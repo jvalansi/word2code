@@ -6,86 +6,10 @@ Created on Dec 3, 2014
 import nltk
 from nltk import word_tokenize
 from nltk.corpus import conll2000
+from autotag.autotag import AutoTag
+import sentence_parser
+import json
 import os
-import re
-import collections
-
-WORD = '[\w\-,\=\']+'
-
-def parse2list(parse):
-    parse = "".join(parse)
-    parse_list = parse.split('\n\n')
-    parse_list = [(parse_list[2*i],parse_list[2*i+1]) for i in range(len(parse_list)/2) ]
-    return parse_list
-
-def get_parentheses(parse):
-    depth = 0
-    for i in range(len(parse)):
-        if parse[i] == '(':
-            depth += 1
-        if parse[i] == ')':
-            depth -= 1
-        if depth == 0:
-            return parse[:i+1]
-    return None
-
-def parse2tree(parse):
-#     get string surrounded by parenthesis return dictionary
-#    input: (NAME (NAME VALUE) (NAME VALUE)) 
-#    output: {"NAME": {"NAME": VALUE, "NAME": VALUE}}
-#     print(parse)
-    if parse[0] != '(':
-        return parse.split(')')[0] #return VALUE
-    d = []
-    while len(parse) > 0:    
-        parentheses = get_parentheses(parse)
-        parse = parse[len(parentheses):].strip()
-        parentheses = parentheses[1:-1] #remove parentheses
-        name = parentheses.split()[0]
-        value = parse2tree(parentheses[len(name):].strip())
-        d.append((name, value))
-    return d
-
-
-def parse2lambda(parse):
-    if not isinstance(parse, dict):
-        return parse
-    lmbd = ''
-    if len(parse) == 1:
-        lmbd = parse.keys()[0]
-        parse = parse[lmbd]
-        result = lmbd+'('+ str(parse2lambda(parse)) + ')'
-        return result
-    if len(parse) >= 2:
-        lmbd = parse.keys()
-        lmbd1 = lmbd.pop(1)
-        parse = parse[lmbd1]
-        result = lmbd1+'('+ ','.join(lmbd)+','+str(parse2lambda(parse)) + ')'    
-        return result
-
-def parse2relations(parse):
-    relations = {}
-    for p in parse:
-        m  = re.search('('+WORD+')\(('+WORD+'-\d+), ('+WORD+'-\d+)\)', p)
-        relation = m.group(1)
-        head = m.group(2)    
-        tail = m.group(3)
-        if head not in relations:
-            relations[head] = {}
-        relations[head][relation] = tail
-    return relations
-
-def relation2string(relation,args):
-    m = re.search('('+WORD+')-\d+', str(relation))
-    func = m.group(1)
-    s = func +'('
-    for a in args:
-        argname = str(a)
-        m = re.search('('+WORD+')-\d+', str(args[a]))
-        argvalue = m.group(1)
-        s+=  argname+'='+argvalue+','
-    s += ')'
-    return s
 
 def tree2string(tree):
     s = ""
@@ -99,6 +23,7 @@ def tree2string(tree):
             s += ':'+'"'+str(val)+'"'
         s += ','
     return s
+
 
 def tree2code(tree):
     s = ""
@@ -135,9 +60,36 @@ def tree2code(tree):
     if args:
         s += '('+','.join(args)+')'
     return s
-      
+
+def get_data(dir):
+    data = []
+    sp = sentence_parser.SentenceParser()
+    entry = ("",[])
+    for file in os.listdir(dir):
+        with open(dir+file,'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith('#'):
+                    data.append(entry)
+                    sentence = line[1:] 
+                    parse = sp.parse_sentence(sentence)
+                    sentence = ' '.join(parse[0][1].keys())
+                    entry = (sentence,[])
+                else:
+                    entry[1].append(line)
+#    for each file:
+#        a sentence starts with #
+#        if the is a non sentence after a sentence it is it's tag
+    return(data)
 
 class TopCoderSolver:
+    
+    def tag_sentence(self,sentence):
+#         train on 
+        pass
     
     def get_imperative(self,parses):
         print('getting imperative')
@@ -162,28 +114,12 @@ class TopCoderSolver:
         pass
     
     def parse_problem(self, problem):
-
-        parser_out = os.popen("~/Downloads/stanford-parser-full-2014-08-27/lexparser.sh "+problem).readlines()
-
-        parse_list = parse2list(parser_out)
-        parses = []
-        for parse0,parse1 in parse_list: 
-            parse0 = re.sub("\s+", " ",parse0)
-    #         print(parse0)
-            parse_tree = parse2tree(parse0)
-#             print(parse_tree)
-#             parse_lambda = parse2lambda(parse_tree)
-    #         print(len(parse_lambda))
-            parse1 = parse1.split('\n') 
-            relations = parse2relations(parse1)
-#             print(relations)
-#             for r in relations:
-#                 print(relation2string(r,relations[r]))
-            parses.append((parse_tree,relations))
-        return parses
+        sp = sentence_parser.SentenceParser()
+        return sp.parse_file(problem)
         
         # get problem data
     def get_data(self):
+
         #TODO: 
         pass
     
@@ -206,9 +142,17 @@ class TopCoderSolver:
         
 
 if __name__ == '__main__':
-    
-    tcs = TopCoderSolver()
-    print(tcs.solve('res/return'))
+    data = get_data('res/train/')
+    N = len(data)
+    print(N)
+    at = AutoTag()
+    at.classify(data[:N/2])
+    at.test(data[N/2+1:])
+    sentence = data[11][0] 
+    print(sentence)
+    print(at.test_doc(sentence, ['Return','Valid','Map'], 0))
+#     tcs = TopCoderSolver()
+#     print(tcs.solve('res/return'))
     
 #     parser_out = os.popen("~/Downloads/stanford-parser-full-2014-08-27/lexparser.sh res/sentences").readlines()
 #     
