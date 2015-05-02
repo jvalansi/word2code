@@ -10,6 +10,7 @@ from autotag.autotag import AutoTag
 import sentence_parser
 import json
 import os
+import probability_calc
 
 def tree2string(tree):
     s = ""
@@ -64,7 +65,8 @@ def tree2code(tree):
 def get_data(dir):
     data = []
     sp = sentence_parser.SentenceParser()
-    entry = ("",[])
+    at = AutoTag()
+    entry = Entry(None,"",[])
     for file in os.listdir(dir):
         with open(dir+file,'r') as f:
             lines = f.readlines()
@@ -75,15 +77,29 @@ def get_data(dir):
                 if line.startswith('#'):
                     data.append(entry)
                     sentence = line[1:] 
-                    parse = sp.parse_sentence(sentence)
-                    sentence = ' '.join(parse[0][1].keys())
-                    entry = (sentence,[])
+                    sentence = at.clean_text(sentence)
+#                     parse = sp.parse_sentence(sentence)
+#                     tree = parse[0][0]
+#                     sentence = tree2string(tree)
+#                     relations = parse[0][1]
+#                     sentence = ' '.join([r[0]+' '+r[1][0] + ' ' + r[1][1] for r in relations])
+                    entry = Entry(None,sentence,[],"")
                 else:
-                    entry[1].append(line)
+#                     entry.tags.append(line)
+                    entry.code += line
 #    for each file:
 #        a sentence starts with #
 #        if the is a non sentence after a sentence it is it's tag
     return(data)
+
+class Entry:
+    def __init__(self,eid = None,text = "",tags = [], code = ""):
+        if eid is None:
+            eid = id(self)
+        self.id = eid
+        self.text = text
+        self.tags = tags
+        self.code = code 
 
 class TopCoderSolver:
     
@@ -142,15 +158,19 @@ class TopCoderSolver:
         
 
 if __name__ == '__main__':
-    data = get_data('res/train/')
-    N = len(data)
-    print(N)
-    at = AutoTag()
-    at.classify(data[:N/2])
-    at.test(data[N/2+1:])
-    sentence = data[11][0] 
-    print(sentence)
-    print(at.test_doc(sentence, ['Return','Valid','Map'], 0))
+    data = get_data('res/text&code/')
+    coocurences = probability_calc.calc_cooccurences(data)
+    print(coocurences[('return','min')])
+
+#     N = len(data)
+#     print(N)
+#     at = AutoTag()
+#     at.classify(data[:N/2])
+#     at.test(data[N/2+1:])
+#     sentence = data[11] 
+#     print(sentence.text)
+#     print(at.test_doc(data[11], ['Return','Valid','Map'], 0))
+
 #     tcs = TopCoderSolver()
 #     print(tcs.solve('res/return'))
     

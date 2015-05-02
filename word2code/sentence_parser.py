@@ -90,11 +90,11 @@ class SentenceParser:
             return result
     
     def parse2relations(self,parse):
-        relations = {}
+        relations = []
         for p in parse:
-            m  = re.search('('+WORD+')\(('+WORD+'-\d+), ('+WORD+'-\d+)\)', p)
+            m  = re.search('('+WORD+')\(('+WORD+')-\d+, ('+WORD+')-\d+\)', p)
             if m == None:
-                with open('problems','w') as problems_file:
+                with open('problems','a') as problems_file:
                     problems_file.write(p)
                 continue
             relation = m.group(1)
@@ -102,7 +102,7 @@ class SentenceParser:
             tail = m.group(3)
 #             if relation not in relations:
 #                 relations[relation] = {}
-            relations[relation] = (head,tail)
+            relations.append((relation,(head,tail)))
         return relations
     
     def relation2string(self,relation,args):
