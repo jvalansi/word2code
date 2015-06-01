@@ -5,7 +5,6 @@ Created on Jan 27, 2015
 '''
 from itertools import *
 from operator import *
-import numpy
 
 def cpairs(S):
     return csubsets(S, 2)
@@ -13,9 +12,11 @@ def cpairs(S):
 def pairs(S):
     return permutations(S, 2)
 
-def subsets(S):
+def subsets(S, m = None):
     N = len(S)
-    return chain(*map(lambda x: combinations(S, x), range(0, N+1)))
+    if m == None:
+        return chain(*map(lambda x: combinations(S, x), range(0, N+1)))
+    return combinations(S, m)
 
 def transformations(S):
     N = len(S)
@@ -52,6 +53,9 @@ def is_prime(n):
             return False
     return True
 
+def is_positive(n):
+    return gt(n,0)
+
 def inclusive(n):
     return n+1
 
@@ -59,17 +63,17 @@ def percentage(S,n):
     return float(countOf(S, n))/len(S)
 
 def successive(S):
-    #TODO: implement
-    return False
+    return(all(abs(pair[0]-pair[1]) == 1 for pair in cpairs(S)))
 
 if __name__ == '__main__':
-    with open('res/logger.log','r') as f:
-        lines = f.readlines()
-    with open('res/sorted.log', 'w') as f:
-        f.write(''.join(sorted(lines)))
-    S1 = ['B','W','B','W','|','|']
-    for S in list(permutations(S1)):
-        print(list(list(s) for k,s in groupby(S,lambda x: x in '|')))
-    S2 = ['B','B','B']
-    print(list(csubsets(S1)))
-    print(list(diff(S1, S2)))
+#     with open('res/logger.log','r') as fp:
+#         lines = fp.readlines()
+#     with open('res/sorted.log', 'w') as fp:
+#         fp.write(''.join(sorted(lines)))
+#     S1 = ['B','W','B','W','|','|']
+#     for S in list(permutations(S1)):
+#         print(list(list(s) for k,s in groupby(S,lambda x: x in '|')))
+#     S2 = ['B','B','B']
+#     print(list(csubsets(S1)))
+#     print(list(diff(S1, S2)))
+    pass

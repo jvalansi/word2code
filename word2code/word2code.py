@@ -62,13 +62,13 @@ def tree2code(tree):
         s += '('+','.join(args)+')'
     return s
 
-def get_data(dir):
+def get_data(data_dir):
     data = []
     sp = sentence_parser.SentenceParser()
     at = AutoTag()
     entry = Entry(None,"",[])
-    for file in os.listdir(dir):
-        with open(dir+file,'r') as f:
+    for fname in os.listdir(data_dir):
+        with open(os.path.join(data_dir,fname),'r') as f:
             lines = f.readlines()
             for line in lines:
                 line = line.strip()
@@ -93,7 +93,9 @@ def get_data(dir):
     return(data)
 
 class Entry:
-    def __init__(self,eid = None,text = "",tags = [], code = ""):
+    def __init__(self,eid = None,text = "",tags = None, code = ""):
+        if tags is None:
+            tags = []
         if eid is None:
             eid = id(self)
         self.id = eid
@@ -158,8 +160,8 @@ class TopCoderSolver:
         
 
 if __name__ == '__main__':
-    data = get_data('res/text&code/')
-    coocurences = probability_calc.calc_cooccurences(data)
+    main_data = get_data('res/text&code/')
+    coocurences = probability_calc.calc_cooccurences(main_data)
     print(coocurences[('return','min')])
 
 #     N = len(data)

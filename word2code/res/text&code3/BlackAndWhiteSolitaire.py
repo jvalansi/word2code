@@ -6,6 +6,9 @@ class BlackAndWhiteSolitaire:
     def minimumTurns(self,cardFront):
         input_array = list(cardFront)
         N = len(input_array)
+        elements = ['B','W']
+        possibilities = product(elements,repeat=N)
+
         # Manao has N cards arranged in a sequence. 
         # He numbered them from left to right with numbers from 0 to N-1. 
         # Each card is colored black on one side and white on the other. 
@@ -18,11 +21,9 @@ class BlackAndWhiteSolitaire:
         
         # You are given a String cardFront consisting of N characters. 
         # For each i, character i of cardFront is 'B' if card i lies black side up, and 'W' otherwise.
-        elements = ['B','W']
-        possibilities = product(elements,repeat=N)
 
         # Count and return the minimum number of cards which must be flipped to obtain an alternating configuration.
-        #### return(minimum([flipped(input_array, possibility) for possibility in cards if alternating(possibility)]))
+        #### return(minimum([number(flipped(input_array, possibility)) for possibility in cards if alternating(possibility)]))
         return(min([len(diff(input_array, possibility)) for possibility in possibilities if valid(possibility)]))
 
 

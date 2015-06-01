@@ -17,10 +17,10 @@ import problem
 
 class TopCoderSpider:
     def __init__(self):
-        
+
         self.base_url = 'http://community.topcoder.com'
-        
-    
+
+
     def auth(self,link):
         print(link)
         payload = {
@@ -32,14 +32,14 @@ class TopCoderSpider:
         html_page = requests.post(self.base_url+link, data=payload)
         soup = BeautifulSoup(html_page.text)
         return soup
-    
+
 #     root url: http://community.topcoder.com/tc?module=ProblemArchive&sr=1&er=100&sc=&sd=&class=&cat=Brute+Force&div1l=&div2l=1&mind1s=&mind2s=&maxd1s=&maxd2s=&wr=
     def link2soup(self,link):
         html_page = urllib2.urlopen(self.base_url+link)
         soup = BeautifulSoup(html_page)
         return soup
-        
-    def getLinks(self,soup,pattern):
+
+    def get_links(self,soup,pattern):
 #     extract problems:
 #         extract all http://community.topcoder.com/stat?c=problem_statement&pm=<number>
         problem_links = []
@@ -48,7 +48,7 @@ class TopCoderSpider:
             if re.match(pattern, href):
                 problem_links.append(href)
         return problem_links
-    
+
     def get_problems(self, ):
         pattern = r'/stat\?c=problem_statement&pm=(\d+)'
         problem_links = self.getLinks(rootsoup,pattern)
@@ -60,38 +60,48 @@ class TopCoderSpider:
             fname = 'res/brute_force_easy/'+name
             print(name)
             if os.path.isfile(fname):
-                continue 
+                continue
             with open(fname, 'w') as f:
                 f.write(soup.prettify('utf-8'))
-        
-    def parseProblem(self,fname):
+
+    def parse_problem(self,fname):
         with open(fname, 'r') as f:
             html = f.read()
-        soup = BeautifulSoup(html)  
+        soup = BeautifulSoup(html)
         problem_name = soup.find(class_ = 'statTextBig')
         problem_name = problem_name.get_text().split()[-1]
         problem_soup = soup.find(class_ = 'problemText')
+#         problem_text = problem_soup.get_text()
+#         print(problem_text)
         parts = problem_soup.table.children
         problem_dict =  {}
         header = None
         for part in parts:
-            h3 = part.find('h3') 
+            h3 = part.find('h3')
             if h3 > 0:
-                header = h3.get_text().strip() 
+                header = h3.get_text().strip()
                 problem_dict[header] = []
             else:
                 try:
                     problem_dict[header].append(part)
                 except:
-                    pass  
-        problem = problem.Problem()
-        problem.examples = self.parse_examples(problem_dict['Examples'])
-        with open(fname+'.pkl', 'w') as f:
-            pickle.dump(problem,f)
-        return(problem)
+                    pass
+#         print(problem_dict['Definition'])
+        problem_dict['Definition'] = self.parse_definitions(problem_dict['Definition'])
+        problem_dict['Problem Statement'] = self.parse_statement(problem_dict['Problem Statement'])
+        problem_dict['Constraints'] = self.parse_constraints(problem_dict['Constraints'])
+        problem_dict['Examples'] = self.parse_examples(problem_dict['Examples'])
+        if 'Notes' in problem_dict:
+            problem_dict['Notes'] = self.parse_statement(problem_dict['Notes'])
+#         print(problem_dict)
+        with open(fname+'.json', 'w') as f:
+            json.dump(problem_dict, f, indent=4)
+#         with open(fname+'.pkl', 'w') as f:
+#             pickle.dump(problem,f)
+#         return(problem)
 
 #     extract solutions /tc?module=ProblemDetail&rd=\d+&pm=\d+
-    def parseSolution(self,soup):
+    def parse_solution(self,soup):
         solution = soup.find(class_ = 'problemText')
         if not solution:
             return
@@ -101,7 +111,48 @@ class TopCoderSpider:
         print(solution_name)
         f = open('res/brute_force_easy/'+solution_name+'.sol', 'w')
         f.write(solution.encode('utf-8'))
-        
+
+    def parse_constraints(self,constraints):
+        constraints_dict = {}
+        for part in constraints:
+            try:
+                var = part.find('b').get_text()
+                explanation = part.find('b').next_sibling
+                constraints_dict[var] = explanation
+            except:
+                pass
+        return constraints_dict
+
+    def parse_statement(self,statement):
+        s = ""
+        for part in statement:
+            try:
+                s += part.get_text()
+            except:
+                pass
+        return s
+
+    def parse_definitions(self,definitions):
+        for definition in definitions:
+            try:
+                definition_text = definition.get_text()
+#                 print(definition_text)
+                definition_dict = {}
+                pattern = "\s+Class:\s+(?P<class_name>[^\n]+)"+\
+                          "\s+Method:\s+(?P<method_name>[^\n]+)"+\
+                          "\s+Parameters:\s+(?P<parameters>[^\n]+)"+\
+                          "\s+Returns:\s+(?P<returns>[^\n]+)"+\
+                          "\s+Method signature:\s+(?P<method_signature>[^\n]+)"
+                m = re.match(pattern, definition_text)
+                definition_dict['class_name'] = m.group('class_name')
+                definition_dict['method_name'] = m.group('method_name')
+                definition_dict['parameters'] = m.group('parameters')
+                definition_dict['returns'] = m.group('returns')
+                definition_dict['method_signature'] = m.group('method_signature')
+                return(definition_dict)
+            except:
+                pass
+
     def parse_examples(self, examples):
         examples_list = []
         for example in examples:
@@ -117,23 +168,26 @@ class TopCoderSpider:
                     example_dict['output'] = child.get_text().strip()[9:]
             examples_list.append(example_dict)
         return examples_list
-        
-            
-        
-        
+
+
+
+
 
 if __name__ == '__main__':
     tcs = TopCoderSpider()
     root = "/tc?module=ProblemArchive&sr=1&er=100&sc=&sd=&class=&cat=Brute+Force&div1l=&div2l=1&mind1s=&mind2s=&maxd1s=&maxd2s=&wr="
-    rootsoup = tcs.link2soup(root)
-    
+#     rootsoup = tcs.link2soup(root)
+
     dir = 'res/brute_force_easy/'
-    for fname in os.listdir(dir):
+#     fname = '10152'
+#     tcs.parse_problem(os.path.join(dir,fname))
+    for fname in sorted(os.listdir(dir)):
         if not re.match('^\d+$', fname):
             continue
+        print(fname)
 #         soup = tcs.link2soup(link)
-        print(tcs.parseProblem(dir + fname))
-        
+        tcs.parse_problem(dir + fname)
+
 #     detail_links = tcs.getLinks(rootsoup,r'/tc\?module=ProblemDetail&rd=\d+&pm=\d+')
 #     for link in detail_links:
 #         soup = tcs.link2soup(link)
