@@ -9,7 +9,7 @@ import copy
 from stanford_corenlp import sentence2dependencies
 import ast
 import os
-from problem_parser import parse_problem
+import problem_parser
 from utils import average
 import logger
 
@@ -134,8 +134,10 @@ def clean_dependencies(dependencies):
     clean_deps = []
     for dep in dependencies:
 #         print(dep)
-        child = dep2word(dep[2])
-        parent = dep2word(dep[1])
+#         child = dep2word(dep[2])
+        child = dep[2]
+#         parent = dep2word(dep[1])
+        parent = dep[1]
         clean_deps.append([parent,child])
     return clean_deps
 
@@ -212,7 +214,7 @@ def check_sentences(dir,n=0):
     for fname in sorted(os.listdir(dir)):
         with open(os.path.join(dir,fname),'r') as f:
             problem = f.read()
-        parse = parse_problem(problem)
+        parse = problem_parser.parse_problem(problem)
         correct_sentences = []
         for sentence_parse in parse['sentences']: 
             sentence = sentence_parse['sentence']

@@ -9,7 +9,7 @@ import shutil
 import json
 from nltk.tokenize import sent_tokenize
 from stanford_corenlp import sentence2dependencies
-# import codeline_gen_dep
+import codeline_gen_dep
 
 # from utils import *
 # from operator import *
@@ -123,8 +123,9 @@ def compose_sentence(parse):
         sentence += indenter*indent + codeline.strip() + '\n'
     deps = sentence2dependencies(parse['sentence'])[0]
     sentence += '\n'.join([indenter*indent+'# '+str(dep) for dep in deps]) +'\n'
-#     root = codeline_gen_dep.Node('ROOT')
-#     sentence += indenter*indent+'# '+ str(root.deps2tree(deps)) + '\n'
+    root = codeline_gen_dep.Node('ROOT-0')
+    deps = codeline_gen_dep.clean_dependencies(deps)
+    sentence += indenter*indent+'# '+ str(root.deps2tree(deps)) + '\n'
     return sentence
 
 indenter = '\t'
@@ -230,6 +231,14 @@ if __name__ == '__main__':
 #         fbase = problem_json['Definition']['class_name']
 #         with open(os.path.join(outdir, fbase+'.py'), 'w') as fp:
 #             fp.write(json2problem(problem_json))
+
+    root = codeline_gen_dep.Node('ROOT-0')
+    sentence = 'hello, how are you'
+    deps = sentence2dependencies(sentence)[0]
+    deps = codeline_gen_dep.clean_dependencies(deps)
+    print(deps)
+    print(root.deps2tree(deps))
+
 
     indir = 'res/text&code5/'
     outdir = 'res/text&code6/'

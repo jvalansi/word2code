@@ -321,6 +321,51 @@ def check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thr
         .intersection(set(codeline_score1)))
     return sorted(list(result))
 
+def check_all_problems_intersection(sentence_dir, word_dir, problem_dir):
+    sentence_score = {}
+    for n in range(1,5):
+        sentence_score = problem2sentence.calc_score(sentence_dir, n)
+        sentence_score[n] = clean_names(sentence_score)
+
+    word_score = {}
+    for m in range(1,5):
+        word_score = sentence2word.calc_score(word_dir, m)
+        word_score[m] = clean_names(word_score)
+
+    codeword_score = {}
+    for p in range(1,6):
+        p_thresh = p*0.1
+        codeword_score = word2codeword.check_words(problem_dir, p_thresh)
+        codeword_score[p] = clean_names(codeword_score)
+
+    codeline_score1 = codeline_gen.check_sentences(problem_dir)
+    codeline_score1 = clean_names(codeline_score1)
+
+#     codeline_score2 = codeline_gen_dep.check_sentences(problem_dir, 4)
+#     codeline_score2 = [os.path.splitext(fname)[0] for fname in codeline_score2]
+
+#     print('wo dep: '+ str(set(problem_score).intersection(set(word_score)).intersection(set(codeword_score)).intersection(codeline_score1)))
+    
+    for n in range(1,5):
+        for m in range(1,5):
+            for p in range(1,6):
+                s = ""
+                for fname in sorted(clean_names(os.listdir(problem_dir))):
+                    base_pattern = "{:30} : {:10} {:10} {:10} {:10}\n"
+                    in_sentence = fname in sentence_score[n]
+                    in_word = fname in word_score[m]
+                    in_codeword = fname in codeword_score[p]
+                    in_codeline = fname in codeline_score1
+                    s += base_pattern.format(fname, in_sentence, in_word, in_codeword, in_codeline)
+                with open('res/intersection'+'_'.join([n,m,p]), 'w') as f:
+                    f.write(s)
+                result = (set(sentence_score[n])\
+                    .intersection(set(word_score[m]))\
+                    .intersection(set(codeword_score[p]))\
+                    .intersection(set(codeline_score1)))
+                print('n:{} m:{} p:{} - {}'.format(n,m,p*0.1,len(result)))
+    return 
+
 if __name__ == '__main__':
     sentence_dir = 'res/sentence_json_small'
     n = 1
@@ -330,18 +375,7 @@ if __name__ == '__main__':
     problem_dir = 'res/text&code5'
     p_thresh = 0.5
 #     print(check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thresh))
- 
-    results = {}
-    for n in range(1,5):
-        results[n] = {}
-        for m in range(1,5):
-            results[n][m] = {}
-            for p in range(1,6):
-                p_thresh = p*0.2
-                results[n][m][p_thresh] = len(check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thresh))
-    print(results)
-    print(json.dumps(results, indent=4))
-                
+    check_all_problems_intersection(sentence_dir, word_dir, problem_dir)
 
     tries = 100000
 #     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries))
