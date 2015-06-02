@@ -13,6 +13,7 @@ import re
 import json
 import ast
 import CRF
+import shutil
 
 # get minimal continuous subset containing all relevant words
 # example:
@@ -73,8 +74,9 @@ def label_sentence(sentence,translations,code,symbol):
     return zip(sentwords,pos,labels)
 
 def build_train(indir, outdir):
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
+    if os.path.exists(outdir):
+        shutil.rmtree(outdir)
+    os.mkdir(outdir)
     for fname in sorted(os.listdir(indir)):
         with open(os.path.join(indir,fname),'r') as f:
             problem = f.read()
@@ -162,12 +164,13 @@ if __name__ == '__main__':
     train_dir = 'res/sentence_train'
     build_train(indir, train_dir)
 
-    indir = 'res/problems_test/'
-    test_dir = 'res/sentence_test'
-    build_train(indir, test_dir)
+#     indir = 'res/problems_test/'
+#     test_dir = 'res/sentence_test'
+#     build_train(indir, test_dir)
 
-    outdir = 'res/sentence_json'
-    CRF.test(train_dir,test_dir,outdir)
+#     outdir = 'res/sentence_json'
+    outdir = 'res/sentence_json_small'
+    CRF.test(train_dir,train_dir,outdir)
 
     num = 2
     print(calc_score(outdir,num))

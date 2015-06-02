@@ -1,183 +1,22 @@
-try to find the maximum matching between the semantic tree and the code tree
-
-find the trivial tree  for the return statement:
-	each level encapsulates "()" it's children
+*	problem2sentences:
+	* n = 2
+	* 2^3 = 8 options to label sentences
+* 	sentence2words:
+	* m = 4
+	* (2 4)^3 = 12^3 ~= 1700 options of word extractions
+*	word2codeword
+	* p = 0.3
+	* ~3 codeword for each word 
+*	codeword2codeline
+	* ~10-20 codelines for each codeword combination
+	-> ~1000-8000 codelines for each sentence
+	-> ~10^9-5*10^11 codelines for each problem
 	
-goal:
-	# Return the number of different passwords Fred needs to try.
-	return(number(different(passwords)))
-	return(number(different(password for password in passwords if need_to_try(password))))
-	return len(set([password for password in passwords if valid(password)))
+	(8 4) = 1680	
+	each word has ~3 codewords -> each 4 words has 3^4 = 81 options
+	-> 81*1680 = 136080
 	
-	# Return the number of different ways that Romeo can place the cosmic amoeba on the table.
-	return(number(different(ways)))
-	return(number(different(way for way in ways if can_place(way))
-	return len(set([way for way in ways if valid(way)])
-		
-	# The returned hash is the sum of all character values in input.
-	return(hash)
-	sum(character_values(input))
-	sum(character_value for character_value in input)
-	hash = sum(value(character) for character in input)
 	
-	# Given a int[] numList, for each non-empty subset of numList, compute the average of its elements, then return the average of those averages.
-	average(elements(non-empty(subset(numList))))
-	[average(elements) for elements in subset(numList) if non-empty(elements)] 
-	return(average(averages))
-	averages = average(subset) for subset in subsets(numList) if non-empty(subset)
-	
-	# Return the number of apples remaining after the procedure described above is performed.
-	return(number(remaining(apples))
-	return(number(remaining(apples) for apples in possibilities))
-	return(max[sum(apples) for apples in options])
-	
-	# Count and return the minimum number of cards which must be flipped to obtain an alternating configuration.
-	return(minimum(number(cards)))
-	return(minimum(number(cards) for cards in possibilities if alternating_configuration(cards))
-	return(min([flipped(cards) for cards in configurations if alternating(cards)]))
-	
-	# Return the height of the tallest possible block tower Josh can build.
-	return(height(tallest(block_tower)))
-	return(height(tallest(block_tower for block_tower in possibilities if can_build(tower))
-	return max([height(tower) for tower in towers if can_build(tower)])
-	
-	# Return a int[] with n elements: the numbers of all candidates, ordered according to their level in skill x from the best to the worst.
-	return(number(candidate) for candidate in ordered(candidates,x)
-	return(numbers(candidates))
-	return [number(candidate) for candidate in sorted(candidates, item = x)]
-	
-	# Return the minimum possible distance between A and B after you perform that change.
-	return(minimum(possible(distance(A,B))))
-	return(minimum(distance(A,B) for (A,B) in change(A,B)))
-	return min([distance(A,B) for A in As if valid(A)])
-	
-	# Return the maximum possible length of the remaining chocolate bar that contains no repeated letters.
-	return(maximum(possible(length(remaining(chocolate_bar)))
-	return(maximum(length(chocolate_bar) for chocolate_bar in possibilities if contains_no_repeated_letters(chocolate_bar)   
-	return max([(len(chocolate) for chocolate in chocolates if valid(chocolate))
-	
-	# Compute and return the number of beautiful ribbons in Alice's tree.
-	return(number(beatiful(ribbons)))
-	return(number(beautiful(ribbon) for ribbon in ribbons)))
-	return(len([ribbon for ribbon in ribbons if beautiful(ribbon)]))
-	
-	# Your method should return the maximum number of consecutive competitions with positive rating changes.
-	return(maximum(number(cosecutive(competitions)))
-	return(maximum(number(competitions) for competitions in possibilities if  positive_rating_changes(competitions)))
-	return max([len(competitions) for competitions in ccompetitions if positive_rating_change(competitions)]) 
-	
-	# Return a int[] with exactly two elements {x,y}, where x is the smallest possible number of deer that still have two antlers, and y is the largest possible number of those deer.
-	return(smallest(possible(number(deer)))
-	smallest(number(have_two_antlers(deers)) for deers in possibilities)
-	x = min([have_two_antlers(deers) for deers in possibilities if valid(deers)])
-	y = max([have_two_antlers(deers) for deers in possibilities if valid(deers)])
-	return [x,y]
-	
-	# Return this minimum possible difference.
-	return(minimum(possible(difference)))
-	return(minimum(difference for difference in possibilities))
-	return(min([difference(possibility) for possibility in possibilities])
-	
-	# Compute and return how many numbers will there be on John's paper at the end.
-	return(how_many(numbers)))
-	return(how_many(numbers for numbers in possibilities))
-	return(len([number for number in paper]))
-	
-	# Return the minimal number of egg cartons he must buy.
-	return(minimal(number(egg_crtons)))
-	return(minimal(number(egg_crtons) for egg_crtons in possibilities)
-	return min([len(egg_cartons) for egg_cartons in possibilities if valid(egg_cartons)])
-	
-	# You are to return an int representing the 0-based index of the state where the lowest percentage of people are planning on voting for candidate 1 (lowest percentage of '1' characters in that element of the input).
-	return(int)
-	index(lowest(percentage(state) for state in states))
-	int = index(state) for state in state if percentage(state) == lowest
-	
-	#	Return the lexicographically smallest string Elly can create by using the device exactly once.
-	return(lexicographically_smallest(string for string in strings if can_create(string))
-	return(min(string for string in string if can_create(string))) 
-	
-	# Return the number of far from primes numbers between A and B, inclusive.
-	return(number(far_from_prime(numbers,(A,B)))
-	return(number(far_from_prime(number) for number in numbers(A,B))
-	return(len([number for number in range(A,B+1) if far_from_prime(number)])
-	
-	# Return the smallest number of steps needed to change N into a Fibonacci number.
-	return(smallest(number(steps)))
-	return(smallest(number(steps) for steps in possibilities))
-	return (min(len(steps) for steps in possible_steps if sum(steps,N) in F )
-	
-	# Return the largest number he can count to.
-	return(largest(number))
-	return(largest(number for number in numbers if can_count(number)
-	return(max(number for number in numbers if can_count(number))
-		
-	# Compute and return the smallest possible result after inserting the missing plus sign
-	return(smallest(possible(result)))
-	return(smallest(result for result in possibilities))
-	return(min(eval(result) for result in insert('+',expression)) 
-	
-	# Return the maximum possible number of flowers Jiro can buy in this situation.
-	return(maximum(possible(number(flowers)))
-	return(maximum(number(flowers) for flowers in possibilities if can_buy(flowers))
-	return max(sum(subset) for subset in csubset(flowers) if can_buy(flowers)
-	
-	# Return the total number of stars Ciel has at the moment.
-	return(total(number(stars)))
-	return(total(number(stars) for stars in possibilities)
-	return sum(stars(result) for result in results)
-	
-	# Your method should return a double, equal to the maximum distance that the car can travel (in kilometers) with the given amount of fuel, and travelling at a constant velocity equal to one of the elements of velocities.
-	return(double)
-	maximum(distance)
-	maximum(distance for distance in possibilities if can_travel(distance))
-	double = max(distance for distance in possible_distances)
-
-	# Your method must find and return the maximum number of moves Gogo could have performed.
-	return(maximum(number(moves))) 
-	return(maximum(number(moves) for moves in possibilities if could_have_performed(moves)))
-	# In other words, among all sequences S that produce the given sequence T, find one that requires the most moves, and return that number of moves.
-	return(max(moves(S) for S in permutations(T)))  
-
-	# Compute and return the number of diverse departments in Shiny's company.
-	return(number(diverse(departments)))
-	return(number(diverse(department) for department in departments)) 
-	return(len(department for department in departments if diverse(department))
-	
-	# Compute and return the total number of hit points you'll lose during the fight.
-	return(total(number(hit_points)))
-	return(total(number(hit_points) for hit_points in possibilities)
-	return sum(lost_hit_points(i) for i in range(N))
-	
-	# You are to return the minimum among the Hamming distances of all pairs of the given numbers.
-	return(minimum(hamming_distances(pairs(numbers))))
-	return(minimum(hamming_distance(pair) for pair in pairs(numbers))
-	return min(hamming_distance(pair) for pair in subsets(numbers,2))
-
-	# Return the smallest number of turns in which this can be done.
-	return(smallest(number(turns)))
-	return(smallest(number(turns) for turns in possibilities if can_be_done(turns))
-	return min(len(turns) for turns in csubset(S) if valid(turns))
-
-
-	# Return "Able to catch" (quotes for clarity) if you can, and "Not able to catch" otherwise.
-	return "Able to catch" if can else "Not able to catch"
-	
-	# Your method must return "YES" (quotes for clarity) if Cucumber Boy can buy any set of k unique cucumbers, and "NO" if there is some set of k cucumbers that is too expensive for him.
-	return "YES" if all([can_buy(subset) for subset in subsets(cucumbers,k)])  else "NO"
-	
-	# Return "Easy" (quotes for clarity) if feeding the pets is easy for the given inputs.
-	# Otherwise, return "Difficult".
-	return "Easy" if easy else "Difficult"
-	
-	# Return "found" (quotes for clarity) if there are five such cells anywhere on the board.
-	return "found" if condition
-	# Otherwise, return "not found".
-	else "not found"
-
-	# Given Strings s and t, return the String "Yep, it's wood." (quotes for clarity) if the pair (s, t) is wood and "Nope." otherwise.
-	return "Yep, it's wood." if is_wood(s,t) else "Nope."
-
-	# Return "Interesting" if that integer is interesting, otherwise return "Not interesting".
-	return "Interesting" if is_interesting(x) else "Not interesting"
-	 
+find variables
+	exchange variables with generic name
+	use crf to find vars

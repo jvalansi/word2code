@@ -15,6 +15,7 @@ import string
 import CRF
 import json
 import ast
+import shutil
 
 from utils import *
 from collections import Counter
@@ -138,8 +139,9 @@ def label_sentence(sentence,translations,code):
     return zip(sentwords,pos,labels)
 
 def build_train(indir, outdir):
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
+    if os.path.exists(outdir):
+        shutil.rmtree(outdir)
+    os.mkdir(outdir)
     for fname in sorted(os.listdir(indir)):
         print(fname)
         with open(os.path.join(indir,fname),'r') as fp:
@@ -167,7 +169,10 @@ def get_label_probs(sentence, label):
     for line in sentence:
         important = line['label'] == label
         probs = {v: k for k, v in ast.literal_eval(line['probs'])}
-        prob = probs[label]
+        if label in probs: 
+            prob = probs[label]
+        else:
+            prob = 0
         sentprobs.append((prob,important,line['word']))
     sentprobs = sorted(sentprobs,reverse = True)
     return sentprobs
@@ -227,7 +232,7 @@ if __name__ == '__main__':
 #     print(Counter(non_relevant))
 
     train_dir = 'res/word_train'
-#     build_train(indir, train_dir)
+    build_train(indir, train_dir)
 #     print(non_callable)
 
 #     test_indir = 'res/problems_test/'
@@ -235,7 +240,8 @@ if __name__ == '__main__':
 #     build_train(test_indir, test_dir)
 
     output_dir = 'res/word_json'
-#     CRF.test(train_dir, train_dir, output_dir)
+    output_dir = 'res/word_json_small'
+    CRF.test(train_dir, train_dir, output_dir)
 
     m = 4
     print(calc_score(output_dir, m))

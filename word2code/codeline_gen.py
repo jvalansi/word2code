@@ -305,9 +305,9 @@ def check_translation(sentence, translation, codeline):
 #     print(relevantwords)
     relevantcode = [transcodedict[word] for word in relevantwords]
     funcs = [word for word in relevantcode if is_func(word) and word != 'return']
-#     possible_vars = [word for word in relevantcode if not is_func(word)]
-    possible_vars = set(vars) - set(list(string.punctuation)+['\'\'','``'])
-    possible_vars -= set(['for', 'in', 'if', 'else'])
+    possible_vars = [word for word in relevantcode if not is_func(word)]
+    possible_vars = set(possible_vars) - set(list(string.punctuation)+['\'\'','``'])
+    possible_vars = possible_vars - set(['for', 'in', 'if', 'else'])
     possible_vars = list(possible_vars)
     array_vars = [var for var in possible_vars if var in array]
     if 'possibility' not in array_vars: array_vars.append('possibility')
@@ -409,7 +409,8 @@ def check_sentences(sentences_dir, n=0):
             correct.append(fname)
         total += bool(correct_sentences)
     print(total)
-    print(float(len(correct))/total)
+    if total:
+        print(float(len(correct))/total)
     return correct
 
 

@@ -106,7 +106,7 @@ def get_type_codelines(word_type, type_codewords):
                                                         word_type)
             possible_codelines = [(p, type_codeline) for type_codeline in possible_codelines]
             type_codelines.update(possible_codelines)
-#     type_codelines = sorted(type_codelines, reverse=True)[:10]
+    type_codelines = sorted(type_codelines, reverse=True)[:100]
     return type_codelines
 
 def get_type_codewords(important_words, translations_count, p_thresh):
@@ -322,16 +322,29 @@ def check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thr
     return sorted(list(result))
 
 if __name__ == '__main__':
-    sentence_dir = 'res/sentence_json'
+    sentence_dir = 'res/sentence_json_small'
     n = 1
-    word_dir = 'res/word_json'
+    word_dir = 'res/word_json_small'
     m = 2
-    problem_dir = 'res/problems_test'
-    p_thresh = 1
+#     problem_dir = 'res/problems_test'
+    problem_dir = 'res/text&code5'
+    p_thresh = 0.5
 #     print(check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thresh))
+ 
+    results = {}
+    for n in range(1,5):
+        results[n] = {}
+        for m in range(1,5):
+            results[n][m] = {}
+            for p in range(1,6):
+                p_thresh = p*0.2
+                results[n][m][p_thresh] = len(check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thresh))
+    print(results)
+    print(json.dumps(results, indent=4))
+                
 
     tries = 100000
-    print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries))
+#     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries))
 
 #     fname = 'AverageAverage.py'
 #     fname = 'BlockTower.py'

@@ -5,8 +5,11 @@ Created on Apr 6, 2015
 '''
 import re
 import os
+import shutil
 import json
 from nltk.tokenize import sent_tokenize
+from stanford_corenlp import sentence2dependencies
+# import codeline_gen_dep
 
 # from utils import *
 # from operator import *
@@ -107,29 +110,33 @@ def parse_dir(problem_dir):
 
 def compose_sentence(parse):
     sentence = ''
-    sentence += indeter*2 + '# ' + parse['sentence'].strip() + '\n'
+    sentence += indenter*2 + '# ' + parse['sentence'].strip() + '\n'
     if not parse['code']:
         return sentence
     if parse['method'][0]:
-        sentence += indeter*2 + parse['method'][0].strip() + '\n'
+        sentence += indenter*2 + parse['method'][0].strip() + '\n'
     indent = 2 + bool(parse['method'][0])
     for i,codeline in enumerate(parse['code']):
         if i in range(len(parse['translations'])):
             translation = parse['translations'][i]
-            sentence += indeter*indent + '#### ' + translation.strip() + '\n'
-        sentence += indeter*indent + codeline.strip() + '\n'
+            sentence += indenter*indent + '#### ' + translation.strip() + '\n'
+        sentence += indenter*indent + codeline.strip() + '\n'
+    deps = sentence2dependencies(parse['sentence'])[0]
+    sentence += '\n'.join([indenter*indent+'# '+str(dep) for dep in deps]) +'\n'
+#     root = codeline_gen_dep.Node('ROOT')
+#     sentence += indenter*indent+'# '+ str(root.deps2tree(deps)) + '\n'
     return sentence
 
-indeter = '    '
+indenter = '\t'
 
 def compose_problem(parse):
     problem = ''
     problem += '\n'.join([imp.strip() for imp in parse['import']]) +'\n'
     problem += '\n'
     problem += parse['class'][0].strip() + '\n'
-    problem += indeter + parse['method'][0].strip() + '\n'
+    problem += indenter + parse['method'][0].strip() + '\n'
     for var_parse in parse['vars']:
-        problem += indeter*2 + var_parse.strip() + '\n'
+        problem += indenter*2 + var_parse.strip() + '\n'
     for sentence_parse in parse['sentences']:
         problem += compose_sentence(sentence_parse)
     problem += '\n'
@@ -197,14 +204,15 @@ def json2problem(problem_json):
     return problem
 
 
+
 if __name__ == '__main__':
-    with open('res/text&code5/AlienAndPassword.py') as f:
-        problem = f.read()
-    parse = parse_problem(problem)
-#     with open('res/parse', 'w') as f:
-#         json.dump(parse,f,indent=4, separators=(',', ': '))
-    with open('res/compose.py', 'w') as f:
-        f.write(compose_problem(parse))
+#     with open('res/text&code5/AmoebaDivTwo.py') as f:
+#         problem = f.read()
+#     parse = parse_problem(problem)
+# #     with open('res/parse', 'w') as f:
+# #         json.dump(parse,f,indent=4, separators=(',', ': '))
+#     with open('res/compose.py', 'w') as f:
+#         f.write(compose_problem(parse))
 
 #     indir = 'res/brute_force_easy/'
 #     outdir = 'res/problems_test/'
@@ -222,3 +230,19 @@ if __name__ == '__main__':
 #         fbase = problem_json['Definition']['class_name']
 #         with open(os.path.join(outdir, fbase+'.py'), 'w') as fp:
 #             fp.write(json2problem(problem_json))
+
+    indir = 'res/text&code5/'
+    outdir = 'res/text&code6/'
+    if os.path.exists(outdir):
+        shutil.rmtree(outdir)
+    os.mkdir(outdir)
+    for fname in sorted(os.listdir(indir)):
+        fbase, fext = os.path.splitext(fname)
+        if fext != '.py':
+            continue
+        print(fname)
+        with open(os.path.join(indir,fname)) as fp:
+            problem = fp.read()
+        parse = parse_problem(problem)
+        with open(os.path.join(outdir, fbase+'.py'), 'w') as fp:
+            fp.write(compose_problem(parse))
