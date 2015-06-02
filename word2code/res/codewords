@@ -1,0 +1,68 @@
+element, element,
+inf,infinity, 
+n, n,
+i, i, 
+j, j, 
+input_int, integer, 
+elements, elements, 
+possibilities, possibilities, 
+possibility, possibility, 
+pair,pair,
+pairs,pairs,
+cpairs,successive,
+input_array,array, 
+and, and 
+all, all
+set, set 
+inclusive, inclusive 
+not_, not
+gt,greater 
+valid,valid,  
+in,in,  
+diff, differ, 
+eq,equal 
+any, any, 
+if, if, 
+or, or, 
+sub,subtract 
+for, for, 
+min, minimum
+indexOf, index
+int, integer
+sum, sum, 
+contains, contains, 
+add, add, 
+abs, absolute
+str, string, 
+ne, different
+return, return, 
+tuple, tuple, 
+max, maximum
+mapping, mapping, 
+else, else, 
+leq, less
+not_any, no
+len, length
+successive, successive, 
+sorted, sorted, 
+mod, modulo,
+list, list, 
+countOf, count 
+subsets, subsets, 
+csubsets, subsets, 
+where, where, 
+is_even, even
+is_prime, prime
+range,range,  
+str, string, 
+is_even, even
+is_odd, odd
+is_positive, positive
+itemgetter, item
+lambda,lambda,
+eval, evaluate
+average, average
+percentage, percentage
+map, map
+filter, filter
+reduce, reduce
