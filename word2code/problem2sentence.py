@@ -14,6 +14,7 @@ import json
 import ast
 import CRF
 import shutil
+import logger
 
 # get minimal continuous subset containing all relevant words
 # example:
@@ -125,11 +126,13 @@ def check_problem(json_dir,fname,n):
         problem_json = json.load(inputjson)
     results = []
     for sentence_type in types:
-        print(sentence_type)
         sentprobs = get_sentences_probabilities(problem_json,sentence_type)
         sentprobs = sorted(sentprobs,reverse = True)
-        print(sentprobs)
         result = all([not important for (sentprob,i,important) in sentprobs[n:]])
+#         if not result:
+        logger.logging.info(fname)
+        logger.logging.info(sentence_type)            
+        logger.logging.info(sentprobs)
         results.append(result)
     return results
 
@@ -163,18 +166,22 @@ if __name__ == '__main__':
     indir = 'res/text&code5/'
     train_dir = 'res/sentence_train'
     build_train(indir, train_dir)
+ 
+    indir = 'res/problems_test/'
+    test_dir = 'res/sentence_test'
+    build_train(indir, test_dir)
 
-#     indir = 'res/problems_test/'
-#     test_dir = 'res/sentence_test'
-#     build_train(indir, test_dir)
+    outdir = 'res/sentence_json'
+#     outdir = 'res/sentence_json_small'
+#     CRF.test(train_dir, outdir, features=2)
+    CRF.test(train_dir, outdir, test_dir, features=2)
 
-#     outdir = 'res/sentence_json'
-    outdir = 'res/sentence_json_small'
-    CRF.test(train_dir,train_dir,outdir)
+    n = 2
+#     print(calc_score(outdir, n))
 
-    num = 2
-    print(calc_score(outdir,num))
-
-    fname = 'Elections.label'
-    fname = 'FarFromPrimes.label'
-#     check_problem(outdir, fname,n)
+    fname = 'AverageAverage.label'
+#     fname = 'ChristmasTreeDecorationDiv2.label'
+#     fname = 'Elections.label'
+#     fname = 'FarFromPrimes.label'
+#     fname = 'LittleElephantAndBallsAgain.label'
+#     print(check_problem(outdir, fname,n))

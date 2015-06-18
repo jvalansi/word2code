@@ -122,13 +122,13 @@ def compose_sentence(parse):
             sentence += indenter*indent + '#### ' + translation.strip() + '\n'
         sentence += indenter*indent + codeline.strip() + '\n'
     deps = sentence2dependencies(parse['sentence'])[0]
-    sentence += '\n'.join([indenter*indent+'# '+str(dep) for dep in deps]) +'\n'
+#     sentence += '\n'.join([indenter*indent+'# '+str(dep) for dep in deps]) +'\n'
     root = codeline_gen_dep.Node('ROOT-0')
-    deps = codeline_gen_dep.clean_dependencies(deps)
+#     deps = codeline_gen_dep.clean_dependencies(deps)
     sentence += indenter*indent+'# '+ str(root.deps2tree(deps)) + '\n'
     return sentence
 
-indenter = '\t'
+indenter = ' '*4
 
 def compose_problem(parse):
     problem = ''
@@ -136,7 +136,7 @@ def compose_problem(parse):
     problem += '\n'
     problem += parse['class'][0].strip() + '\n'
     problem += indenter + parse['method'][0].strip() + '\n'
-    for var_parse in parse['vars']:
+    for var_parse in parse['vars'][0].split('\n'):
         problem += indenter*2 + var_parse.strip() + '\n'
     for sentence_parse in parse['sentences']:
         problem += compose_sentence(sentence_parse)
@@ -204,10 +204,22 @@ def json2problem(problem_json):
     problem += "if __name__ == '__main__':\n\tprint(example0())\n\n"
     return problem
 
-
+def json2problem_dir(indir, outdir):
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    for fname in sorted(os.listdir(indir)):
+        fbase, fext = os.path.splitext(fname)
+        if fext != '.json':
+            continue
+        print(fname)
+        with open(os.path.join(indir,fname)) as fp:
+            problem_json = json.load(fp)
+        fbase = problem_json['Definition']['class_name']
+        with open(os.path.join(outdir, fbase+'.py'), 'w') as fp:
+            fp.write(json2problem(problem_json))
 
 if __name__ == '__main__':
-#     with open('res/text&code5/AmoebaDivTwo.py') as f:
+#     with open('res/text&code5/AlienAndPassword.py') as f:
 #         problem = f.read()
 #     parse = parse_problem(problem)
 # #     with open('res/parse', 'w') as f:
@@ -217,27 +229,14 @@ if __name__ == '__main__':
 
 #     indir = 'res/brute_force_easy/'
 #     outdir = 'res/problems_test/'
-#     if not os.path.exists(outdir):
-#         os.mkdir(outdir)
-#     for fname in sorted(os.listdir(indir)):
-#         fbase, fext = os.path.splitext(fname)
-# #         if fext == '.py':
-# #             os.remove(os.path.join(dir,fname))
-#         if fext != '.json':
-#             continue
-#         print(fname)
-#         with open(os.path.join(indir,fname)) as fp:
-#             problem_json = json.load(fp)
-#         fbase = problem_json['Definition']['class_name']
-#         with open(os.path.join(outdir, fbase+'.py'), 'w') as fp:
-#             fp.write(json2problem(problem_json))
+#     json2problem_dir(indir, outdir)
 
-    root = codeline_gen_dep.Node('ROOT-0')
-    sentence = 'hello, how are you'
-    deps = sentence2dependencies(sentence)[0]
-    deps = codeline_gen_dep.clean_dependencies(deps)
-    print(deps)
-    print(root.deps2tree(deps))
+#     root = codeline_gen_dep.Node('ROOT-0')
+#     sentence = 'hello, how are you'
+#     deps = sentence2dependencies(sentence)[0]
+#     deps = codeline_gen_dep.clean_dependencies(deps)
+#     print(deps)
+#     print(root.deps2tree(deps))
 
 
     indir = 'res/text&code5/'

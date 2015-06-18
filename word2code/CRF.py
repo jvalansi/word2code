@@ -291,12 +291,12 @@ def join_files(files_dir, fnames):
                     outfile.write(line)
                 outfile.write('\n\n')
 
-def test(train_dir,test_dir,output_dir):
+def test(train_dir, output_dir, test_dir=None, features=1):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)
-#     with open(output_dir,'w') as outputfile:
-#         pass
+    if not test_dir:
+        test_dir = train_dir
     test_fnames = sorted(os.listdir(test_dir))
     train_fnames = sorted(os.listdir(train_dir))
     for index,fname in enumerate(test_fnames):
@@ -305,7 +305,7 @@ def test(train_dir,test_dir,output_dir):
         if fname in train_fnames:
             train_fnames_.remove(fname)
         join_files(train_dir, train_fnames_)
-        cmd = '/home/jordan/Downloads/CRF++-0.58/crf_learn res/features res/train res/model'
+        cmd = '/home/jordan/Downloads/CRF++-0.58/crf_learn res/features{} res/train res/model'.format(features)
         output = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
         cmd = '/home/jordan/Downloads/CRF++-0.58/crf_test -v2 -m res/model {}'.format(os.path.join(test_dir,fname))
         output = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
@@ -320,8 +320,11 @@ def test(train_dir,test_dir,output_dir):
 
 
 prediction_pattern = r'\w+/\d\.\d+'
-line_pattern = r'\S+\s+\S+\s+\w+\s+(?:'+prediction_pattern+r'\s+)+'
-sentence_pattern = r'#\s+\d\.\d+\n(?:'+line_pattern+r')+'
+line_pattern = r'(?:\S+)\s+(?:\w+\s+)+(?:\w+)\s+(?:'+prediction_pattern+r'\s+)+'
+# named_line_pattern = r'(:P<word>\S+)\s+(:P<features>(?:\S+\s+)+)(:P<label>\w+)\s+(:P<predictions>(?:'+prediction_pattern+r'\s+)+)'
+# named_line_pattern = r'(:P<word>\S+)\s+(?:\w+\s+)+(:P<label>\w+)\s+(?:'+prediction_pattern+r'\s+)+'
+named_line_pattern = r'(?P<line>(?P<word>\S+)\s+(?P<features>(?:\w+\s+)+)(?P<label>\w+)\s+(?P<prediction>'+prediction_pattern+')\s+(?P<probs>(?:'+prediction_pattern+r'\s+)+))'
+sentence_pattern = r'#\s+\d\.\d+\n(?P<lines>(?:'+named_line_pattern+r')+)'
 
 def output2json(output):
     sentences_json = []
@@ -329,15 +332,20 @@ def output2json(output):
     sentences = re.findall(sentence_pattern, output)
     for sentence in sentences:
         lines_json = []
-        lines = re.findall(line_pattern, sentence)
+        lines = re.findall(named_line_pattern, sentence[0])
         for line in lines:
-            word,pos,label = line.split()[:3]
-            predictions = re.findall(prediction_pattern, line)
-            predictions = [(prediction.split('/')[1], prediction.split('/')[0]) for prediction in predictions]
-            prediction = predictions[0]
-            probs = predictions[1:]
-            probs = sorted(probs, reverse = True)
-            d = {'word':word,'pos':pos,'label':label,'prediction':prediction,'probs':str(probs)}
+            m = re.match(named_line_pattern, line[0])
+            d = m.groupdict()
+            d['features'] = d['features'].split()
+            d['probs'] = str([(prediction.split('/')[1], prediction.split('/')[0]) for prediction in d['probs'].split()])
+            d['prediction'] = (d['prediction'].split('/')[1], d['prediction'].split('/')[0])
+#             word,pos,feature,label = line.split()[:4]
+#             predictions = re.findall(prediction_pattern, line)
+#             predictions = [(prediction.split('/')[1], prediction.split('/')[0]) for prediction in predictions]
+#             prediction = predictions[0]
+#             probs = predictions[1:]
+#             probs = sorted(probs, reverse = True)
+#             d = {'word':word, 'pos':pos, 'feature':feature, 'label':label, 'prediction':prediction, 'probs':str(probs)}
 #                 lines_json.append(' '.join([word,pos,label,str(prediction),str(probs)]))
             lines_json.append(d)
         sentences_json.append(lines_json)

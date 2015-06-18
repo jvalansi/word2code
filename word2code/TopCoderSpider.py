@@ -17,9 +17,7 @@ import problem
 
 class TopCoderSpider:
     def __init__(self):
-
         self.base_url = 'http://community.topcoder.com'
-
 
     def auth(self,link):
         print(link)
@@ -49,15 +47,18 @@ class TopCoderSpider:
                 problem_links.append(href)
         return problem_links
 
-    def get_problems(self, ):
+    def get_problems(self, path, root):
         pattern = r'/stat\?c=problem_statement&pm=(\d+)'
-        problem_links = self.getLinks(rootsoup,pattern)
+        rootsoup = self.link2soup(root)
+        problem_links = self.get_links(rootsoup,pattern)
+        if not os.path.exists(path):
+            os.mkdir(path)
         print(len(problem_links))
         for link in problem_links:
-            soup = tcs.link2soup(link)
+            soup = self.link2soup(link)
             m = re.search(pattern, link)
             name = m.group(1)
-            fname = 'res/brute_force_easy/'+name
+            fname = os.path.join(path, name)
             print(name)
             if os.path.isfile(fname):
                 continue
@@ -178,15 +179,16 @@ if __name__ == '__main__':
     root = "/tc?module=ProblemArchive&sr=1&er=100&sc=&sd=&class=&cat=Brute+Force&div1l=&div2l=1&mind1s=&mind2s=&maxd1s=&maxd2s=&wr="
 #     rootsoup = tcs.link2soup(root)
 
-    dir = 'res/brute_force_easy/'
+    path = 'res/brute_force_easy/'
+#     tcs.get_problems(path, root)
 #     fname = '10152'
 #     tcs.parse_problem(os.path.join(dir,fname))
-    for fname in sorted(os.listdir(dir)):
+    for fname in sorted(os.listdir(path)):
         if not re.match('^\d+$', fname):
             continue
         print(fname)
 #         soup = tcs.link2soup(link)
-        tcs.parse_problem(dir + fname)
+        tcs.parse_problem(os.path.join(path, fname))
 
 #     detail_links = tcs.getLinks(rootsoup,r'/tc\?module=ProblemDetail&rd=\d+&pm=\d+')
 #     for link in detail_links:

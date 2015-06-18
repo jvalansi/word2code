@@ -15,16 +15,21 @@ import logger
 
 
 class Node:
-    def __init__(self, name = '', parent = None, children = None):
+    def __init__(self, name = '', parent = None, children = None, ntype = None):
         self.name = name
         self.parent = parent
+        self.ntype = ntype
         if not children:
             self.children = []
     
     def deps2tree(self, deps):
         for dep in deps:
+            if dep[-2] == dep[-1]: #prevent loop
+                continue
             if dep[-2] == self.name:
                 node = Node(dep[-1],self)
+                if len(dep) > 2:
+                    node.ntype = dep[0]
                 self.children.append(node)
                 node.deps2tree(deps)
         return self
@@ -32,7 +37,7 @@ class Node:
     def tree2deps(self):
         deps = []
         for child in self.children:
-            deps.append([self.name,child.name])
+            deps.append([child.ntype, self.name, child.name])
             deps.extend(child.tree2deps())
         return deps
 
@@ -65,12 +70,18 @@ class Node:
     #         split args
     #         for each arg:
     #             repeat
-        m = re.match('\s*(?P<func>\w+)?(?:[\(\[](?P<args>.+)[\)\]])?\s*', code)
+        print(code)
+        m = re.match('\s*(?:(?P<ntype>\w+)=)?(?P<func>\w+)?(?:[\(\[](?P<args>.+)[\)\]])?\s*', code)
+        ntype = m.group('ntype')
+        print(ntype)
         func = m.group('func')
+#         print('func: '+str(func)+' ntype: '+str(ntype))
         if func:
             func_node = Node(func)
-            self.children.append(func_node)
             func_node.parent = self
+            if ntype:
+                func_node.ntype = ntype
+            self.children.append(func_node)
         else:
             func_node = self
         args = m.group('args')
@@ -80,18 +91,31 @@ class Node:
         for arg in args:
             func_node.code2tree(arg)
         
-
     def __str__(self):
-        s = self.name
-#         print('s: '+ self.name)
+        s = ''
+        if self.ntype:
+            s = self.ntype + '='
+        s += self.name
         if self.children:
             s += '('
             s += ', '.join([str(child) for child in self.children])
             s += ')'
         return s
         
+    def get_nodes(self):
+        nodes = []
+        nodes.append(self.name)
+        for child in self.children:
+            nodes.extend(child.get_nodes())
+        return nodes
+        
+        
 def dep2word(dep):
     return re.search('(\w+)?-\d+', dep).group(1)
+
+def dep2dict(dep):
+    m = re.search('(?P<word>\w+)?-(?P<ind>\d+)', dep)
+    return m.groupdict()
 
 # filter dependencies according to words
 #     unimportant words should be contracted to their parents
@@ -238,11 +262,11 @@ if __name__ == '__main__':
 #     words = ['hello', 'friend', 'you']
 #     print(filter_dep(deps[0], words))
 
-    code = 'return(min([mapping(possibility) for possibility in possibilities]))'
+    code = 'return(min([mapping(bla=possibility) for possibility in possibilities]))'
 #     parse = ast.parse(code)
 #     print(ast.dump(parse,False, True))
 #     eval(ast.dump(parse))
-
+    
     root = Node('ROOT')
     root.code2tree(code)
     print(root)

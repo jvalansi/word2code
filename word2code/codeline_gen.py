@@ -18,6 +18,7 @@ import traceback
 from utils import *
 import itertools
 import operator
+from word2codeword import is_func
 
 N = 2
 input_array = range(N)
@@ -258,13 +259,6 @@ def all_possible_trees(funcs, arrays, primitives):
 #         codewords.append(likelihoods)
 #     return codewords
 
-def is_func(codeword):
-    try:
-        isfunc = codeword in ['return', 'mapping', 'valid']
-        isfunc |= hasattr(eval(codeword), '__call__')
-    except Exception:
-        isfunc = False
-    return isfunc
 
 
 def check_translation(sentence, translation, codeline):

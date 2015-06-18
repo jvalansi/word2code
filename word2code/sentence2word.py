@@ -21,6 +21,9 @@ from utils import *
 from collections import Counter
 import codeline_gen
 from word2codeword import word2codewords, clean_word, codeword_dict, is_func
+from stanford_corenlp import sentence2dependencies, tokenize_sentences
+from codeline_gen_dep import dep2dict
+from matplotlib.pyplot import imshow
 
 
 mapping = lambda x: x
@@ -88,9 +91,31 @@ def get_type(codewords):
 #     print(codewords[0])
     return ''
 
+def get_features(sentence):
+#     sentwords = nltk.word_tokenize(sentence.lower())
+    sentwords = tokenize_sentences(sentence)[0]
+#     print(sentwords)
+    dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
+    features = ['O']*len(sentwords)
+    for dep in dependencies:
+        m0 = dep2dict(dep[-1])
+        m1 = dep2dict(dep[-2])
+#         if m0['word'] != sentwords[int(m0['ind'])-1]:
+#             print(m0['word'])
+#         if m1['word'] != sentwords[int(m1['ind'])-1]:
+#             print(m1['word'])
+        features[int(m0['ind'])-1] = 'I'
+        features[int(m1['ind'])-1] = 'I'
+    for dep in dependencies:
+        m = dep2dict(dep[-1])
+        features[int(m['ind'])-1] = dep[0] 
+    return features
+
 def label_sentence_by_type(sentence,translations,code):
-    sentwords = nltk.word_tokenize(sentence.lower())
+#     sentwords = nltk.word_tokenize(sentence.lower())
+    sentwords = tokenize_sentences(sentence.lower())[0]
     pos = zip(*nltk.pos_tag(sentwords))[1]
+    features = get_features(sentence)
     N = len(sentwords)
     labels = ['O'] * N
     for translation,codeline in zip(translations,code):
@@ -117,7 +142,7 @@ def label_sentence_by_type(sentence,translations,code):
         labels = [ 'var' if var_words[i] else labels[i] for i in range(N)]
 #     if labels == ['O'] * N:
 #         return None
-    return zip(sentwords,pos,labels)
+    return zip(sentwords, pos, features, labels)
 
 
 def label_sentence(sentence,translations,code):
@@ -138,6 +163,22 @@ def label_sentence(sentence,translations,code):
         labels = [ labelwords[transwords.index(sentwords[i])] if sentwords[i] in relevantwords else labels[i] for i in range(N)]
     return zip(sentwords,pos,labels)
 
+def label_problem(problem, only_code=False):
+    parse = parse_problem(problem)
+    problem_labels = []
+    for sentence_parse in parse['sentences']:
+        sentence = sentence_parse['sentence']
+        translations = sentence_parse['translations']
+        code = sentence_parse['code']
+        if only_code and not code: #TODO: ?
+            continue
+#             labels = label_sentence(sentence, translations, code)
+        labels = label_sentence_by_type(sentence, translations, code)
+#         if not labels:
+#             continue
+        problem_labels.append(labels)
+    return problem_labels 
+
 def build_train(indir, outdir):
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
@@ -146,23 +187,10 @@ def build_train(indir, outdir):
         print(fname)
         with open(os.path.join(indir,fname),'r') as fp:
             problem = fp.read()
-        parse = parse_problem(problem)
-        problem_labels = []
-        for sentence_parse in parse['sentences']:
-            sentence = sentence_parse['sentence']
-            translations = sentence_parse['translations']
-            code = sentence_parse['code']
-#             if not sentence or not code:
-#                 continue
-#             labels = label_sentence(sentence, translations, code)
-            labels = label_sentence_by_type(sentence, translations, code)
-            if not labels:
-                continue
-            problem_labels.append(labels)
+        problem_labels = label_problem(problem) 
         fileBase, fileExtension = os.path.splitext(fname)
         with open(os.path.join(outdir,fileBase+'.label'),'w') as f:
             f.write('\n\n'.join(['\n'.join(['\t'.join(label) for label in labels]) for labels in problem_labels]))
-
 
 def get_label_probs(sentence, label):
     sentprobs = []
@@ -194,11 +222,11 @@ def check_problem(json_dir,fname,n):
 #         check if n most probable mappings contain all mappings
     problem_result = []
     for sentence in problem_json:
-#         for word_type in types:
-#             result = check_type(sentence, word_type, n)
-#             problem_result.append(result)
-        result = check_type(sentence, 'var', n)
-        problem_result.append(result)
+        for word_type in types:
+            result = check_type(sentence, word_type, n)
+            problem_result.append(result)
+#         result = check_type(sentence, 'var', n)
+#         problem_result.append(result)
     return problem_result
 
 def calc_score(json_dir,n):
@@ -212,50 +240,48 @@ def calc_score(json_dir,n):
         else:
             logger.logging.info(fname)
         total += any(problem_result)
-    print(total)
-    print(float(len(correct))/total)
+#     print(total)
+    if total:
+        print(float(len(correct))/total)
     return correct
 
 
 if __name__ == '__main__':
-#     phrase = 'the correct array can be done from S by remove exactly 1 element'
-#     phrase = 'Return the number of different passwords Fred needs to try.'
-#     phrase2codewords(phrase)
-
-#     word = 'top'
-#     codeword = 'successive'
-#     print(w2v.model.similarity(word.lower(), codeword))
-#     print(word2codewords(word))
 
     indir = 'res/text&code5/'
 #     print(check_sentences(indir,4))
 #     print(Counter(non_relevant))
 
     train_dir = 'res/word_train'
-    build_train(indir, train_dir)
+#     build_train(indir, train_dir)
 #     print(non_callable)
 
 #     test_indir = 'res/problems_test/'
-#     test_dir = 'res/word_test'
+    test_dir = 'res/word_test'
 #     build_train(test_indir, test_dir)
 
     output_dir = 'res/word_json'
-    output_dir = 'res/word_json_small'
-    CRF.test(train_dir, train_dir, output_dir)
+    output_dir_small = 'res/word_json_small'
+#     CRF.test(train_dir, output_dir_small, features=2)
+    CRF.test(train_dir, output_dir, test_dir, features=2)
 
-    m = 4
-    print(calc_score(output_dir, m))
-
-#     fname = 'AverageAverage.label'
+#     m = 2
+#     scores = {}
+#     for m in range(1,20):
+#         scores[m] = len(calc_score(output_dir, m))
+#     print(scores)
+#     import matplotlib.pyplot as plt
+#     plt.plot(scores.values())
+#     plt.ylabel('some numbers')
+#     plt.show()
+    
+    fname = 'AverageAverage.label'
 #     fname = 'BlockTower.label'
 #     fname = 'ChocolateBar.label'
 #     fname = 'CompetitionStatistics.label'
+#     fname = 'CucumberMarket.label'
+#     fname = 'DifferentStrings.label'
+#     fname = 'FarFromPrimes.label'
 #     fname = 'Elections.label'
+#     fname = 'LittleElephantAndBallsAgain.label'
 #     print(check_problem(output_dir, fname, m))
-
-#     funcs = ['indexOf', 'sorted', 'itemgetter']
-#     vars = ['input_array', 'input_int']
-#     possible_code = get_possible_code(funcs, vars)
-#     print(len(possible_code))
-#     with open('res/possible_code','w') as f:
-#         f.write('\n'.join(possible_code))
