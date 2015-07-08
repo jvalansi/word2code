@@ -14,7 +14,7 @@ class WordCount:
         return data
 
     def tuple2file(self,t,data_name):
-        with open('count_'+data_name+'.txt', 'w') as f:
+        with open('res/count_'+data_name+'.txt', 'w') as f:
             json.dump(t, f, ensure_ascii=False, indent = 4, separators=[',',': '])
 
     def count_words(self,data,data_name):
@@ -55,7 +55,12 @@ class WordCount:
 
 
 if __name__ == '__main__':
-    main_data_dir = 'res/brute_force_easy/'
+#     main_data_dir = 'res/brute_force_easy/'
     wc = WordCount()
-    wc.compare_count(main_data_dir, '>')
+#     wc.compare_count(main_data_dir, '>')
+
+    fpath = 'res/intersection'
+    with open(fpath) as f:
+        data = f.read()
+    wc.count_words(data, 'data') 
 

@@ -26,7 +26,6 @@ def tokenize_sentences(sentences):
     parser = StanfordNLP()
     parse = parser.parse(sentences)
     sentences_words = [[word[0] for word in sentence_parse['words']] for sentence_parse in parse['sentences']]
-    print()
     return sentences_words
     
 if __name__ == '__main__':

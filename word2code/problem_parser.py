@@ -65,10 +65,11 @@ def parse_problem(problem):
     parse['vars'] = re.findall(class_vars_pattern,problem)
     example_pattern = r'\s*def\s+example\d+\(\):\s*\n(?:[^\n]*\w[^\n]+\n)+'
     parse['example'] = re.findall(example_pattern, problem)
-    main_pattern = r'\s*if\s+__name__\s*==\s*\'__main__\'\s*:\s*\n.*'
+    main_pattern = r'\s*if\s+\(?__name__\s*==\s*\'__main__\'\)?\s*:\s*\n.*'
     parse['main'] = re.findall(main_pattern,problem)
-    method_pattern = r'\s*def\s+.+\(.*\):\s*'
-    sentences_pattern = r'(?:\s*#[^#].+\n)(?:'+method_pattern+r'\n)?(?:\s*####.+\n.+\n)*'
+    sentence_method_pattern = r'\s*def\s+.+\([^\)]*\):\s\n*'
+    code_pattern = r'[^#\n]*\w[^#\n]+\n'
+    sentences_pattern = r'(?:\s*#[^#].+\n)(?:'+sentence_method_pattern+r'\n)?(?:\s*####.+\n.+\n)*(?:'+code_pattern+')*'
 #     sentences_pattern = '(?:[ \t\r\f\v]*#[^#].+\n)+'
     sentences = re.findall(sentences_pattern,problem)
     parse['sentences'] = [parse_sentence(sentence) for sentence in sentences]
@@ -88,16 +89,24 @@ def parse_content(content):
 
 def parse_sentence(sentence):
     parse = {}
-    method_pattern = r'\s*def\s+.+\(.*\):\s*'
-    comment_pattern = r'(\s*#[^#].+\n)(?:'+method_pattern+r'\n)?(?:\s*####.+\n.+\n)*'
-    comments = re.findall(comment_pattern, sentence)
+    sentence_method_pattern = r'\s*def\s+.+\(.*\):\s*'
+    code_pattern = r'^[^#\n]*\w[^#\n]+\n'
+    comment_pattern = r'(\s*#[^#].+\n)(?:'+sentence_method_pattern+r'\n)?(?:\s*####.+\n.+\n)*(?:'+ code_pattern +r')*'
+    comments = re.findall(comment_pattern, sentence, re.MULTILINE)
     parse['sentence'] = ' '.join([re.sub(r'^\s*#','',comment) for comment in comments])
-    method_pattern = r'(?:\s*#[^#].+\n)('+method_pattern+r'\n)?(?:\s*####.+\n.+\n)*'
-    parse['method'] = re.findall(method_pattern, sentence)
+    method_pattern = r'(?:\s*#[^#].+\n)('+sentence_method_pattern+r'\n)?(?:\s*####.+\n.+\n)*(?:'+ code_pattern +r')*'
+    parse['method'] = re.findall(method_pattern, sentence, re.MULTILINE)
     translation_pattern = r'(?:\s*####(.+\n).+\n)'
-    parse['translations'] = re.findall(translation_pattern, sentence)
-    code_pattern = r'(?:\s*####.+\n(.+\n))'
-    parse['code'] = re.findall(code_pattern, sentence)
+    parse['translations'] = re.findall(translation_pattern, sentence, re.MULTILINE)
+    codeline_pattern = r'(?:\s*####.+\n(.+\n))'
+    parse['code'] = re.findall(codeline_pattern, sentence, re.MULTILINE)
+#     extra_code_pattern = r'(?:\s*#[^#].+\n)(?:'+sentence_method_pattern+r'\n)?(?:\s*####.+\n.+\n)*('+ code_pattern +r')*'
+    extra_code_pattern = code_pattern 
+    extra_code = re.findall(extra_code_pattern, sentence, re.MULTILINE)
+    for codeline in extra_code:
+        if codeline in parse['code'] or codeline in parse['method']:
+            continue
+        parse['code'].append(codeline)
     return parse
 
 def parse_dir(problem_dir):
@@ -108,9 +117,18 @@ def parse_dir(problem_dir):
             parses.append(parse_problem(problem))
     return parses
 
+def print_deps(parse):
+    deps = sentence2dependencies(parse['sentence'])[0]
+#     sentence += '\n'.join([indenter*indent+'# '+str(dep) for dep in deps]) +'\n'
+    root = codeline_gen_dep.Node('ROOT-0')
+#     deps = codeline_gen_dep.clean_dependencies(deps)
+    return str(root.deps2tree(deps))
+
+
 def compose_sentence(parse):
     sentence = ''
     sentence += indenter*2 + '# ' + parse['sentence'].strip() + '\n'
+#     sentence += indenter*2 + '\' ' + parse['sentence'].strip() + '\'\n'
     if not parse['code']:
         return sentence
     if parse['method'][0]:
@@ -121,11 +139,7 @@ def compose_sentence(parse):
             translation = parse['translations'][i]
             sentence += indenter*indent + '#### ' + translation.strip() + '\n'
         sentence += indenter*indent + codeline.strip() + '\n'
-    deps = sentence2dependencies(parse['sentence'])[0]
-#     sentence += '\n'.join([indenter*indent+'# '+str(dep) for dep in deps]) +'\n'
-    root = codeline_gen_dep.Node('ROOT-0')
-#     deps = codeline_gen_dep.clean_dependencies(deps)
-    sentence += indenter*indent+'# '+ str(root.deps2tree(deps)) + '\n'
+#     sentence += indenter*indent+'# '+ print_deps(parse) + '\n'
     return sentence
 
 indenter = ' '*4

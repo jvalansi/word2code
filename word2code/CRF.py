@@ -291,7 +291,7 @@ def join_files(files_dir, fnames):
                     outfile.write(line)
                 outfile.write('\n\n')
 
-def test(train_dir, output_dir, test_dir=None, features=1):
+def test(train_dir, output_dir, test_dir=None, features=2):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)

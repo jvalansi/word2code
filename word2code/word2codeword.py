@@ -180,7 +180,7 @@ def check_words(path, p_thresh):
 if __name__ == '__main__':
     p_thresh = 1
     p = 4
-    problem_dir = 'res/text&code5'
+    problem_dir = 'res/text&code6'
 #     print(check_words(problem_dir, p_thresh))
 #     print(check_words(problem_dir, p))
     fname = 'AverageAverage.py'
@@ -196,13 +196,21 @@ if __name__ == '__main__':
 #     fname = 'Multiples.py'
 
     p = 4
-    print(check_problem(problem_dir, fname, p))
+#     print(check_problem(problem_dir, fname, p))
 
-#     results = {}
-#     for p in range(1,20):
-#         results[p] = check_words(problem_dir, p)
-#     print(', '.join(['{}: {}'.format(k, len(v)) for k, v in results.items()]))
+    results = {}
+    for p in range(1,20):
+        results[p] = check_words(problem_dir, p)
+    print(', '.join(['{}: {}'.format(k, len(v)) for k, v in results.items()]))
         
+#     problem_dir = 'res/text&code5'
+#     1: 19, 2: 20, 3: 22, 4: 23, 5: 23, 6: 23, 7: 23, 8: 23, 9: 24, 10: 24, 11: 24, 1
+#     2: 24, 13: 24, 14: 24, 15: 25, 16: 26, 17: 26, 18: 29, 19: 30        
+        
+#     problem_dir = 'res/text&code6'
+#     1: 37, 2: 38, 3: 40, 4: 41, 5: 41, 6: 41, 7: 41, 8: 41, 9: 42, 10: 42, 11: 42, 1
+#     2: 44, 13: 44, 14: 44, 15: 45, 16: 46, 17: 46, 18: 49, 19: 50        
+
 #     results = []
 #     similarities = [wn.wup_similarity,
 #                 wn.jcn_similarity,

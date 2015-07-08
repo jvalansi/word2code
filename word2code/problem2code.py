@@ -18,6 +18,7 @@ from codeline_gen import all_possible_trees
 from utils import *
 import numpy
 import shutil
+import imp
 
 def get_possible_sentence_type(sentences_json, sentence, n):
     sentind = sentences_json.index(sentence)
@@ -121,16 +122,16 @@ def generate_possible_code(word_json, translations_count, p_thresh, sentence_par
 #         print(codeline)
     for word_type in sentence2word.types:
 #         print(word_type)
-#         important_words = get_important_words(word_json, word_type)
+        important_words = get_important_words(word_json, word_type)
 #         print("important_words")
 #         print(important_words)
-#         type_codewords = get_type_codewords(important_words, translations_count, p_thresh)
+        type_codewords = get_type_codewords(important_words, translations_count, p_thresh)
 #         print("type_codewords")
 #         print(type_codewords)
-#         type_codelines = get_type_codelines(word_type, type_codewords)
-        type_codelines = get_type_codelines(word_type, [])
-        print("type_codelines")
-        print(type_codelines)
+        type_codelines = get_type_codelines(word_type, type_codewords)
+#         type_codelines = get_type_codelines(word_type, [])
+#         print("type_codelines")
+#         print(type_codelines)
 #         if codeline.strip() not in type_codelines:
 #             print(False)
         possible_codes.append(type_codelines)
@@ -148,25 +149,21 @@ def generate_possible_code(word_json, translations_count, p_thresh, sentence_par
 #     print(len(list(product(* possible_code))))
     return product_code
 
-def check_solution(solution, fname, soln=0):
-    with open('temp.py', 'w') as f:
-        f.write(compose_problem(solution))
-    if os.path.exists('temp.pyc'):
-        os.remove('temp.pyc')
-    import temp
-    reload(temp)
+def check_solution(problem_path, soln=1):
+#     with open('temp.py', 'w') as f:
+#         f.write(compose_problem(solution))
+#     import temp
+#     reload(temp)
     try:
+        if os.path.exists(problem_path+'c'):
+            os.remove(problem_path+'c')
+        temp = imp.load_source('tmp', problem_path)
         for i in range(soln):
             name = 'example' + str(i)
             if hasattr(temp, name):
                 result = getattr(temp, name)() 
             if not result:
                 return False
-        sol_dir = 'res/solutions/'
-        if not os.path.exists(sol_dir):
-            os.mkdir(sol_dir)
-        with open(os.path.join(sol_dir, fname), 'w') as f:
-            f.write(compose_problem(solution))
         return True
     except Exception:
 #                 traceback.print_exc()
@@ -188,6 +185,10 @@ def build_return(types):
     return base_pattern.format(reduce0, mapping0, valid0, valid0_, mapping0_, reduce0_)
 
 def check_solutions(possible_solutions, parse, possible_types, tries, fname):
+    sol_dir = 'res/solutions/'
+    if not os.path.exists(sol_dir):
+        os.mkdir(sol_dir)
+    fpath = os.path.join(sol_dir, fname)
     return_statement = build_return(possible_types)
     for j, possible_codes in enumerate(product(* possible_solutions)):
         if not j%1000:
@@ -208,12 +209,14 @@ def check_solutions(possible_solutions, parse, possible_types, tries, fname):
                 new_parse['sentences'][sentence_idx]['method'] = ['def '+sentence_type+'0(input_array):']
                 new_parse['sentences'][sentence_idx]['code'] = possible_code
             else:
-#                 new_parse['sentences'][sentence_idx]['code'] = possible_code[:-1] + (return_statement,)
-                new_parse['sentences'][sentence_idx]['code'] = possible_code
+                new_parse['sentences'][sentence_idx]['code'] = possible_code[:-1] + (return_statement,)
+#                 new_parse['sentences'][sentence_idx]['code'] = possible_code
 
 #         if i > indexOf(possible_codes, code):
 #             return False
-        if check_solution(new_parse, fname):
+        with open(fpath, 'w') as f:
+            f.write(compose_problem(new_parse))
+        if check_solution(fpath):
             return True
         if success:
             return True
@@ -244,10 +247,11 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p_thresh, tr
         if not sentence_type:
             continue
         possible_types.append((i, sentence_type))
-        possible_codes = generate_possible_code(word,
-                                                translations_count,
-                                                p_thresh,
-                                                sentence_parse)
+#         possible_codes = generate_possible_code(word,
+#                                                 translations_count,
+#                                                 p_thresh,
+#                                                 sentence_parse)
+        possible_codes = []
 #         print(len(list(possible_codes)))
 #         code = tuple(codeline.strip() for codeline in sentence_parse['code'])
 #         if code in possible_codes:
@@ -312,7 +316,7 @@ def check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thr
         .intersection(set(codeline_score1)))
     return sorted(list(result))
 
-def check_all_problems_intersection(sentence_dir, word_dir, problem_dir):
+def check_all_problems_intersection(sentence_dir, word_dir, problem_dir, intersections_path):
     sentence_score = {}
     for n in range(1,5):
         sentence_score[n] = problem2sentence.calc_score(sentence_dir, n)
@@ -329,15 +333,14 @@ def check_all_problems_intersection(sentence_dir, word_dir, problem_dir):
         codeword_score[p] = word2codeword.check_words(problem_dir, p_thresh)
         codeword_score[p] = clean_names(codeword_score[p])
 
-    codeline_score1 = codeline_gen.check_sentences(problem_dir)
-    codeline_score1 = clean_names(codeline_score1)
+#     codeline_score1 = codeline_gen.check_sentences(problem_dir)
+#     codeline_score1 = clean_names(codeline_score1)
 
 #     codeline_score2 = codeline_gen_dep.check_sentences(problem_dir, 4)
 #     codeline_score2 = [os.path.splitext(fname)[0] for fname in codeline_score2]
 
 #     print('wo dep: '+ str(set(problem_score).intersection(set(word_score)).intersection(set(codeword_score)).intersection(codeline_score1)))
     summary = ""
-    intersections_path = 'res/intesections'
     if os.path.exists(intersections_path):
         shutil.rmtree(intersections_path)
     os.mkdir(intersections_path)
@@ -349,12 +352,14 @@ def check_all_problems_intersection(sentence_dir, word_dir, problem_dir):
             for p in range(1,5):
                 s = ""
                 for fname in sorted(clean_names(os.listdir(problem_dir))):
-                    base_pattern = "{:30} : {:10} {:10} {:10} {:10}\n"
+#                     base_pattern = "{:30} : {:10} {:10} {:10} {:10}\n"
+                    base_pattern = "{:30} : {:10} {:10} {:10}\n"
                     in_sentence = fname in sentence_score[n]
                     in_word = fname in word_score[m]
                     in_codeword = fname in codeword_score[p]
-                    in_codeline = fname in codeline_score1
-                    s += base_pattern.format(fname, in_sentence, in_word, in_codeword, in_codeline)
+#                     in_codeline = fname in codeline_score1
+#                     s += base_pattern.format(fname, in_sentence, in_word, in_codeword, in_codeline)
+                    s += base_pattern.format(fname, in_sentence, in_word, in_codeword)
                 fname = 'intersection_{}_{}_{}'.format(n,m,p)
                 with open(os.path.join(intersections_path, fname), 'w') as f:
                     f.write(s)
@@ -372,18 +377,22 @@ def check_all_problems_intersection(sentence_dir, word_dir, problem_dir):
 
 if __name__ == '__main__':
     sentence_dir = 'res/sentence_json'
+    sentence_dir = 'res/sentence_json6'
 #     sentence_dir = 'res/sentence_json_small'
     n = 1
-    word_dir = 'res/word_json'
+#     word_dir = 'res/word_json'
+    word_dir = 'res/word_json6'
 #     word_dir = 'res/word_json_small'
     m = 3
     problem_dir = 'res/problems_test'
-#     problem_dir = 'res/text&code5'
+    problem_dir = 'res/text&code5'
+    problem_dir = 'res/text&code6'
 #     p_thresh = 0.5
     p = 1
 #     print(check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thresh))
  
-#     check_all_problems_intersection(sentence_dir, word_dir, problem_dir)
+    intersections_path = 'res/intesections6'
+    check_all_problems_intersection(sentence_dir, word_dir, problem_dir, intersections_path)
  
 #     results = {}
 #     for n in range(1,5):
@@ -398,7 +407,7 @@ if __name__ == '__main__':
                 
     tries = 100000
 #     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries))
-    print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries))
+#     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries))
 
 #     fname = 'AmoebaDivTwo.py'
 #     fname = 'AverageAverage.py'

@@ -15,6 +15,7 @@ import ast
 import CRF
 import shutil
 import logger
+from codeline_gen_dep import clean_codeline
 
 # get minimal continuous subset containing all relevant words
 # example:
@@ -32,21 +33,32 @@ def get_min_mask(sentwords,relevantwords):
                 return mask
     return [1] * N
 
-types = ['return', 'mapping', 'valid', 'reduce']
+types = ['return', 'mapping', 'valid', 'reduce', 'possibilities', 'types']
 # types = ['I']
+
+def clean_codeword(codeword):
+    return re.sub(r'\d?$', '', codeword)
 
 def get_type(sentence, translations, code, method):
     if method[0]:
         m = re.match(r'\s*def\s+(.+)\(.*\):\s*', method[0])
-        sentence_type = re.sub(r'\d?$', '', m.group(1))
+        sentence_type = clean_codeword(m.group(1))
         if sentence_type in types:
             return sentence_type
     if len(code) == 1:
         codewords = nltk.word_tokenize(code[0])
-        sentence_type = re.sub(r'\d?$', '', codewords[0])
+        sentence_type = clean_codeword(codewords[0])
         if sentence_type in types:
             return sentence_type
-    return types[0]
+        if sentence_type == 'def' and clean_codeword(codewords[1]) in types:
+            return clean_codeword(codewords[1])
+    else:
+        codewords = nltk.word_tokenize(code[-1])
+        if codewords[0] == 'return':
+            return 'return'
+    print(method)
+    print(code)
+    return None
 
 #     input: sentence, translated code, code
 #     output: labeled sentence
@@ -79,18 +91,21 @@ def build_train(indir, outdir):
         shutil.rmtree(outdir)
     os.mkdir(outdir)
     for fname in sorted(os.listdir(indir)):
+        print(fname)
         with open(os.path.join(indir,fname),'r') as f:
             problem = f.read()
         parse = parse_problem(problem)
         sentence_labels = []
         for sentence_parse in parse['sentences']:
             sentence = sentence_parse['sentence']
-            if not sentence:
-                continue
             translations = sentence_parse['translations']
             code = sentence_parse['code']
             method = sentence_parse['method']
+            if not code:
+                continue
             symbol = get_type(sentence, translations, code, method)
+            if not symbol:
+                continue               
             labels = label_sentence(sentence, translations, code, symbol)
             sentence_labels.append(labels)
         fileBase, fileExtension = os.path.splitext(fname)
@@ -164,20 +179,23 @@ if __name__ == '__main__':
 
 
     indir = 'res/text&code5/'
+    indir = 'res/text&code6'
     train_dir = 'res/sentence_train'
+    train_dir = 'res/sentence_train6'
     build_train(indir, train_dir)
  
-    indir = 'res/problems_test/'
-    test_dir = 'res/sentence_test'
-    build_train(indir, test_dir)
+#     indir = 'res/problems_test/'
+#     test_dir = 'res/sentence_test'
+#     build_train(indir, test_dir)
 
-    outdir = 'res/sentence_json'
+#     outdir = 'res/sentence_json'
 #     outdir = 'res/sentence_json_small'
-#     CRF.test(train_dir, outdir, features=2)
-    CRF.test(train_dir, outdir, test_dir, features=2)
+    outdir = 'res/sentence_json6'
+    CRF.test(train_dir, outdir, features=1)
+#     CRF.test(train_dir, outdir, test_dir, features=1)
 
-    n = 2
-#     print(calc_score(outdir, n))
+    n = 1
+    print(calc_score(outdir, n))
 
     fname = 'AverageAverage.label'
 #     fname = 'ChristmasTreeDecorationDiv2.label'

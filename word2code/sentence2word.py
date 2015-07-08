@@ -18,7 +18,6 @@ import ast
 import shutil
 
 from utils import *
-from collections import Counter
 import codeline_gen
 from word2codeword import word2codewords, clean_word, codeword_dict, is_func
 from stanford_corenlp import sentence2dependencies, tokenize_sentences
@@ -163,7 +162,7 @@ def label_sentence(sentence,translations,code):
         labels = [ labelwords[transwords.index(sentwords[i])] if sentwords[i] in relevantwords else labels[i] for i in range(N)]
     return zip(sentwords,pos,labels)
 
-def label_problem(problem, only_code=False):
+def label_problem(problem, only_code=True):
     parse = parse_problem(problem)
     problem_labels = []
     for sentence_parse in parse['sentences']:
@@ -179,7 +178,7 @@ def label_problem(problem, only_code=False):
         problem_labels.append(labels)
     return problem_labels 
 
-def build_train(indir, outdir):
+def build_train(indir, outdir, only_code=True):
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
     os.mkdir(outdir)
@@ -187,7 +186,7 @@ def build_train(indir, outdir):
         print(fname)
         with open(os.path.join(indir,fname),'r') as fp:
             problem = fp.read()
-        problem_labels = label_problem(problem) 
+        problem_labels = label_problem(problem, only_code=only_code) 
         fileBase, fileExtension = os.path.splitext(fname)
         with open(os.path.join(outdir,fileBase+'.label'),'w') as f:
             f.write('\n\n'.join(['\n'.join(['\t'.join(label) for label in labels]) for labels in problem_labels]))
@@ -248,22 +247,20 @@ def calc_score(json_dir,n):
 
 if __name__ == '__main__':
 
-    indir = 'res/text&code5/'
-#     print(check_sentences(indir,4))
-#     print(Counter(non_relevant))
+    indir = 'res/text&code6'
+#     train_dir = 'res/word_train'
+    train_dir = 'res/word_train6'
+    build_train(indir, train_dir)
 
-    train_dir = 'res/word_train'
-#     build_train(indir, train_dir)
-#     print(non_callable)
-
-#     test_indir = 'res/problems_test/'
-    test_dir = 'res/word_test'
+#     test_indir = 'res/problems_test'
+#     test_dir = 'res/word_test'
 #     build_train(test_indir, test_dir)
 
     output_dir = 'res/word_json'
     output_dir_small = 'res/word_json_small'
-#     CRF.test(train_dir, output_dir_small, features=2)
-    CRF.test(train_dir, output_dir, test_dir, features=2)
+    output_dir_small = 'res/word_json6'
+    CRF.test(train_dir, output_dir_small)
+#     CRF.test(train_dir, output_dir, test_dir)
 
 #     m = 2
 #     scores = {}

@@ -17,6 +17,7 @@ import shutil
 import json
 import numpy as np
 from sklearn.metrics import accuracy_score
+from pystruct.learners.structured_perceptron import StructuredPerceptron
 
 
 # sentence: Return the number of different passwords Fred needs to try.
@@ -168,8 +169,9 @@ def test(indir, outdir):
     os.mkdir(outdir)    
     features = get_features(indir)
     crf = EdgeFeatureGraphCRF(n_states=len(features[2]))
-    ssvm = OneSlackSSVM(crf, inference_cache=50, C=.1, tol=.1, max_iter=100,
-                        n_jobs=1)
+#     ssvm = OneSlackSSVM(crf, inference_cache=50, C=.1, tol=.1, max_iter=100,
+#                         n_jobs=1)
+    sp = StructuredPerceptron(crf)
     for fname in sorted(os.listdir(indir)):
         X_train, Y_train, X_test, Y_test = get_data(indir, fname, features)
 #         n_states = np.unique(np.hstack([y.ravel() for y in Y_train]))
@@ -182,14 +184,17 @@ def test(indir, outdir):
 # #             n_nodes = x[0].shape[0]
 # #             y = y.reshape(n_nodes)
 # #             print(y)
-        ssvm.fit(X_train, Y_train)
+#         ssvm.fit(X_train, Y_train)
+        sp.fit(X_train, Y_train)
         
         # Evaluate using confusion matrix.
-        Y_pred = ssvm.predict(X_test)
+#         Y_pred = ssvm.predict(X_test)
+        Y_pred = sp.predict(X_test)
         print(Y_test)
         print(Y_pred)
         if not Y_pred:
             continue
+        print("weights: {}".format(sp.w))
         print("Results using only directional features for edges")
         print("Test accuracy: %.3f"
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
@@ -208,3 +213,6 @@ if __name__ == '__main__':
     indir = outdir
     outdir = 'res/word_test_struct'
     test(indir, outdir)
+
+
+#TODO: use part of speech for node features
