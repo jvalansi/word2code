@@ -16,6 +16,8 @@ import CRF
 import shutil
 import logger
 from codeline_gen_dep import clean_codeline
+from code_parser import check_solution
+from itertools import combinations
 
 # get minimal continuous subset containing all relevant words
 # example:
@@ -25,13 +27,15 @@ from codeline_gen_dep import clean_codeline
 def get_min_mask(sentwords,relevantwords):
     relevantset = set(relevantwords)
     N = len(sentwords)
-    mask = [0] * N
-    for i in range(N):
-        for j in range(N-i):
-            if relevantset.issubset(sentwords[j:j+i]):
-                mask[j:j+i] = [1] * i
-                return mask
-    return [1] * N
+    mask = [1] * N
+    for i,j in combinations(range(N), 2):
+        if relevantset.issubset(sentwords[i:j]):
+            new_mask = [0] * N
+            new_mask[i:j] = [1] * (j-i)
+            if sum(new_mask) < sum(mask):
+                mask = new_mask
+    return mask
+
 
 types = ['return', 'mapping', 'valid', 'reduce', 'possibilities', 'types']
 # types = ['I']
@@ -40,6 +44,8 @@ def clean_codeword(codeword):
     return re.sub(r'\d?$', '', codeword)
 
 def get_type(sentence, translations, code, method):
+    if not code:
+        return None
     if method[0]:
         m = re.match(r'\s*def\s+(.+)\(.*\):\s*', method[0])
         sentence_type = clean_codeword(m.group(1))
@@ -86,32 +92,38 @@ def label_sentence(sentence,translations,code,symbol):
 #         labels[index] = 'B'+symbol
     return zip(sentwords,pos,labels)
 
+def label_problem(indir, outdir, fname):
+    with open(os.path.join(indir,fname),'r') as f:
+        problem = f.read()
+    parse = parse_problem(problem)
+    sentence_labels = []
+    for sentence_parse in parse['sentences']:
+        sentence = sentence_parse['sentence']
+        print(sentence)
+        translations = sentence_parse['translations']
+        code = sentence_parse['code']
+        method = sentence_parse['method']
+        if not code:
+            continue
+        symbol = get_type(sentence, translations, code, method)
+        print(symbol)
+        if not symbol:
+            continue               
+        labels = label_sentence(sentence, translations, code, symbol)
+        sentence_labels.append(labels)
+    fileBase, fileExtension = os.path.splitext(fname)
+    with open(os.path.join(outdir,fileBase+'.label'),'w') as f:
+        f.write('\n\n'.join(['\n'.join(['\t'.join(label) for label in labels]) for labels in sentence_labels]))
+
 def build_train(indir, outdir):
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
     os.mkdir(outdir)
     for fname in sorted(os.listdir(indir)):
         print(fname)
-        with open(os.path.join(indir,fname),'r') as f:
-            problem = f.read()
-        parse = parse_problem(problem)
-        sentence_labels = []
-        for sentence_parse in parse['sentences']:
-            sentence = sentence_parse['sentence']
-            translations = sentence_parse['translations']
-            code = sentence_parse['code']
-            method = sentence_parse['method']
-            if not code:
-                continue
-            symbol = get_type(sentence, translations, code, method)
-            if not symbol:
-                continue               
-            labels = label_sentence(sentence, translations, code, symbol)
-            sentence_labels.append(labels)
-        fileBase, fileExtension = os.path.splitext(fname)
-        with open(os.path.join(outdir,fileBase+'.label'),'w') as f:
-            f.write('\n\n'.join(['\n'.join(['\t'.join(label) for label in labels]) for labels in sentence_labels]))
-
+        if not fname.endswith('.py'):
+            continue
+        label_problem(indir, outdir, fname)
 
 def get_sentences_probabilities(problem_json, symbol):
     sentprobs = []
@@ -132,8 +144,17 @@ def get_sentences_probabilities(problem_json, symbol):
 #                 if line['label'] == line['prediction'][1]:
 #                     correct +=1
 #                 total += 1
-        sentprobs.append((sentprob,i,important))
+        sentprobs.append((sentprob,important,i))
+    sentprobs = sorted(sentprobs,reverse = True)
     return sentprobs
+
+def get_expected_sents(problem_json, symbol): 
+    expected_sents = []
+    for i,sentence in enumerate(problem_json):
+        for line in sentence:
+            if line['label'] == symbol:
+                expected_sents.append(i)
+    return expected_sents
 
 def check_problem(json_dir,fname,n):
 #         check if n most probable sentences contain all important sentences
@@ -142,21 +163,25 @@ def check_problem(json_dir,fname,n):
     results = []
     for sentence_type in types:
         sentprobs = get_sentences_probabilities(problem_json,sentence_type)
-        sentprobs = sorted(sentprobs,reverse = True)
-        result = all([not important for (sentprob,i,important) in sentprobs[n:]])
-#         if not result:
-        logger.logging.info(fname)
-        logger.logging.info(sentence_type)            
-        logger.logging.info(sentprobs)
+        probable_sents = zip(*sentprobs[:n])[-1]
+        expected_sents = get_expected_sents(problem_json,sentence_type)
+        result = set(expected_sents).issubset(set(probable_sents))
+#         result = all([not important for (sentprob,i,important) in sentprobs[n:]])
+        if not result:
+            logger.logging.info(fname)
+            logger.logging.info(sentence_type)            
+            logger.logging.info(sentprobs)
         results.append(result)
     return results
 
-def calc_score(json_dir,n=4):
+def calc_score(json_dir,n=4, problem_dir=None):
     correct = []
     total = 0
     fnames = sorted(os.listdir(json_dir))
 #     for problem in problems_json:
     for fname in fnames:
+        if problem_dir and not check_solution(os.path.join(problem_dir, re.sub('.label', '.py', fname))):
+            continue
         results = check_problem(json_dir,fname,n)
         if all(results):
             correct.append(fname)
@@ -168,38 +193,31 @@ def calc_score(json_dir,n=4):
 
 
 if __name__ == '__main__':
-#     with open('res/text&code3/AmoebaDivTwo.py') as f:
-#         problem = f.read()
-#     parse = parse_problem(problem)
-#     for sentence_parse in parse['sentences']:
-#         sentence = sentence_parse['sentence']
-#         translations = sentence_parse['translations']
-#         code = sentence_parse['code']
-#         print(label_sentence(sentence, translations, code))
 
+    main_indir = os.path.join('res', 'text&code5')
+    main_indir = os.path.join('res', 'text&code6')
+    main_train_dir = os.path.join(main_indir, 'sentence_train')
+    main_fname = 'ChocolateBar.py'
+    label_problem(main_indir, main_train_dir, main_fname)
+#     build_train(main_indir, main_train_dir)
 
-    indir = 'res/text&code5/'
-    indir = 'res/text&code6'
-    train_dir = 'res/sentence_train'
-    train_dir = 'res/sentence_train6'
-    build_train(indir, train_dir)
- 
 #     indir = 'res/problems_test/'
 #     test_dir = 'res/sentence_test'
-#     build_train(indir, test_dir)
+#     build_train(main_indir, main_test_dir)
 
 #     outdir = 'res/sentence_json'
 #     outdir = 'res/sentence_json_small'
-    outdir = 'res/sentence_json6'
-    CRF.test(train_dir, outdir, features=1)
-#     CRF.test(train_dir, outdir, test_dir, features=1)
+    main_outdir = os.path.join(main_indir, 'sentence_json')
+#     CRF.test(main_train_dir, main_outdir, features=1)
+#     CRF.test(main_train_dir, main_outdir, main_test_dir, features=1)
 
     n = 1
-    print(calc_score(outdir, n))
+#     print(calc_score(main_outdir, n, main_indir))
 
-    fname = 'AverageAverage.label'
+    main_fname = 'AverageAverage.label'
+    main_fname = 'ChocolateBar.label'
 #     fname = 'ChristmasTreeDecorationDiv2.label'
 #     fname = 'Elections.label'
 #     fname = 'FarFromPrimes.label'
 #     fname = 'LittleElephantAndBallsAgain.label'
-#     print(check_problem(outdir, fname,n))
+#     print(check_problem(main_outdir, main_fname,n))

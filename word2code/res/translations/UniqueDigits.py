@@ -4,7 +4,6 @@ class UniqueDigits:
     def count(self, n):
         input_int = n
         inf = 10000
-        integers = range(inf)
         # Given an int n find all positive integers less than n whose digits are all different.
         # ROOT-0(root=find-5(prep=Given-1(pobj=int-3(det=an-2)), nsubj=n-4, advmod=less-9(npadvmod=integers-8(det=all-6, amod=positive-7)), prep_than=n-11(rcmod=different-16(nsubj=digits-13(poss=whose-12), cop=are-14, advmod=all-15))))
         # root=find(nsubj=n, advmod=less(npadvmod=integers(det=all, amod=positive)), prep_than=n(rcmod=different(nsubj=digits(poss=whose), cop=are, advmod=all)))
@@ -16,7 +15,8 @@ class UniqueDigits:
         # ROOT-0(root=Return-1(dep=number-4(det=the-2, amod=total-3, prep_of=integers-7(amod=such-6))))
         number = len
         such = valid
-        return(number(filter(such, integers)))
+        integers = range
+        return(number(filter(such, integers(inf))))
 
 
 

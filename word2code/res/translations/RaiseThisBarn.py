@@ -21,7 +21,6 @@ class RaiseThisBarn:
         same = eq
         def valid(k):  return same(*list(contain(part, cows) for part in parts(k))) 
         # Return the number of possible positions for the wall.
-        # ROOT-0(root=Return-1(dep=number-3(det=the-2, prep_of=positions-6(amod=possible-5, prep_for=wall-9(det=the-8)))))
         # In other words, return the number of choices for the integer k such that all the conditions above are satisfied.
         number = len
         return(number(filter(valid, k)))

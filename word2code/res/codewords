@@ -19,13 +19,13 @@ not_, not
 gt,greater 
 valid,valid,  
 in,in,  
-diff, differ, 
+diff, difference, 
 eq,equal 
 any, any, 
 if, if, 
 or, or, 
-sub,subtract 
-for, for, 
+sub,difference
+for, for,
 min, minimum
 indexOf, index
 int, integer
@@ -58,6 +58,7 @@ str, string,
 is_even, even
 is_odd, odd
 is_positive, positive
+is_divisor, divisor
 itemgetter, item
 lambda,lambda,
 eval, evaluate
@@ -66,3 +67,9 @@ percentage, percentage
 map, map
 filter, filter
 reduce, reduce
+swap, swap
+combinations_with_replacement, combinations
+combinations, combinations
+is_, is
+permutations, permutations
+reversed, reverse 

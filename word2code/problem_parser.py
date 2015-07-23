@@ -9,7 +9,8 @@ import shutil
 import json
 from nltk.tokenize import sent_tokenize
 from stanford_corenlp import sentence2dependencies
-import codeline_gen_dep
+from solution_check import check_solution
+from dependency_parser import Node
 
 # from utils import *
 # from operator import *
@@ -43,45 +44,49 @@ import codeline_gen_dep
 #         \s*(?P<example>def\s+example\d+\(\):\s*\n(?:[^\n]*\w[^\n]+\n)+)+
 #         \s*(?P<main>if\s+__name__\s*==\s*\'__main__\'\s*:\s*\n.*)
 def parse_problem(problem):
-#     parse = {}
-#     problem_pattern = re.compile(r'''
-#         \s*(?P<import>import\s+\S+|from\s+.+\s+import\s+.+)+
-#         \s*(?P<class>class\s+.+:)
-#         \s*(?P<method>def\s+.+\(self(?:\s*,\s*.+)*\):)
-#         .+
-#         \s*
-#         ''', re.VERBOSE | re.MULTILINE)
-#     m = problem_pattern.match(problem)
-#     parse = m.groupdict()
-#     parse['sentences'] = parse_content(parse['sentences'])
     parse = {}
-    import_pattern = r'\s*import\s+\S+|from\s+.+\s+import\s+.+\s*'
-    parse['import'] = re.findall(import_pattern,problem)
-    class_pattern = r'\s*class\s+.+:\s*'
-    parse['class'] = re.findall(class_pattern,problem)
-    class_method_pattern = r'\s*(def\s+.+\(self(?:\s*,\s*.+)*\):)\s*\n(?:[^#]+\n)*'
-    parse['method'] = re.findall(class_method_pattern,problem)
-    class_vars_pattern = r'\s*def\s+.+\(self(?:\s*,\s*.+)*\):\s*\n(?:([^#]+)\n)*'
-    parse['vars'] = re.findall(class_vars_pattern,problem)
-    example_pattern = r'\s*def\s+example\d+\(\):\s*\n(?:[^\n]*\w[^\n]+\n)+'
-    parse['example'] = re.findall(example_pattern, problem)
-    main_pattern = r'\s*if\s+\(?__name__\s*==\s*\'__main__\'\)?\s*:\s*\n.*'
-    parse['main'] = re.findall(main_pattern,problem)
-    sentence_method_pattern = r'\s*def\s+.+\([^\)]*\):\s\n*'
-    code_pattern = r'[^#\n]*\w[^#\n]+\n'
-    sentences_pattern = r'(?:\s*#[^#].+\n)(?:'+sentence_method_pattern+r'\n)?(?:\s*####.+\n.+\n)*(?:'+code_pattern+')*'
-#     sentences_pattern = '(?:[ \t\r\f\v]*#[^#].+\n)+'
-    sentences = re.findall(sentences_pattern,problem)
-    parse['sentences'] = [parse_sentence(sentence) for sentence in sentences]
+    problem_pattern = re.compile(r'''
+        \s*(?P<imports>(?:.*\bimport\b.*\n)+)?\s*
+        \s*(?P<class>class\s+.+:)\s*
+        \s*(?P<method>def\s+.+\(self(?:\s*,\s*.+)*\):)\s*
+        \s*(?P<vars>(?:[^\#]+\n)+)?\s*
+        \s*(?P<sentences>(.*\n)+?)\s*
+        \s*
+        \s*(?P<example>(?:def\s+example\d+\(\):\s*\n(?:[^\n]*\w[^\n]+\n)+\s*)+)\s*
+        \s*(?P<main>\s*if\s+\(?__name__\s*==\s*\'__main__\'\)?\s*:\s*\n.*)\s*
+        ''', re.VERBOSE | re.MULTILINE)
+    m = problem_pattern.match(problem)
+    parse = m.groupdict()
+    parse['sentences'] = parse_content(parse['sentences'])
+#     parse = {}
+#     import_pattern = r'\s*import\s+\S+|from\s+.+\s+import\s+.+\s*'
+#     parse['import'] = re.findall(import_pattern,problem)
+#     class_pattern = r'\s*class\s+.+:\s*'
+#     parse['class'] = re.findall(class_pattern,problem)
+#     class_method_pattern = r'\s*(def\s+.+\(self(?:\s*,\s*.+)*\):)\s*\n(?:[^#]+\n)*'
+#     parse['method'] = re.findall(class_method_pattern,problem)
+#     class_vars_pattern = r'\s*def\s+.+\(self(?:\s*,\s*.+)*\):\s*\n(?:([^#]+)\n)*'
+#     parse['vars'] = re.findall(class_vars_pattern,problem)
+#     example_pattern = r'\s*def\s+example\d+\(\):\s*\n(?:[^\n]*\w[^\n]+\n)+'
+#     parse['example'] = re.findall(example_pattern, problem)
+#     main_pattern = r'\s*if\s+\(?__name__\s*==\s*\'__main__\'\)?\s*:\s*\n.*'
+#     parse['main'] = re.findall(main_pattern,problem)
+#     sentence_method_pattern = r'\s*def\s+.+\([^\)]*\):\s\n*'
+#     code_pattern = r'[^#\n]*\w[^#\n]+\n'
+#     sentences_pattern = r'(?:\s*#[^#].+\n)(?:'+sentence_method_pattern+r'\n)?(?:\s*####.+\n.+\n)*(?:'+code_pattern+')*'
+# #     sentences_pattern = '(?:[ \t\r\f\v]*#[^#].+\n)+'
+#     sentences = re.findall(sentences_pattern,problem)
+#     parse['sentences'] = [parse_sentence(sentence) for sentence in sentences]
     return parse
 
 def parse_content(content):
     sentences = []
     sentence_pattern = re.compile(r"""
-        \s*\#[^\#].+\n
+        \s*\#[^\#\n].+\n
         (?:\s*def\s+.+\(.*\):)?
-        (?:\s*\#\#\#\#.+\n.+\n)+
-    """, re.VERBOSE)
+        (?:\s*\#\#\#\#.+\n.+\n)*
+        (?:[^\#\n]+\n)*
+    """, re.VERBOSE|re.MULTILINE)
     matches = sentence_pattern.findall(content)
     for m in matches:
         sentences.append(parse_sentence(m))
@@ -98,7 +103,8 @@ def parse_sentence(sentence):
     parse['method'] = re.findall(method_pattern, sentence, re.MULTILINE)
     translation_pattern = r'(?:\s*####(.+\n).+\n)'
     parse['translations'] = re.findall(translation_pattern, sentence, re.MULTILINE)
-    codeline_pattern = r'(?:\s*####.+\n(.+\n))'
+#     codeline_pattern = r'(?:\s*####.+\n(.+\n))'
+    codeline_pattern = r'[\#\n]+\n'
     parse['code'] = re.findall(codeline_pattern, sentence, re.MULTILINE)
 #     extra_code_pattern = r'(?:\s*#[^#].+\n)(?:'+sentence_method_pattern+r'\n)?(?:\s*####.+\n.+\n)*('+ code_pattern +r')*'
     extra_code_pattern = code_pattern 
@@ -120,7 +126,7 @@ def parse_dir(problem_dir):
 def print_deps(parse):
     deps = sentence2dependencies(parse['sentence'])[0]
 #     sentence += '\n'.join([indenter*indent+'# '+str(dep) for dep in deps]) +'\n'
-    root = codeline_gen_dep.Node('ROOT-0')
+    root = Node('ROOT-0')
 #     deps = codeline_gen_dep.clean_dependencies(deps)
     return str(root.deps2tree(deps))
 
@@ -131,9 +137,10 @@ def compose_sentence(parse):
 #     sentence += indenter*2 + '\' ' + parse['sentence'].strip() + '\'\n'
     if not parse['code']:
         return sentence
-    if parse['method'][0]:
-        sentence += indenter*2 + parse['method'][0].strip() + '\n'
-    indent = 2 + bool(parse['method'][0])
+    method = parse['method'][0]
+    if method:
+        sentence += indenter*2 + method.strip() + '\n'
+    indent = 2 + bool(method)
     for i,codeline in enumerate(parse['code']):
         if i in range(len(parse['translations'])):
             translation = parse['translations'][i]
@@ -146,18 +153,19 @@ indenter = ' '*4
 
 def compose_problem(parse):
     problem = ''
-    problem += '\n'.join([imp.strip() for imp in parse['import']]) +'\n'
+    if parse['imports']:
+        problem += parse['imports'] +'\n'
     problem += '\n'
-    problem += parse['class'][0].strip() + '\n'
-    problem += indenter + parse['method'][0].strip() + '\n'
-    for var_parse in parse['vars'][0].split('\n'):
-        problem += indenter*2 + var_parse.strip() + '\n'
+    problem += parse['class'].strip() + '\n'
+    problem += indenter + parse['method'].strip() + '\n'
+    if parse['vars']:
+        for var_parse in parse['vars'].split('\n'):
+            problem += indenter*2 + var_parse.strip() + '\n'
     for sentence_parse in parse['sentences']:
         problem += compose_sentence(sentence_parse)
     problem += '\n'
-    for example_parse in parse['example']:
-        problem += example_parse + '\n'
-    problem += parse['main'][0]
+    problem += parse['example']
+    problem += parse['main']
     return problem
 
 def json2method(definiton_json):
@@ -233,9 +241,10 @@ def json2problem_dir(indir, outdir):
             fp.write(json2problem(problem_json))
 
 if __name__ == '__main__':
-#     with open('res/text&code5/AlienAndPassword.py') as f:
+#     with open('res/translations/CorruptedMessage.py') as f:
 #         problem = f.read()
 #     parse = parse_problem(problem)
+#     print(parse)
 # #     with open('res/parse', 'w') as f:
 # #         json.dump(parse,f,indent=4, separators=(',', ': '))
 #     with open('res/compose.py', 'w') as f:
@@ -253,8 +262,8 @@ if __name__ == '__main__':
 #     print(root.deps2tree(deps))
 
 
-    indir = 'res/text&code5/'
-    outdir = 'res/text&code6/'
+    indir = 'res/text&code6/'
+    outdir = 'res/test/'
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
     os.mkdir(outdir)
@@ -262,9 +271,13 @@ if __name__ == '__main__':
         fbase, fext = os.path.splitext(fname)
         if fext != '.py':
             continue
-        print(fname)
+        if not check_solution(os.path.join(indir, fname)):
+            continue
+#         print(fname)
         with open(os.path.join(indir,fname)) as fp:
             problem = fp.read()
         parse = parse_problem(problem)
-        with open(os.path.join(outdir, fbase+'.py'), 'w') as fp:
+        with open(os.path.join(outdir, fname), 'w') as fp:
             fp.write(compose_problem(parse))
+        if not check_solution(os.path.join(outdir, fname)):
+            print(fname)

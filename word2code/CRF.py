@@ -312,7 +312,6 @@ def test(train_dir, output_dir, test_dir=None, features=2):
         sentences_json = output2json(output)
         json_file = os.path.join(output_dir,fname)
         with open(json_file, 'w') as outputjson:
-    #             json.dump(problems_json, outputjson, indent = 4, separators=(',', ': '))
             json.dump(sentences_json, outputjson, indent = 4, separators=(',', ': '))
 #         with open(os.path.join(output_dir,fname),'w') as outputfile:
 #             outputfile.write(output)
@@ -323,18 +322,20 @@ prediction_pattern = r'\w+/\d\.\d+'
 line_pattern = r'(?:\S+)\s+(?:\w+\s+)+(?:\w+)\s+(?:'+prediction_pattern+r'\s+)+'
 # named_line_pattern = r'(:P<word>\S+)\s+(:P<features>(?:\S+\s+)+)(:P<label>\w+)\s+(:P<predictions>(?:'+prediction_pattern+r'\s+)+)'
 # named_line_pattern = r'(:P<word>\S+)\s+(?:\w+\s+)+(:P<label>\w+)\s+(?:'+prediction_pattern+r'\s+)+'
-named_line_pattern = r'(?P<line>(?P<word>\S+)\s+(?P<features>(?:\w+\s+)+)(?P<label>\w+)\s+(?P<prediction>'+prediction_pattern+')\s+(?P<probs>(?:'+prediction_pattern+r'\s+)+))'
+named_line_pattern = r'(?P<line>(?P<word>\S+)\s+(?P<features>(?:\S+\s+)+)(?P<label>\w+)\s+(?P<prediction>'+prediction_pattern+')\s+(?P<probs>(?:'+prediction_pattern+r'\s+)+))'
 sentence_pattern = r'#\s+\d\.\d+\n(?P<lines>(?:'+named_line_pattern+r')+)'
 
 def output2json(output):
     sentences_json = []
 #         sentences = re.findall(sentence_pattern, problem)
-    sentences = re.findall(sentence_pattern, output)
+    sentences = re.split('\n\n+\#\s+\d\.\d+\n', output)
     for sentence in sentences:
         lines_json = []
-        lines = re.findall(named_line_pattern, sentence[0])
+        lines = re.split('\n', sentence)
         for line in lines:
-            m = re.match(named_line_pattern, line[0])
+            m = re.match(named_line_pattern, line)
+            if not m:
+                continue
             d = m.groupdict()
             d['features'] = d['features'].split()
             d['probs'] = str([(prediction.split('/')[1], prediction.split('/')[0]) for prediction in d['probs'].split()])

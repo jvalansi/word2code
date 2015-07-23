@@ -4,12 +4,11 @@ class SquareDigitNumbers:
     def getNumber(self, n):
         input_int = n
         inf = 10000
-        numbers = range(inf)
         # You enjoy working with numbers that contain only square digits (namely, 0, 1, 4 and 9).
         only = all
         def valid(number): return only(contains(('0','1','4','9'), digit) for digit in str(number))
         # The sequence containing only these digits is 0, 1, 4, 9, 10, 11, 14... 
-        sequence = filter(valid, numbers)
+        sequence = filter(valid, range(inf))
         # Return the n -th term (indexed from 0) in this sequence.
         return(sequence[n])
 

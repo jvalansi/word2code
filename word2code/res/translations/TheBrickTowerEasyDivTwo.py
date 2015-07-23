@@ -17,11 +17,10 @@ class TheBrickTowerEasyDivTwo:
         towers = transformations(red+blue)
         # A brick can be placed either on the ground, or on a brick of a different color.
         # (I.e., you are not allowed to put two bricks of the same color immediately on one another.)
-        immediately = csubsets
-        two = 2
+        two = cpairs
         same = eq
         no = not_
-        def valid(tower): return tower and no(list(same(*bricks) for bricks in immediately(tower, two)))
+        def valid(tower): return tower and no(list(bricks for bricks in two(tower) if same(*bricks)))
         # A tower has to consist of at least one brick.
         # The height of a tower is the sum of all heights of bricks that form the tower.
         # ROOT-0(root=sum-8(nsubj=height-2(det=The-1, prep_of=tower-5(det=a-4)), cop=is-6, det=the-7, prep_of=heights-11(det=all-10, prep_of=bricks-13(rcmod=form-15(nsubj=that-14, dobj=tower-17(det=the-16))))))
@@ -82,4 +81,4 @@ def example3():
 
 
 if __name__ == '__main__':
-	print(example0()&example1()&example2())
+	print(example2())

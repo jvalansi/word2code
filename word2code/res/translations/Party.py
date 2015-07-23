@@ -13,9 +13,7 @@ class Party:
         # You will be given an int n , the number of people at the party.
         # You will also be given a int[] personA and a int[] personB , containing the zero-based indices of the people who shook hands with each other, in chronological order.
         # Elements of personA and personB with equal indices describe the same handshake.
-        # ROOT-0(root=describe-9(nsubj=Elements-1(prep_of=personA-3(conj_and=personB-5, prep_with=indices-8(amod=equal-7))), dobj=handshake-12(det=the-10, amod=same-11)))
         # You should return the average number of names that each person at the party has learned, not including his or her own name.
-        # ROOT-0(root=return-3(nsubj=You-1, aux=should-2, dobj=number-6(det=the-4, amod=average-5), prep_of=names-8(rcmod=learned-16(dobj=that-9, nsubj=person-11(det=each-10, prep_at=party-14(det=the-13)), aux=has-15)), neg=not-18, prep_including=name-24(nn=his-20(conj_or=her-22), amod=own-23)))
         return(average(number(names)))
 
 

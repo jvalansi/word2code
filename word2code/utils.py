@@ -6,6 +6,7 @@ Created on Jan 27, 2015
 from itertools import *
 from operator import *
 import copy
+import math
 
 def partitions(myList):
     if not myList:
@@ -87,11 +88,10 @@ def is_odd(i):
     return not is_even(i)
 
 def is_prime(n):
-    for i in range(3, n):
-        if n % i == 0:
-            return False
-    return True
-
+    if n % 2 == 0 and n > 2: 
+        return False
+    return all(n % i for i in range(3, int(math.sqrt(n)) + 1, 2))
+  
 def is_divisor(x, y): #TODO: add translations 
     return (mod(y, x) == 0)
 
@@ -112,6 +112,8 @@ def swap(S, (i,j)):
     S_[i], S_[j] = S_[j], S_[i]
     return S_ 
 
+def startswith(s, x):
+    return str(s).startswith(str(x))
 
 if __name__ == '__main__':
 #     with open('res/logger.log','r') as fp:

@@ -10,12 +10,12 @@ class TheSwapsDivTwo:
         two = 2
         choose = combinations
         positions = range
-        sequences = (swap(sequence, p) for p in choose(positions(N), two))
+        sequences = (tuple(swap(sequence, p)) for p in choose(positions(N), two))
         # (The two swapped elements may have the same value.)
         # Return the number of different sequences Brus can obtain after he makes the swap.
         different = set
         number = len
-        return(number(different(map(tuple, sequences))))
+        return(number(different(sequences)))
 
 
 

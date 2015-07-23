@@ -20,7 +20,7 @@ class TextStatistics:
         # Given a String text , return the average word length in it.
         # ROOT-0(root=return-6(prep=Given-1(pobj=text-4(det=a-2, nn=String-3)), dobj=length-10(det=the-7, amod=average-8, nn=word-9), prep_in=it-12))
         length = len
-        return(average(filter(None, map(length, words))))
+        return(average(list(length(word) for word in words if word)))
         # If there are no words in the text, return 0.0.
 
 

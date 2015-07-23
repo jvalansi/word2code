@@ -21,8 +21,9 @@ from utils import *
 import codeline_gen
 from word2codeword import word2codewords, clean_word, codeword_dict, is_func
 from stanford_corenlp import sentence2dependencies, tokenize_sentences
-from codeline_gen_dep import dep2dict
 from matplotlib.pyplot import imshow
+from code_parser import check_solution
+from dependency_parser import dep2dict
 
 
 mapping = lambda x: x
@@ -84,10 +85,12 @@ types = ['mapping', 'valid', 'reduce']
 # types = ['I']
 
 def get_type(codewords):
+    if not codewords:
+        return ''
     for word_type in types:
         if codewords[0].startswith(word_type):
             return word_type
-#     print(codewords[0])
+    print(codewords[0])
     return ''
 
 def get_features(sentence):
@@ -183,6 +186,8 @@ def build_train(indir, outdir, only_code=True):
         shutil.rmtree(outdir)
     os.mkdir(outdir)
     for fname in sorted(os.listdir(indir)):
+        if not fname.endswith('.py'):
+            continue
         print(fname)
         with open(os.path.join(indir,fname),'r') as fp:
             problem = fp.read()
@@ -196,44 +201,65 @@ def get_label_probs(sentence, label):
     for line in sentence:
         important = line['label'] == label
         probs = {v: k for k, v in ast.literal_eval(line['probs'])}
-        if label in probs: 
+        if label in probs:
             prob = probs[label]
         else:
             prob = 0
-        sentprobs.append((prob,important,line['word']))
+        sentprobs.append((prob,important,line['word'],sentence.index(line)))
     sentprobs = sorted(sentprobs,reverse = True)
     return sentprobs
 
+def get_label_words(sentence, label):
+    label_words = []
+    for line in sentence:
+        if line['label'] == label:
+            label_words.append((line['word'],sentence.index(line)))
+    return label_words
+    
 def check_type(sentence, word_type, n):
-        sentprobs = get_label_probs(sentence, word_type)
-        result = all([not important for (sentprob,important,word) in sentprobs[n:]])
-        if not result:
-            logger.logging.info(word_type)
-            logger.logging.info(sentprobs)
-        return result
+    print(word_type)
+    sentprobs = get_label_probs(sentence, word_type)
+    expected_words = zip(*sentprobs[:n])[-1]
+    print('expected_words')
+    print(expected_words)
+    label_words = get_label_words(sentence, word_type)
+    print('label_words')
+    print(label_words)
+    if label_words:
+        label_words = zip(*label_words)[-1]
+        result = set(label_words).issubset(set(expected_words))
+    else:
+        result = True
+#     result = all([not important for (sentprob,important,word) in sentprobs[n:]])
+    if not result:
+        logger.logging.info(word_type)
+        logger.logging.info(sentprobs)
+    return result
 
-def check_problem(json_dir,fname,n):
+def check_problem(json_dir,fname,n, labels=types):
     with open(os.path.join(json_dir,fname),'r') as inputjson:
         problem_json = json.load(inputjson)
-#     with open(json_name,'r') as inputjson:
-#         problems_json = json.load(inputjson)
 #     for problem in problems_json:
-#         check if n most probable mappings contain all mappings
     problem_result = []
     for sentence in problem_json:
-        for word_type in types:
+#         check if n most probable mappings contain all mappings
+        for word_type in labels:
             result = check_type(sentence, word_type, n)
             problem_result.append(result)
 #         result = check_type(sentence, 'var', n)
 #         problem_result.append(result)
     return problem_result
 
-def calc_score(json_dir,n):
+def calc_score(json_dir, n, problem_dir=None, labels=types):
     correct = []
+#     no_sol = []
     total = 0
     fnames = sorted(os.listdir(json_dir))
     for fname in fnames:
-        problem_result = check_problem(json_dir, fname, n)
+        if problem_dir and not check_solution(os.path.join(problem_dir, re.sub('.label', '.py', fname))):
+#             no_sol.append(fname)
+            continue
+        problem_result = check_problem(json_dir, fname, n, labels)
         if any(problem_result) and all(problem_result):
             correct.append(fname)
         else:
@@ -247,10 +273,10 @@ def calc_score(json_dir,n):
 
 if __name__ == '__main__':
 
-    indir = 'res/text&code6'
+    indir = os.path.join('res','text&code6')
 #     train_dir = 'res/word_train'
-    train_dir = 'res/word_train6'
-    build_train(indir, train_dir)
+    train_dir = os.path.join(indir, 'word_train')
+#     build_train(indir, train_dir)
 
 #     test_indir = 'res/problems_test'
 #     test_dir = 'res/word_test'
@@ -258,14 +284,16 @@ if __name__ == '__main__':
 
     output_dir = 'res/word_json'
     output_dir_small = 'res/word_json_small'
-    output_dir_small = 'res/word_json6'
+    output_dir_small = os.path.join(indir, 'word_json')
     CRF.test(train_dir, output_dir_small)
 #     CRF.test(train_dir, output_dir, test_dir)
 
-#     m = 2
+    check_dir = output_dir_small
+    m = 2
+    print(calc_score(check_dir, m, indir))
 #     scores = {}
 #     for m in range(1,20):
-#         scores[m] = len(calc_score(output_dir, m))
+#         scores[m] = len(calc_score(check_dir, m, indir))
 #     print(scores)
 #     import matplotlib.pyplot as plt
 #     plt.plot(scores.values())

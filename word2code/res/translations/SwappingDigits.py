@@ -18,8 +18,8 @@ class SwappingDigits:
         integers = [''.join(swap(list(num), (i,j))) for i,j in choose(indices(N), pair)]
         # Note that you may also leave the original number unchanged.
         # The new String must again describe a valid positive integer, i.e., it must not have any leading zeros.
-        zeros = '0'
-        def leading(s, x): return s.startswith(x)
+        zeros = 0
+        leading = startswith
         def valid(s): return not(leading(s, zeros)) 
         # Find and return the String that represents the smallest possible integer that can be obtained.
         # ROOT-0(root=Find-1(conj_and=return-3(dobj=String-5(det=the-4, rcmod=represents-7(nsubj=that-6, dobj=integer-11(det=the-8, amod=smallest-9, amod=possible-10, rcmod=obtained-15(nsubjpass=that-12, aux=can-13, auxpass=be-14)))))))

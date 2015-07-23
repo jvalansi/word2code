@@ -62,5 +62,5 @@ if __name__ == '__main__':
     fpath = 'res/intersection'
     with open(fpath) as f:
         data = f.read()
-    wc.count_words(data, 'data') 
+    wc.count_words(data, 'intersection') 
 

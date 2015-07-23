@@ -10,7 +10,7 @@ class TimeTravellingCellar:
         # However, as a side effect, he must also choose one other cellar and turn back time there, making the wine inside younger.
         # You are given two int[]s, profit and decay .
         # Advancing time in cellar i will gain Gogo a profit of profit [i].
-        gain = add
+        gain = sum
         def advancing_time(i): return gain(0,profit[i]) 
         # Turning back time in cellar i will lose him decay [i] in profit.
         lose = sub
