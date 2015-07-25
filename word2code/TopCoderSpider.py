@@ -8,11 +8,8 @@ import urllib2
 import re
 import requests
 from requests.auth import HTTPBasicAuth
-import sys
 import os
 import json
-import pickle
-import problem
 
 
 class TopCoderSpider:
@@ -164,7 +161,7 @@ class TopCoderSpider:
             for child in children:
                 if children.index(child)%6 == 1:
                     inputs = list(child.table.children)
-                    example_dict['inputs'] = [input.get_text().strip() for input in inputs if inputs.index(input)%2 == 1]
+                    example_dict['inputs'] = [inp.get_text().strip() for inp in inputs if inputs.index(input)%2 == 1]
                 if children.index(child)%6 == 3:
                     example_dict['output'] = child.get_text().strip()[9:]
             examples_list.append(example_dict)

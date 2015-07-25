@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class RandomColoringDiv2:
     def getCount(self, maxR, maxG, maxB, startR, startG, startB, d1, d2):

@@ -1,131 +1,102 @@
 '''
-Created on Jan 27, 2015
+Created on Jul 23, 2015
 
 @author: jordan
 '''
-from itertools import *
-from operator import *
-import copy
-import math
 
-def partitions(myList):
-    if not myList:
-        yield []
-    else:
-        for partial_partition in partitions(myList[:-1]):
-            for i in range(len(partial_partition)):
-                copy_partition = partial_partition[:]
-                copy_partition[i] += (myList[-1],)
-                yield copy_partition
-            yield partial_partition + [(myList[-1],)]   
+import imp
+import os
+import json
+import nltk
+import collections
 
-def cpartitions(myList, n=None):
-    print(myList)
-    if not myList:
-        yield []
-    else:
-        if n==1:
-            yield [tuple(myList)]
-        elif n==None:
-            for partial_partition in cpartitions(myList[:-1]):
-                if partial_partition:
-                    copy_partition = partial_partition[:]
-                    copy_partition[-1] += (myList[-1],)
-                    yield copy_partition
-                yield partial_partition + [(myList[-1],)]
-        else:
-            for partial_partition in cpartitions(myList[:-1], n-1):
-                yield partial_partition + [(myList[-1],)]
-            for partial_partition in cpartitions(myList[:-1], n):
-                if partial_partition:
-                    copy_partition = partial_partition[:]
-                    copy_partition[-1] += (myList[-1],)
-                    yield copy_partition
-            
+def check_solution(problem_path, soln=1):
+#     with open('temp.py', 'w') as f:
+#         f.write(compose_problem(solution))
+#     import temp
+#     reload(temp)
+    try:
+        if os.path.exists(problem_path+'c'):
+            os.remove(problem_path+'c')
+        temp = imp.load_source('tmp', problem_path)
+        for i in range(soln):
+            name = 'example' + str(i)
+            if hasattr(temp, name):
+                result = getattr(temp, name)() 
+            if not result:
+                return False
+        return True
+    except Exception:
+#                 traceback.print_exc()
+        pass
+    return False
 
-def cpairs(S):
-    return csubsets(S, 2)
 
-def pairs(S):
-    return permutations(S, 2)
+def is_func(codeword):
+    try:
+        isfunc = codeword in ['return','reduce', 'mapping','valid'] or hasattr(eval(codeword), '__call__')
+    except:
+        isfunc = False
+    return isfunc
 
-def triples(S): 
-    return permutations(S, 3)
+class WordCount:
+    def get_data(self,data_dir,suffix):
+        data = []
+        for fn in os.listdir(data_dir):
+            if not fn.endswith(suffix):
+                continue
+            f = open(os.path.join(data_dir,fn),'r')
+            data.append(f.read())
+        return data
 
-def subsets(S, m = None):
-    N = len(S)
-    if m == None:
-        return chain(*map(lambda x: combinations(S, x), range(0, N+1)))
-    return combinations(S, m)
+    def tuple2file(self,t,data_name):
+        with open('res/count_'+data_name+'.txt', 'w') as f:
+            json.dump(t, f, ensure_ascii=False, indent = 4, separators=[',',': '])
 
-def transformations(S):
-    N = len(S)
-    return chain(*map(lambda x: permutations(S, x), range(0, N+1)))
+    def count_words(self,data,data_name):
+        tokens = nltk.word_tokenize(data)
+        c = collections.Counter(tokens)
+        c = sorted(c.items(), key=lambda item: item[1],reverse = True)
+        self.tuple2file(c, data_name)
+        return c
 
-def csubsets(S,m = None):
-    N = len(list(S))
-    if m == None:
-        return chain(S[i:i+m] for m in range(N+1) for i in range(N+1-m))
-    return (S[i:i+m] for i in range(N+1-m))
+    def cnt2rank(self,cnt,name):
+        words,word_cnts = zip(*cnt)
+        rank = enumerate(words)
+        d = dict((y,x) for x,y in rank)
+        self.tuple2file(tuple(rank), 'rank_'+name)
+        return d
 
-def argmin(S):
-    S = list(S)
-    print(S)
-    return S[S.index(min(S))]
 
-def average(S):
-    if not S:
-        return 0
-    return float(sum(S))/len(S)
+    def compare_count(self,data_dir,word):
+#         rank words in problem
+        prb_data = self.get_data(data_dir,'prb')
+        word_cnt = self.count_words('\n'.join(prb_data), 'prb')
+        word_rank = self.cnt2rank(word_cnt,'word')
+        word_cnt = dict((x,y) for x,y in word_cnt)
+        print(word_rank)
+#         rank words in problems where solution contains word
+        sol_data = self.get_data(data_dir,'sol')
+        fltr_data = [prb_data[i] for i in range(len(prb_data)) if word in sol_data[i]]
+        fltr_cnt = self.count_words('\n'.join(fltr_data), 'fltr')
+        fltr_rank = self.cnt2rank(fltr_cnt,'fltr')
+        fltr_cnt = dict((x,y) for x,y in fltr_cnt)
+#         print(fltr_rank)
+#          get most significant change
+        print([word for word in fltr_rank if word not in word_rank])
+        diff = ((word,float(fltr_cnt[word]) / word_cnt[word]) for word in fltr_cnt if word in word_cnt)
+        diff = sorted(diff, key=lambda item: item[1],reverse = True)
+        print(diff)
+        self.tuple2file(diff, 'diff')
 
-def diff(S1,S2):
-    return list(compress(S1,map(ne,S1,S2)))
-
-def is_even(i):
-    return i%2==0
-
-def is_odd(i):
-    return not is_even(i)
-
-def is_prime(n):
-    if n % 2 == 0 and n > 2: 
-        return False
-    return all(n % i for i in range(3, int(math.sqrt(n)) + 1, 2))
-  
-def is_divisor(x, y): #TODO: add translations 
-    return (mod(y, x) == 0)
-
-def is_positive(n):
-    return gt(n,0)
-
-def inclusive(n):
-    return n+1
-
-def percentage(S,n):
-    return float(countOf(S, n))/len(S)
-
-def successive(S):
-    return(all(abs(pair[0]-pair[1]) == 1 for pair in cpairs(S)))
-
-def swap(S, (i,j)):
-    S_ = copy.copy(S)
-    S_[i], S_[j] = S_[j], S_[i]
-    return S_ 
-
-def startswith(s, x):
-    return str(s).startswith(str(x))
 
 if __name__ == '__main__':
-#     with open('res/logger.log','r') as fp:
-#         lines = fp.readlines()
-#     with open('res/sorted.log', 'w') as fp:
-#         fp.write(''.join(sorted(lines)))
-#     S1 = ['B','W','B','W','|','|']
-#     for S in list(permutations(S1)):
-#         print(list(list(s) for k,s in groupby(S,lambda x: x in '|')))
-#     S2 = ['B','B','B']
-#     print(list(csubsets(S1)))
-#     print(list(diff(S1, S2)))
-    S = ['A','B','C']
-    print(list(cpartitions(S,2)))
-    pass
+#     main_data_dir = 'res/brute_force_easy/'
+    wc = WordCount()
+#     wc.compare_count(main_data_dir, '>')
+
+    fpath = 'res/intersection'
+    with open(fpath) as f:
+        data = f.read()
+    wc.count_words(data, 'intersection') 
+

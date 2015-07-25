@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 from itertools import combinations
 
 class TheBrickTowerEasyDivTwo:

@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 from string import lowercase
 
 class CorruptedMessage:

@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class ChristmasTreeDecorationDiv2:
 	def solve(self, col, x, y):

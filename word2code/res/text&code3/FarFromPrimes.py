@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class FarFromPrimes:
     def count(self, A, B):

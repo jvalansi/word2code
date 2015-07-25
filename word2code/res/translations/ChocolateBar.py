@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class ChocolateBar:
 	def maxLength(self, letters):

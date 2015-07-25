@@ -1,5 +1,5 @@
 from itertools import *
-from utils import *
+from problem_utils import *
 from operator import *
 
 class BlackAndWhiteSolitaire:

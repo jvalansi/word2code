@@ -1,5 +1,5 @@
 from operator import *
-from utils import * 
+from problem_utils import * 
 
 class AmoebaDivTwo:
     def count(self, table, K):

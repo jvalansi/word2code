@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class CheckFunction:
 	def newFunction(self, code):

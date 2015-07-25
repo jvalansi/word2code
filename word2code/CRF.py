@@ -11,7 +11,6 @@ from collections import Counter
 import json
 import string
 import os
-from stanford_corenlp import sentence2dependencies
 import copy
 import shutil
 

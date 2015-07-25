@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class Party:
     def averageNames(self, n, personA, personB):

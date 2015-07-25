@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class MinimalDifference:
 	def findNumber(self, A, B, C):

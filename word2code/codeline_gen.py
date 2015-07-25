@@ -3,22 +3,19 @@ Created on Apr 26, 2015
 
 @author: jordan
 '''
-# from utils import *
+# from problem_utils import *
 import logger
 import inspect
 import re
-import copy
-import sys
 from problem_parser import parse_problem
 import os
 # from word2codeword import is_func
 import string
 import nltk
-import traceback
-from utils import *
+from problem_utils import *
 import itertools
 import operator
-from word2codeword import is_func
+from utils import is_func
 
 N = 2
 input_array = range(N)

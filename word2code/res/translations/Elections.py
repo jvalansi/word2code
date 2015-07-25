@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class Elections:
 	def visit(self, likelihoods):

@@ -8,11 +8,10 @@ import os
 import shutil
 import json
 from nltk.tokenize import sent_tokenize
-from stanford_corenlp import sentence2dependencies
-from solution_check import check_solution
-from dependency_parser import Node
+from dependency_parser import Node, sentence2dependencies
+from utils import check_solution
 
-# from utils import *
+# from problem_utils import *
 # from operator import *
 #
 # class AlienAndPassword:
@@ -206,7 +205,7 @@ def json2var(var_json):
 
 def json2problem(problem_json):
     problem = ''
-    problem += 'from utils import *\n\n'
+    problem += 'from problem_utils import *\n\n'
     problem += 'class {}:\n'.format(problem_json['Definition']['class_name'])
     problem += json2method(problem_json['Definition'])
     problem_statement = re.sub(r'\s+', ' ', problem_json['Problem Statement'])
@@ -241,14 +240,14 @@ def json2problem_dir(indir, outdir):
             fp.write(json2problem(problem_json))
 
 if __name__ == '__main__':
-#     with open('res/translations/CorruptedMessage.py') as f:
-#         problem = f.read()
-#     parse = parse_problem(problem)
-#     print(parse)
-# #     with open('res/parse', 'w') as f:
-# #         json.dump(parse,f,indent=4, separators=(',', ': '))
-#     with open('res/compose.py', 'w') as f:
-#         f.write(compose_problem(parse))
+    with open('res/translations/CorruptedMessage.py') as f:
+        problem = f.read()
+    parse = parse_problem(problem)
+    print(parse)
+#     with open('res/parse', 'w') as f:
+#         json.dump(parse,f,indent=4, separators=(',', ': '))
+    with open('res/compose.py', 'w') as f:
+        f.write(compose_problem(parse))
 
 #     indir = 'res/brute_force_easy/'
 #     outdir = 'res/problems_test/'
@@ -262,22 +261,22 @@ if __name__ == '__main__':
 #     print(root.deps2tree(deps))
 
 
-    indir = 'res/text&code6/'
-    outdir = 'res/test/'
-    if os.path.exists(outdir):
-        shutil.rmtree(outdir)
-    os.mkdir(outdir)
-    for fname in sorted(os.listdir(indir)):
-        fbase, fext = os.path.splitext(fname)
-        if fext != '.py':
-            continue
-        if not check_solution(os.path.join(indir, fname)):
-            continue
-#         print(fname)
-        with open(os.path.join(indir,fname)) as fp:
-            problem = fp.read()
-        parse = parse_problem(problem)
-        with open(os.path.join(outdir, fname), 'w') as fp:
-            fp.write(compose_problem(parse))
-        if not check_solution(os.path.join(outdir, fname)):
-            print(fname)
+#     indir = 'res/text&code6/'
+#     outdir = 'res/test/'
+#     if os.path.exists(outdir):
+#         shutil.rmtree(outdir)
+#     os.mkdir(outdir)
+#     for fname in sorted(os.listdir(indir)):
+#         fbase, fext = os.path.splitext(fname)
+#         if fext != '.py':
+#             continue
+#         if not check_solution(os.path.join(indir, fname)):
+#             continue
+# #         print(fname)
+#         with open(os.path.join(indir,fname)) as fp:
+#             problem = fp.read()
+#         parse = parse_problem(problem)
+#         with open(os.path.join(outdir, fname), 'w') as fp:
+#             fp.write(compose_problem(parse))
+#         if not check_solution(os.path.join(outdir, fname)):
+#             print(fname)

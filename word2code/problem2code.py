@@ -10,16 +10,16 @@ import word2codeword
 import codeline_gen
 import json
 from problem2sentence import get_sentences_probabilities
-from word2codeword import count_translations, is_func, word2codewords
+from word2codeword import count_translations, word2codewords
 from problem_parser import parse_problem, compose_problem
-import copy
 from itertools import product, combinations
 from codeline_gen import all_possible_trees
-from utils import *
+import codeline_gen_dep
+# from problem_utils import *
 import numpy
 import shutil
-import imp
-from code_parser import check_solution
+import copy
+from utils import is_func, check_solution
 
 def get_possible_sentence_type(sentences_json, sentence, n):
     sentind = sentences_json.index(sentence)

@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class ElectronicPetEasy:
 	def isDifficult(self, st1, p1, t1, st2, p2, t2):

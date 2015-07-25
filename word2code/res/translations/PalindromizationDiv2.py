@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class PalindromizationDiv2:
     def getMinimumCost(self, X):

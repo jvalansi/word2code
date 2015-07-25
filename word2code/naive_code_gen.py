@@ -5,12 +5,9 @@ Created on Jan 31, 2015
 '''
 import os
 import re
-import TopCoderSpider
 import itertools
-from utils import *
+from problem_utils import *
 import pickle
-from problem import Problem 
-import sys
 
 #       generate possibilities statement
 possibilities = ['subsets', 'csubsets']
@@ -23,8 +20,14 @@ mappings = ['']
 #       generate return statement
 reduces = ['','min','max','len', 'sum', 'average']
 
-#     generate code
+#     
 def solve(input_string, possible_solution): 
+    '''
+    generate code for naive solution
+    
+    :param input_string: input example for the problem
+    :param possible_solution: one of the naive solutions
+    '''
 
 #         solution = \
     input_array = eval(input_string)
@@ -44,8 +47,12 @@ def solve(input_string, possible_solution):
 #                    reduce = possible_solution[5])
 #         print(solution)
         
-#     check code against input and output
 def get_examples(examples_dir):
+    '''
+     get input-output example pairs
+    
+    :param examples_dir: 
+    '''
     print('getting examples')
     simple_examples = []
     for fname in os.listdir(examples_dir):
@@ -60,6 +67,11 @@ def get_examples(examples_dir):
     return simple_examples
         
 def parse_examples(examples):
+    '''
+    parse example string to code
+    
+    :param examples:
+    '''
     parsed = []
     for example in examples:
         input_string = parse_string(example['inputs'][0])
@@ -73,10 +85,21 @@ def parse_examples(examples):
     return parsed
 
 def check_outputs(examples,possible_outputs):
+    '''
+    match example output to code output 
+    
+    :param examples:
+    :param possible_outputs:
+    '''
     return all(examples[i][1] == str(possible_outputs[i]) for i in range(len(examples)))
 
-def check_code(code_dir):
-    examples_list = get_examples(code_dir)
+def check_code(example_dir):
+    '''
+    check all the examples in the given dir, against the naively generated code  
+    
+    :param example_dir:
+    '''
+    examples_list = get_examples(example_dir)
     print('solving')
     success = 0
     tried = 0

@@ -17,13 +17,11 @@ import json
 import ast
 import shutil
 
-from utils import *
-import codeline_gen
-from word2codeword import word2codewords, clean_word, codeword_dict, is_func
-from stanford_corenlp import sentence2dependencies, tokenize_sentences
 from matplotlib.pyplot import imshow
-from code_parser import check_solution
-from dependency_parser import dep2dict
+from dependency_parser import dep2dict, sentence2dependencies
+from operator import indexOf
+from utils import is_func, check_solution
+from stanford_corenlp import tokenize_sentences
 
 
 mapping = lambda x: x

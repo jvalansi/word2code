@@ -5,17 +5,14 @@ Created on Jan 20, 2015
 '''
 import os
 import re
-import word_count
 from problem_parser import parse_problem, compose_problem
-import imp
 import shutil
 import ast
-import parser
 import astor
 import copy
 from ast import NodeTransformer, copy_location
 from _ast import Name, Load
-from solution_check import check_solution
+from utils import check_solution, WordCount
 # from problem2code import check_solution
 # from problem2sentence import types
 
@@ -92,7 +89,7 @@ def count_code(path):
             for codeline in sentence_parse['code']:
 #             else add to code data
                 code_data += clean_code(codeline)
-    word_counter = word_count.WordCount()
+    word_counter = WordCount()
     word_counter.count_words(code_data, "res/code_data")
 #     print(code_data)
     return(word_counter)
@@ -133,6 +130,9 @@ def count_code(path):
 #     return(reduce(map(mapping, filter(valid, possibilities)))) 
 
 class DelGen(NodeTransformer):
+    '''
+    Delete generator expresion from code
+    '''
     def __init__(self, args):
         self.args = args
         
@@ -140,12 +140,23 @@ class DelGen(NodeTransformer):
         return copy_location(self.args, node)
 
 def find_node_type(node, node_type):
+    '''
+    find a node with given type
+    
+    :param node:
+    :param node_type:
+    '''
     walk = ast.walk(node)
     for w in walk:
         if type(w).__name__ == node_type:
             return copy.deepcopy(w)
 
 def gen_codeline_type(codeline):
+    '''
+    generate a type codelines from codeline 
+    
+    :param codeline:
+    '''
     new_code = []
     parse = ast.parse(codeline.strip())
     return_parse = find_node_type(parse, 'Return')
@@ -181,7 +192,7 @@ def gen_codeline_type(codeline):
         new_code.append('return(reduce(map(mapping, possibilities)))')
     return new_code
 
-def to_codeline_type(sentence_parse):
+def sentence_to_codeline_type(sentence_parse):
     '''
     transform:
         #### def valid(k):  return same(contain(cows, part) for part in parts(k))
@@ -227,6 +238,9 @@ def to_codeline_type(sentence_parse):
     sentence_parse['code'].extend(gen_codeline_type(codeline))
 
 class TranslateCode(NodeTransformer):
+    '''
+    Translate code, using transdict
+    '''
     def __init__(self, transdict={}, translate=True):
         self.transdict = transdict
         self.translate = translate
@@ -266,7 +280,49 @@ class TranslateCode(NodeTransformer):
             return node
         return node
 
+
+def sentence_to_single_line(sentence_parse):
+    '''
+    compress multiline code to single line
+    
+    :param sentence_parse: sentence_parse to compress to single line
+    '''
+    code = sentence_parse['code']
+#     print(code)
+    if len(code) <= 1:
+        return
+    new_code = []
+    new_translations = []
+    transdict = {}
+#     for codeline in code[:-1]:
+#     for codeline in code:
+#         parse = ast.parse(codeline.strip())
+#         if type(parse.body[0]).__name__ == 'Assign' and type(parse.body[0].value).__name__ in ['Name', 'Str', 'Num']:
+#             target_parse = parse.body[0].targets[0]
+#             value_parse =  parse.body[0].value
+#             transdict[astor.to_source(target_parse)] = value_parse
+#         else:
+#             new_translations.append(codeline.strip())
+#             tc = TranslateCode(transdict)
+#             tc.visit(parse)
+#             new_code.append(re.sub('\s+',' ',astor.to_source(parse)))
+    parse = ast.parse('\n'.join([codeline.strip() for codeline in code]))
+    translation_parse = copy.deepcopy(parse)
+    TranslateCode(transdict, False).visit(translation_parse)
+    TranslateCode(transdict).visit(parse)
+#     new_code.append(re.sub('\s+',' ',astor.to_source(parse)))
+    new_code.append(clean_code(astor.to_source(parse)))
+    new_translations.append(clean_code(astor.to_source(translation_parse)))
+    sentence_parse['code'] = new_code
+    sentence_parse['translations'] = new_translations
+#     print('code: '+str(sentence_parse['code']))
+#     print('translations: '+str(sentence_parse['translations']))
+    return
+
 class GeneralizeCode(NodeTransformer):
+    '''
+    Transform code to general code, using general codewords 
+    '''
     def __init__(self, gendict={}):
         self.gendict = gendict
 
@@ -310,67 +366,12 @@ class GeneralizeCode(NodeTransformer):
             return node
         return node
 
-
-def to_single_line(sentence_parse):
-    '''
-    compress multiline code to single line
-    
-    :param sentence_parse: sentence_parse to compress to single line
-    '''
-    code = sentence_parse['code']
-#     print(code)
-    if len(code) <= 1:
-        return
-    new_code = []
-    new_translations = []
-    transdict = {}
-#     for codeline in code[:-1]:
-#     for codeline in code:
-#         parse = ast.parse(codeline.strip())
-#         if type(parse.body[0]).__name__ == 'Assign' and type(parse.body[0].value).__name__ in ['Name', 'Str', 'Num']:
-#             target_parse = parse.body[0].targets[0]
-#             value_parse =  parse.body[0].value
-#             transdict[astor.to_source(target_parse)] = value_parse
-#         else:
-#             new_translations.append(codeline.strip())
-#             tc = TranslateCode(transdict)
-#             tc.visit(parse)
-#             new_code.append(re.sub('\s+',' ',astor.to_source(parse)))
-    parse = ast.parse('\n'.join([codeline.strip() for codeline in code]))
-    translation_parse = copy.deepcopy(parse)
-    TranslateCode(transdict, False).visit(translation_parse)
-    TranslateCode(transdict).visit(parse)
-#     new_code.append(re.sub('\s+',' ',astor.to_source(parse)))
-    new_code.append(clean_code(astor.to_source(parse)))
-    new_translations.append(clean_code(astor.to_source(translation_parse)))
-    sentence_parse['code'] = new_code
-    sentence_parse['translations'] = new_translations
-#     print('code: '+str(sentence_parse['code']))
-#     print('translations: '+str(sentence_parse['translations']))
-    return
-
-
-def lambda2def(code):
-#     valid = lambda possibility: exactly(k, len(changed(message,possibility)))
-#     ->
-#     def valid(possibility): return exactly(k, len(changed(message,possibility)))
-    new_code = []
-    for codeline in code:
-        lambda_pattern = r'(?P<indent>\s*)(?P<func>\S+)\s*=\s*(?P<parentheses>\()?lambda\s+(?P<args>[^:]+)\s*:\s*(?P<content>.+)(?(parentheses)\))' 
-        m = re.match(lambda_pattern, codeline)
-        if m:
-            d = m.groupdict()
-            new_code.append('{indent}def {func}({args}): return {content}'.format(**d))
-        else:
-            new_code.append(codeline)
-    return new_code
-
-def to_quotation_mark(problem):
-    problem_parse = parse_problem(problem)
-    for sentence_parse in problem_parse['sentences']:
-        sentence_parse
-    
 def to_generic_names(problem_parse):
+    '''
+    Transform problem code to general code, using general codewords     
+    
+    :param problem_parse:
+    '''
     d = {}
     for sentence_parse in reversed(problem_parse['sentences']):
         method_parse = sentence_parse['method'][0]
@@ -393,6 +394,31 @@ def to_generic_names(problem_parse):
         sentence_parse['code'] = new_code
     return problem_parse
 
+def lambda2def(code):
+    '''
+    Transform lambda expressions to def expressions
+    
+    :param code:
+    '''
+#     valid = lambda possibility: exactly(k, len(changed(message,possibility)))
+#     ->
+#     def valid(possibility): return exactly(k, len(changed(message,possibility)))
+    new_code = []
+    for codeline in code:
+        lambda_pattern = r'(?P<indent>\s*)(?P<func>\S+)\s*=\s*(?P<parentheses>\()?lambda\s+(?P<args>[^:]+)\s*:\s*(?P<content>.+)(?(parentheses)\))' 
+        m = re.match(lambda_pattern, codeline)
+        if m:
+            d = m.groupdict()
+            new_code.append('{indent}def {func}({args}): return {content}'.format(**d))
+        else:
+            new_code.append(codeline)
+    return new_code
+
+def to_quotation_mark(problem):
+    problem_parse = parse_problem(problem)
+    for sentence_parse in problem_parse['sentences']:
+        sentence_parse
+    
 def parse_problem_code(fname, in_path, out_path):
     fpath = os.path.join(in_path, fname)
     with open(fpath) as f:
@@ -406,8 +432,8 @@ def parse_problem_code(fname, in_path, out_path):
         code = lambda2def(code)
 #         code = to_single_line(code)
         sentence_parse['code'] = code
-        to_single_line(sentence_parse)
-        to_codeline_type(sentence_parse)
+        sentence_to_single_line(sentence_parse)
+        sentence_to_codeline_type(sentence_parse)
     problem_parse = to_generic_names(problem_parse)
     print(problem_parse['sentences'])
     problem = compose_problem(problem_parse)
@@ -423,6 +449,7 @@ def is_empty(problem):
             print(sentence_parse['code'])
             return False
     return True
+
 
 def parse_problems_code(path, out_path):
     success = []

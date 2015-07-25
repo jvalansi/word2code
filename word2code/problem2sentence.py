@@ -7,7 +7,6 @@ Created on Apr 6, 2015
 import nltk
 from problem_parser import parse_problem
 import os
-import subprocess
 import string
 import re
 import json
@@ -15,9 +14,8 @@ import ast
 import CRF
 import shutil
 import logger
-from codeline_gen_dep import clean_codeline
-from code_parser import check_solution
 from itertools import combinations
+from utils import check_solution
 
 # get minimal continuous subset containing all relevant words
 # example:

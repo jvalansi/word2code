@@ -5,12 +5,9 @@ Created on May 3, 2015
 '''
 import nltk
 import re
-import copy
-from stanford_corenlp import sentence2dependencies
-import ast
+# from stanford_corenlp import sentence2dependencies
 import os
 import problem_parser
-from utils import average
 import logger
 from dependency_parser import Node, filter_dep, clean_dependencies
 

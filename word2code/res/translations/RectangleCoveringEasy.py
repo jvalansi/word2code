@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class RectangleCoveringEasy:
     def solve(self, holeH, holeW, boardH, boardW):

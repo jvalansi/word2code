@@ -11,7 +11,6 @@ from pprint import pprint
 import os
 from nltk.parse import stanford
 import re
-from dependency_parser import dep2list
 
 
 
@@ -28,11 +27,6 @@ class StanfordNLP:
 #     dependencies = [sentence_parse['indexeddependencies'] for sentence_parse in parse['sentences']]
 #     return (dependencies)
 
-def sentence2dependencies(sentence):
-    dependencies = raw_parse_sents([sentence])
-    print(dependencies)
-    dependencies = [[dep2list(dep) for dep in sentence_dependencies.split('\n')] for sentence_dependencies in dependencies.split('\n\n')]
-    return (dependencies)
 
 def tokenize_sentences(sentences):
     parser = StanfordNLP()
@@ -85,4 +79,4 @@ if __name__ == '__main__':
 #         for sentence in line:
 #             sentence.draw()
 #     print(raw_parse_sents(('this is the english parser test', 'the parser is from stanford parser')))
-    print(sentence2dependencies(sentence))
+#     print(sentence2dependencies(sentence))

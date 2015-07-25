@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class LotteryTicket:
 	def buy(self, price, b1, b2, b3, b4):

@@ -1,4 +1,4 @@
-from utils import *
+from problem_utils import *
 
 class OnTheFarmDivTwo:
 	def animals(self, heads, legs):

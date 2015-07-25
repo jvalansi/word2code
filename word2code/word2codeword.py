@@ -13,13 +13,13 @@ import os
 from problem_parser import parse_problem
 import nltk
 from collections import Counter
-from utils import *
+from problem_utils import *
 import w2v
 from nltk.stem.porter import PorterStemmer
 from nltk.stem.lancaster import LancasterStemmer
 from nltk.stem import SnowballStemmer 
 from nltk.stem import WordNetLemmatizer
-from code_parser import check_solution
+from utils import is_func, check_solution
 
 wn_similarity = wn.wup_similarity
 # stemmer = SnowballStemmer('english')
@@ -49,13 +49,6 @@ def clean_word(word):
     word = word.strip()
     return word
 
-def is_func(codeword):
-    try:
-        isfunc = codeword in ['return','reduce', 'mapping','valid'] or hasattr(eval(codeword), '__call__')
-    except:
-        isfunc = False
-    return isfunc
-
 def get_translations_likelihoods(word, translations_count, funcword_dict):
     if not translations_count:
         return [(-1, codeword) for codeword, transword in funcword_dict.items()]
@@ -77,15 +70,15 @@ def get_wordnet_likelihoods(word, funcword_dict):
     wordnet_likelihoods = sorted(wordnet_likelihoods, reverse = True)
     return wordnet_likelihoods
 
-def get_w2v_likelihoods(word, funcword_dict):
+def get_w2v_likelihoods(word, model, funcword_dict):
     stem = stemmer.lemmatize(word, 'v')
-    if stem not in w2v.model.vocab:
+    if stem not in model.vocab:
         return [(-1, codeword) for codeword, transword in funcword_dict.items()]
-    w2v_likelihoods = [(w2v.model.similarity(stem, codeword_dict[codeword]), codeword) if codeword_dict[codeword] in w2v.model.vocab else (-1, codeword) for codeword, transword in funcword_dict.items()]
+    w2v_likelihoods = [(model.similarity(stem, codeword_dict[codeword]), codeword) if codeword_dict[codeword] in model.vocab else (-1, codeword) for codeword, transword in funcword_dict.items()]
     w2v_likelihoods = sorted(w2v_likelihoods, reverse = True)
     return w2v_likelihoods
 
-def word2codewords(word, translations_count=None, p_thresh = 0.3, n=0):
+def word2codewords(word, translations_count=None, model=None, p_thresh = 0.3, n=0):
     word = clean_word(word)
     if not word:
         return []
@@ -97,7 +90,7 @@ def word2codewords(word, translations_count=None, p_thresh = 0.3, n=0):
     wordnet_likelihoods = get_wordnet_likelihoods(word, funcword_dict)
     if wordnet_likelihoods[0][0] >= p_thresh:
         return wordnet_likelihoods
-    w2v_likelihoods = get_w2v_likelihoods(word, funcword_dict)
+    w2v_likelihoods = get_w2v_likelihoods(word, model, funcword_dict)
     if w2v_likelihoods[0][0] >= p_thresh:
         return w2v_likelihoods
     likelihoods = [(max(zip(*likelihood)[0]),zip(*likelihood)[1][0]) for likelihood in zip(w2v_likelihoods,translations_likelihoods, wordnet_likelihoods)]
@@ -153,6 +146,7 @@ def check_problem(path, fname, p_thresh):
     fnames = sorted(os.listdir(path))
 #         count translations of all words in all other problems
     translations_count = count_translations(path, filter(lambda f: f != fname, fnames))
+    model = w2v.W2V().model
 #     print(translations_count)
 #         predict most likely (highest count) translation for words in the Problem
     results = []
@@ -171,7 +165,7 @@ def check_problem(path, fname, p_thresh):
             if not is_func(codeword) or codeword  in ['reduce', 'mapping', 'valid']:
                 continue
 #             likely_codewords = word2codewords(transword, translations_count, p_thresh)
-            likely_codewords = word2codewords(transword, translations_count)
+            likely_codewords = word2codewords(transword, translations_count, model)
             likely_codewords = sorted(likely_codewords, reverse=True)
 #             result = bool(likely_codewords) and codeword in [likely_codeword for p,likely_codeword in likely_codewords if p >= p_thresh]
             result = bool(likely_codewords) and codeword in [likely_codeword for p,likely_codeword in likely_codewords[:p_thresh]]
@@ -182,7 +176,7 @@ def check_problem(path, fname, p_thresh):
                 logger.logging.info(codeword_dict[codeword])
                 logger.logging.info(codeword)
                 try:
-                    logger.logging.info(w2v.model.similarity(stemmer.lemmatize(transword, 'v'), codeword_dict[codeword]))
+                    logger.logging.info(model.similarity(stemmer.lemmatize(transword, 'v'), codeword_dict[codeword]))
                 except Exception:
                     pass
                 logger.logging.info(likely_codewords)
@@ -212,7 +206,7 @@ if __name__ == '__main__':
     p = 1
     problem_dir = 'res/text&code6'
 #     print(check_words(problem_dir, p_thresh))
-    print(check_words(problem_dir, p))
+#     print(check_words(problem_dir, p))
     fname = 'AverageAverage.py'
 #     fname = 'AlienAndPassword.py'
 #     fname = 'BasketsWithApples.py'
@@ -225,7 +219,7 @@ if __name__ == '__main__':
 #     fname = 'MountainRanges.py'
 #     fname = 'Multiples.py'
     p = 4
-#     print(check_problem(problem_dir, fname, p))
+    print(check_problem(problem_dir, fname, p))
 
 #     results = {}
 #     for p in range(1,20):

@@ -3,13 +3,11 @@ Created on Jun 14, 2015
 
 @author: jordan
 '''
-from stanford_corenlp import sentence2dependencies, tokenize_sentences
-import sentence2word
+from stanford_corenlp import tokenize_sentences
+# import sentence2word
 import nltk
 import os
 from problem_parser import parse_problem
-from word2codeword import is_func
-import string
 from pystruct.models.edge_feature_graph_crf import EdgeFeatureGraphCRF
 from pystruct.learners.one_slack_ssvm import OneSlackSSVM
 import shutil
@@ -17,14 +15,13 @@ import json
 import numpy as np
 from sklearn.metrics import accuracy_score
 from pystruct.learners.structured_perceptron import StructuredPerceptron
-import copy
 from itertools import combinations
-from dependency_parser import dep2word, dep2ind, Node
-import problem2sentence
-from solution_check import check_solution
+from dependency_parser import dep2word, dep2ind, Node, sentence2dependencies
+# import problem2sentence
 import re
 import logger
 import ast
+from utils import is_func, check_solution
 
 
 # sentence: Return the number of different passwords Fred needs to try.
@@ -98,7 +95,7 @@ def sentence2output(sentence_parse):
     translations = sentence_parse['translations']
     code = sentence_parse['code']
     method = sentence_parse['method']
-    sentence_type = problem2sentence.get_type(sentence, translations, code, method)
+#     sentence_type = problem2sentence.get_type(sentence, translations, code, method)
 #     dependencies = sentence2dependencies(sentence)[0]
 #     nodes = get_nodes(dependencies)
     labels = sentence2word.types
@@ -314,7 +311,6 @@ def get_label_probs(line):
     return probs
 
 def get_label_words(line, label):
-    label_words = []
     return line['label']
     
 def check_type(line, word_type, n):
