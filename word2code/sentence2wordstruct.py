@@ -15,13 +15,15 @@ import json
 import numpy as np
 from sklearn.metrics import accuracy_score
 from pystruct.learners.structured_perceptron import StructuredPerceptron
-from itertools import combinations
+from itertools import combinations, combinations_with_replacement
 from dependency_parser import dep2word, dep2ind, Node, sentence2dependencies
 # import problem2sentence
 import re
 import logger
 import ast
 from utils import is_func, check_solution
+import sentence2word
+import problem2sentence
 
 
 # sentence: Return the number of different passwords Fred needs to try.
@@ -52,14 +54,15 @@ def sentence2input(sentence_parse):
     sentence = sentence_parse['sentence']
     translations = sentence_parse['translations']
     code = sentence_parse['code']
+    labels = ['sentence_type'] 
 #     labels = sentence2word.types + ['sentence_type'] 
-    labels = sentence2word.types
+#     labels = sentence2word.types
     dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
     nodes = get_nodes(dependencies)
     edge_features, edge_sources, edge_targets = zip(*dependencies)
     label_features = [[dep2word(n) for n in nodes] + list(edge_features) for label in labels] #TODO: use pos
-    edges = [[labels.index(s), labels.index(t)] for s,t in combinations(labels, 2)]
-    edge_features = ['O' for s,t in combinations(labels, 2) ]
+    edges = [[labels.index(s), labels.index(t)] for s,t in combinations_with_replacement(labels, 2)] #TODO: fix (remove replacements)
+    edge_features = ['O' for s,t in combinations_with_replacement(labels, 2)]
       
     #TODO: clean words
     #TODO: add the edges (with connected nodes) as features
@@ -95,30 +98,31 @@ def sentence2output(sentence_parse):
     translations = sentence_parse['translations']
     code = sentence_parse['code']
     method = sentence_parse['method']
-#     sentence_type = problem2sentence.get_type(sentence, translations, code, method)
+    sentence_type = problem2sentence.get_type(sentence, translations, code, method)
 #     dependencies = sentence2dependencies(sentence)[0]
 #     nodes = get_nodes(dependencies)
     labels = sentence2word.types
     N = len(labels)
+    output = [sentence_type]
 #     output = ['O']*N + [sentence_type]
-    output = ['O']*N
-    sentwords = nltk.word_tokenize(sentence)
-    for translation, codeline in zip(translations, code):
-        codewords = nltk.word_tokenize(codeline)
-        transwords = nltk.word_tokenize(translation)
-        label = sentence2word.get_type(codewords)
-        if not label:
-            continue
-        funcwords = filter(is_func, codewords)
-        if funcwords:
-            output[labels.index(label)] = funcwords[-1]
-#         transcodedict = dict(zip(transwords,codewords))
-#         word_nodes = map(dep2word, nodes)
-#         output = [label if n in transwords and is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
-#         output = ['var' if n in transwords and not is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
-#     if output == ['O']*N + [sentence_type]:
-    if output == ['O']*N:
-        return None 
+#     output = ['O']*N
+#     sentwords = nltk.word_tokenize(sentence)
+#     for translation, codeline in zip(translations, code):
+#         codewords = nltk.word_tokenize(codeline)
+#         transwords = nltk.word_tokenize(translation)
+#         label = sentence2word.get_type(codewords)
+#         if not label:
+#             continue
+#         funcwords = filter(is_func, codewords)
+#         if funcwords:
+#             output[labels.index(label)] = funcwords[-1]
+# #         transcodedict = dict(zip(transwords,codewords))
+# #         word_nodes = map(dep2word, nodes)
+# #         output = [label if n in transwords and is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
+# #         output = ['var' if n in transwords and not is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
+# #     if output == ['O']*N + [sentence_type]:
+#     if output == ['O']*N:
+#         return None 
     return output
 
 
@@ -279,8 +283,8 @@ def test(indir, outdir, build=False):
         train_states = np.unique(np.hstack([y.ravel() for y in Y_train]))
         if len(train_states) != len(features[2]):
             continue
-#         print(X_train[0][0].shape)
-#         print(Y_train[0].shape)
+        print(X_train[0][0].shape)
+        print(Y_train[0].shape)
 # #         for x, y in zip(X_train, Y_train):
 # #             n_nodes = x[0].shape[0]
 # #             y = y.reshape(n_nodes)
@@ -360,13 +364,12 @@ def calc_score(json_dir, n, problem_dir=None):
         else:
             logger.logging.info(fname)
         total += any(problem_result)
-#     print(total)
+    print(total)
     if total:
         print(float(len(correct))/total)
     return correct
 
-
-if __name__ == '__main__':
+def main():
     problem_dir = os.path.join('res', 'text&code6') 
     indir = problem_dir
     outdir = os.path.join(problem_dir, 'word_train_struct')
@@ -378,12 +381,13 @@ if __name__ == '__main__':
     outdir = os.path.join(problem_dir, 'word_json_struct')
 #     test(indir, outdir, build=True)
 
-    n = 2
+    n = 1
     labels = get_features(indir)[2]
     labels.remove('O')
-    print(sentence2word.calc_score(outdir, n, labels=labels))
+    print(calc_score(outdir, n))
 
-
+if __name__ == '__main__':
+    main()
 
 #TODO: use part of speech for node features
 #TODO: use ast as Y

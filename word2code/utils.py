@@ -9,6 +9,38 @@ import os
 import json
 import nltk
 import collections
+import re
+from stanford_corenlp import tokenize_sentences
+from dependency_parser import sentence2dependencies, dep2dict
+
+def get_features(sentence):
+    '''
+    extract dependency relations as features for sentence
+    
+    :param sentence:
+    '''
+#     sentwords = nltk.word_tokenize(sentence.lower())
+    sentwords = tokenize_sentences(sentence)[0]
+#     print(sentwords)
+    dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
+#     print(dependencies)
+    features = ['O']*len(sentwords)
+    for dep in dependencies:
+#         print(dep)
+        m0 = dep2dict(dep[-1])
+        m1 = dep2dict(dep[-2])
+        features[int(m0['ind'])-1] = 'I'
+        features[int(m1['ind'])-1] = 'I'
+    for dep in dependencies:
+        m = dep2dict(dep[-1])
+        features[int(m['ind'])-1] = dep[0] 
+    return features
+
+
+def clean_word(word):
+    word = re.sub('\d?$', '', word)
+    word = word.strip()
+    return word
 
 def check_solution(problem_path, soln=1):
 #     with open('temp.py', 'w') as f:

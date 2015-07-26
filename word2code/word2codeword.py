@@ -6,20 +6,18 @@ Created on Apr 28, 2015
 from __future__ import division
 import logger
 from nltk.corpus import wordnet as wn
-import re
 import csv
 from itertools import product
 import os
 from problem_parser import parse_problem
 import nltk
 from collections import Counter
-from problem_utils import *
 import w2v
 from nltk.stem.porter import PorterStemmer
 from nltk.stem.lancaster import LancasterStemmer
 from nltk.stem import SnowballStemmer 
 from nltk.stem import WordNetLemmatizer
-from utils import is_func, check_solution
+from utils import is_func, check_solution, clean_word
 
 wn_similarity = wn.wup_similarity
 # stemmer = SnowballStemmer('english')
@@ -27,7 +25,15 @@ wn_similarity = wn.wup_similarity
 # stemmer = LancasterStemmer()
 stemmer = WordNetLemmatizer()
 
+model = None
+
 def wordnet_similarity(word1, word2):
+    '''
+    calculate words similarity using wordnet 
+    
+    :param word1:
+    :param word2:
+    '''
     synsets1 = wn.synsets(word1)
     synsets2 = wn.synsets(word2)
     if not synsets1 or not synsets2:
@@ -44,73 +50,109 @@ def wordnet_similarity(word1, word2):
 #     return max(wn.path_similarity(synset1, synset2) for synset1,synset2 in product(synsets1,synsets2))
 #     return max(wn.res_similarity(synset1, synset2) for synset1,synset2 in product(synsets1,synsets2))
 
-def clean_word(word):
-    word = re.sub('\d?$', '', word)
-    word = word.strip()
-    return word
 
 def get_translations_likelihoods(word, translations_count, funcword_dict):
+    '''
+    get likelihoods of translations of the given word according to their count in the data
+    
+    :param word:
+    :param translations_count:
+    :param funcword_dict:
+    '''
+    translations_likelihoods = [(-1, codeword) for codeword, transword in funcword_dict.items()]
     if not translations_count:
-        return [(-1, codeword) for codeword, transword in funcword_dict.items()]
+        return translations_likelihoods
     stem = stemmer.lemmatize(word, 'v')
     translations_likelihoods = [(translations_count[(stem, codeword)], codeword) if (stem, codeword) in translations_count else (0, codeword) for codeword, transword in funcword_dict.items()]
-#         count_sum = sum(zip(*translations_likelihoods)[0])
-    translations_likelihoods = sorted(translations_likelihoods, reverse = True)
-    count_max = translations_likelihoods[0][0]
-#         print(count_max)
-    if not count_max > 1:
-        return [(-1, codeword) for codeword, transword in funcword_dict.items()]
-    translations_likelihoods = [(likelihood/count_max, codeword)  for likelihood, codeword in translations_likelihoods]
-    translations_likelihoods = sorted(translations_likelihoods, reverse = True)
+    count_sum = sum(zip(*translations_likelihoods)[0])
+    if not count_sum > 1:
+        return translations_likelihoods
+    translations_likelihoods = [(likelihood/count_sum, codeword)  for likelihood, codeword in translations_likelihoods]
     return translations_likelihoods
 
 def get_wordnet_likelihoods(word, funcword_dict):
+    '''
+    get likelihoods of translations of the given word according to their wordnet similarity
+    
+    :param word:
+    :param funcword_dict:
+    '''
     stem = stemmer.lemmatize(word, 'v')
     wordnet_likelihoods = [(wordnet_similarity(stem, codeword_dict[codeword]), codeword) for codeword, transword in funcword_dict.items()]
-    wordnet_likelihoods = sorted(wordnet_likelihoods, reverse = True)
     return wordnet_likelihoods
 
 def get_w2v_likelihoods(word, model, funcword_dict):
+    '''
+    get likelihoods of translations of the given word according to their word2vec similarity
+    
+    :param word:
+    :param model:
+    :param funcword_dict:
+    '''
     stem = stemmer.lemmatize(word, 'v')
-    if stem not in model.vocab:
+    if not model or stem not in model.vocab:
         return [(-1, codeword) for codeword, transword in funcword_dict.items()]
     w2v_likelihoods = [(model.similarity(stem, codeword_dict[codeword]), codeword) if codeword_dict[codeword] in model.vocab else (-1, codeword) for codeword, transword in funcword_dict.items()]
-    w2v_likelihoods = sorted(w2v_likelihoods, reverse = True)
     return w2v_likelihoods
 
-def word2codewords(word, translations_count=None, model=None, p_thresh = 0.3, n=0):
+def get_model():
+    global model
+    if not model:
+        model = w2v.W2V().model
+    return model
+
+def word2codewords(word, translations_count=None, p_thresh=0.3, p=None):
+    '''
+    generate most p most probable codewords for the given word
+    
+    :param word:
+    :param translations_count:
+    :param p_thresh: minimal probability to trust a certain likelihood 
+    :param p: number of possible codewords for each word
+    '''
     word = clean_word(word)
     if not word:
         return []
-    likelihoods = []
     funcword_dict = {codeword: transword for codeword,transword in codeword_dict.items() if is_func(codeword)}
     translations_likelihoods = get_translations_likelihoods(word, translations_count, funcword_dict)
-    if translations_likelihoods[0][0] >= p_thresh:
-        return translations_likelihoods
+    if max(zip(*translations_likelihoods)[0]) >= p_thresh:
+        likelihoods = sorted(translations_likelihoods, reverse=True)[:p]
+        return likelihoods
     wordnet_likelihoods = get_wordnet_likelihoods(word, funcword_dict)
-    if wordnet_likelihoods[0][0] >= p_thresh:
-        return wordnet_likelihoods
+    if max(zip(*wordnet_likelihoods)[0]) >= p_thresh:
+        likelihoods = sorted(wordnet_likelihoods, reverse=True)[:p]
+        return likelihoods
+    model = get_model()
     w2v_likelihoods = get_w2v_likelihoods(word, model, funcword_dict)
-    if w2v_likelihoods[0][0] >= p_thresh:
-        return w2v_likelihoods
+    if max(zip(*w2v_likelihoods)[0]) >= p_thresh:
+        likelihoods = sorted(w2v_likelihoods, reverse=True)[:p]
+        return likelihoods
     likelihoods = [(max(zip(*likelihood)[0]),zip(*likelihood)[1][0]) for likelihood in zip(w2v_likelihoods,translations_likelihoods, wordnet_likelihoods)]
 #     likelihoods = [(max(zip(*likelihood)[0]),zip(*likelihood)[1][0]) for likelihood in zip(w2v_likelihoods,translations_likelihoods)]
+    likelihoods = sorted(likelihoods, reverse=True)[:p]
     return likelihoods
 #     if n:
 #         return likelihoods[:n]
 #     return likelihoods
 
 def get_codeword_dict():
-    codeword_dict = {}
-    with open('res/codewords', 'rb') as csvfile:
+    '''
+    get codeword dictionary from file
+    '''
+    with open(os.path.join('res', 'codewords'), 'rb') as csvfile:
         spamreader = csv.reader(csvfile)
-        for row in spamreader:
-            codeword_dict[row[0]] = clean_word(row[1])
+        codeword_dict = {row[0]: clean_word(row[1]) for row in spamreader}
     return codeword_dict
 
 codeword_dict = get_codeword_dict()
 
 def count_translations(path, fnames):
+    '''
+    count the translations of every word of every problem in fnames
+    
+    :param path: path to the problems
+    :param fnames: problem names to include
+    '''
     translations_count = []
     for fname in fnames:
         if not fname.endswith('.py'):
@@ -132,6 +174,13 @@ def count_translations(path, fnames):
     return Counter(translations_count)
 
 def get_translation_dict(translations, code, stem=True):
+    '''
+    dictionary of codewords and their respective translations  
+    
+    :param translations:
+    :param code:
+    :param stem:
+    '''
     transdict = {}
     for translation,codeline in zip(translations,code):
         codewords = nltk.word_tokenize(codeline)
@@ -142,11 +191,17 @@ def get_translation_dict(translations, code, stem=True):
     return transdict
 
 
-def check_problem(path, fname, p_thresh):
+def check_problem(path, fname, p):
+    '''
+    check whether each of the codewords in the problem are contained in the probable codewords 
+    
+    :param path: path to problem
+    :param fname: problem name
+    :param p: number of possible codewords for each word
+    '''
     fnames = sorted(os.listdir(path))
 #         count translations of all words in all other problems
     translations_count = count_translations(path, filter(lambda f: f != fname, fnames))
-    model = w2v.W2V().model
 #     print(translations_count)
 #         predict most likely (highest count) translation for words in the Problem
     results = []
@@ -165,10 +220,10 @@ def check_problem(path, fname, p_thresh):
             if not is_func(codeword) or codeword  in ['reduce', 'mapping', 'valid']:
                 continue
 #             likely_codewords = word2codewords(transword, translations_count, p_thresh)
-            likely_codewords = word2codewords(transword, translations_count, model)
-            likely_codewords = sorted(likely_codewords, reverse=True)
+            likely_codewords = word2codewords(transword, translations_count, p=p)
 #             result = bool(likely_codewords) and codeword in [likely_codeword for p,likely_codeword in likely_codewords if p >= p_thresh]
-            result = bool(likely_codewords) and codeword in [likely_codeword for p,likely_codeword in likely_codewords[:p_thresh]]
+            likely_codewords = zip(*likely_codewords)[-1]
+            result = codeword in likely_codewords 
             if not result:
                 logger.logging.info(fname)
                 logger.logging.info(clean_word(transword))
@@ -183,7 +238,13 @@ def check_problem(path, fname, p_thresh):
             results.append(result)
     return(all(results))
 
-def check_words(path, p_thresh):
+def check_words(path, p):
+    '''
+    calculate how many problems pass the check in the given path
+    
+    :param path:
+    :param p: number of possible codewords for each word
+    '''
     successful = []
     total = 0
 #     for each Problem
@@ -193,7 +254,7 @@ def check_words(path, p_thresh):
             continue
         if not check_solution(os.path.join(path, fname)):
             continue
-        if check_problem(path, fname, p_thresh):
+        if check_problem(path, fname, p):
             successful.append(fname)
         total += 1
 #     print(total)
@@ -201,7 +262,7 @@ def check_words(path, p_thresh):
     return successful
 
 
-if __name__ == '__main__':
+def main():
     p_thresh = 1
     p = 1
     problem_dir = 'res/text&code6'
@@ -219,12 +280,12 @@ if __name__ == '__main__':
 #     fname = 'MountainRanges.py'
 #     fname = 'Multiples.py'
     p = 4
-    print(check_problem(problem_dir, fname, p))
+#     print(check_problem(problem_dir, fname, p))
 
-#     results = {}
-#     for p in range(1,20):
-#         results[p] = check_words(problem_dir, p)
-#     print(', '.join(['{}: {}'.format(k, len(v)) for k, v in results.items()]))
+    results = {}
+    for p in range(1,20):
+        results[p] = check_words(problem_dir, p)
+    print(', '.join(['{}: {}'.format(k, len(v)) for k, v in results.items()]))
          
 #     problem_dir = 'res/text&code5'
 #     1: 19, 2: 20, 3: 22, 4: 23, 5: 23, 6: 23, 7: 23, 8: 23, 9: 24, 10: 24, 11: 24, 1
@@ -251,3 +312,6 @@ if __name__ == '__main__':
 
 #     print(wordnet_similarity('most', 'maximum'))
 #     print(word2codewords('adjacent'))
+
+if __name__ == '__main__':
+    main()

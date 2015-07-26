@@ -9,7 +9,7 @@ import shutil
 import json
 from nltk.tokenize import sent_tokenize
 from dependency_parser import Node, sentence2dependencies
-from utils import check_solution
+# from utils import check_solution
 
 # from problem_utils import *
 # from operator import *
@@ -130,6 +130,8 @@ def print_deps(parse):
     return str(root.deps2tree(deps))
 
 
+indenter = ' '*4
+
 def compose_sentence(parse):
     sentence = ''
     sentence += indenter*2 + '# ' + parse['sentence'].strip() + '\n'
@@ -147,8 +149,6 @@ def compose_sentence(parse):
         sentence += indenter*indent + codeline.strip() + '\n'
 #     sentence += indenter*indent+'# '+ print_deps(parse) + '\n'
     return sentence
-
-indenter = ' '*4
 
 def compose_problem(parse):
     problem = ''

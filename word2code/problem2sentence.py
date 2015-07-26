@@ -15,14 +15,20 @@ import CRF
 import shutil
 import logger
 from itertools import combinations
-from utils import check_solution
+from utils import check_solution, clean_word, get_features
+from stanford_corenlp import tokenize_sentences
 
-# get minimal continuous subset containing all relevant words
-# example:
-#         sentence words: ["hello", "world", ",", "how", "are", "you", "?"]
-#         relevant words: ["world", "are"]
-#         smallest csubset: ["world", ",", "how", "are"]
 def get_min_mask(sentwords,relevantwords):
+    '''
+    get minimal continuous subset containing all relevant words
+    example:
+            sentence words: ["hello", "world", ",", "how", "are", "you", "?"]
+            relevant words: ["world", "are"]
+            smallest csubset: ["world", ",", "how", "are"]
+    
+    :param sentwords:
+    :param relevantwords:
+    '''
     relevantset = set(relevantwords)
     N = len(sentwords)
     mask = [1] * N
@@ -35,43 +41,57 @@ def get_min_mask(sentwords,relevantwords):
     return mask
 
 
-types = ['return', 'mapping', 'valid', 'reduce', 'possibilities', 'types']
+types = ['return', 'mapping', 'valid', 'reduce']
+# types = ['return', 'mapping', 'valid', 'reduce', 'possibilities', 'types']
 # types = ['I']
 
-def clean_codeword(codeword):
-    return re.sub(r'\d?$', '', codeword)
-
 def get_type(sentence, translations, code, method):
+    '''
+    get the sentence type according to the code and method
+    
+    :param sentence:
+    :param translations:
+    :param code:
+    :param method:
+    '''
     if not code:
-        return None
+        return 'O'
     if method[0]:
         m = re.match(r'\s*def\s+(.+)\(.*\):\s*', method[0])
-        sentence_type = clean_codeword(m.group(1))
+        sentence_type = clean_word(m.group(1))
         if sentence_type in types:
             return sentence_type
     if len(code) == 1:
         codewords = nltk.word_tokenize(code[0])
-        sentence_type = clean_codeword(codewords[0])
+        sentence_type = clean_word(codewords[0])
         if sentence_type in types:
             return sentence_type
-        if sentence_type == 'def' and clean_codeword(codewords[1]) in types:
-            return clean_codeword(codewords[1])
+        if sentence_type == 'def' and clean_word(codewords[1]) in types:
+            return clean_word(codewords[1])
     else:
         codewords = nltk.word_tokenize(code[-1])
-        if codewords[0] == 'return':
+        if not method[0] and codewords[0] == 'return':
             return 'return'
-    print(method)
-    print(code)
-    return None
+#     print(method)
+#     print(code)
+    return 'O'
 
-#     input: sentence, translated code, code
-#     output: labeled sentence
-#     label should be according to sentence type (mapping 'M', valid 'V', return 'R')
-#     between first and last translated words, else 'O'
 def label_sentence(sentence,translations,code,symbol):
-    sentwords = nltk.word_tokenize(sentence.lower())
+    '''
+    label should be according to sentence type
+    between first and last translated words, else 'O'
+
+    :param sentence:
+    :param translations:
+    :param code:
+    :param symbol:
+    :returns: labeled sentence    
+    '''
+#     sentwords = nltk.word_tokenize(sentence.lower())
+    sentwords = tokenize_sentences(sentence.lower())[0]
     pos = zip(*nltk.pos_tag(sentwords))[1]
     N = len(sentwords)
+    features = get_features(sentence)
     labels = ['O'] * N
     for translation,codeline in zip(translations,code):
         codewords = nltk.word_tokenize(codeline)
@@ -88,23 +108,30 @@ def label_sentence(sentence,translations,code,symbol):
         labels = [ symbol if mask[i] else labels[i] for i in range(N)]
 #         index = mask.index(1)
 #         labels[index] = 'B'+symbol
-    return zip(sentwords,pos,labels)
+    return zip(sentwords,pos,features, labels)
 
 def label_problem(indir, outdir, fname):
+    '''
+    label each sentence of the given problem
+    
+    :param indir: path to the problem
+    :param outdir: path to write the labeled problem
+    :param fname: problem name
+    '''
     with open(os.path.join(indir,fname),'r') as f:
         problem = f.read()
     parse = parse_problem(problem)
     sentence_labels = []
     for sentence_parse in parse['sentences']:
         sentence = sentence_parse['sentence']
-        print(sentence)
+#         print(sentence)
         translations = sentence_parse['translations']
         code = sentence_parse['code']
         method = sentence_parse['method']
-        if not code:
-            continue
+#         if not code:
+#             continue
         symbol = get_type(sentence, translations, code, method)
-        print(symbol)
+#         print(symbol)
         if not symbol:
             continue               
         labels = label_sentence(sentence, translations, code, symbol)
@@ -114,16 +141,50 @@ def label_problem(indir, outdir, fname):
         f.write('\n\n'.join(['\n'.join(['\t'.join(label) for label in labels]) for labels in sentence_labels]))
 
 def build_train(indir, outdir):
+    '''
+    build train database by labeling each problem in indir
+    
+    :param indir: path to problems to label
+    :param outdir: path to write labeled problems
+    '''
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
     os.mkdir(outdir)
     for fname in sorted(os.listdir(indir)):
-        print(fname)
         if not fname.endswith('.py'):
             continue
+        print(fname)
         label_problem(indir, outdir, fname)
 
-def get_sentences_probabilities(problem_json, symbol):
+def get_possible_sentence_type(sentences_json, sentence, n):
+    '''
+    get the most probable sentence type for the given sentence
+    
+    :param sentences_json:
+    :param sentence:
+    :param n: number of possible sentences for each type
+    '''
+    possible_types = []
+    sentind = sentences_json.index(sentence)
+    for sentence_type in types:
+        sentprobs = get_sentences_probabilities(sentences_json, sentence_type, n)
+        for sentprob in sentprobs:
+            if sentind == sentprob[-1]:
+                possible_types.append((sentprob[0], sentence_type))
+    if not possible_types:
+        return None
+    print(possible_types)
+    possible_types = sorted(possible_types, reverse=True)[0]
+    return possible_types[-1]
+
+def get_sentences_probabilities(problem_json, symbol, n=None):
+    '''
+    get probability for the given symbol, for each of the sentence in the problem    
+    
+    :param problem_json:
+    :param symbol:
+    :param n: number of possible sentences for each type
+    '''
     sentprobs = []
     for i,sentence in enumerate(problem_json):
         sentprob = 0
@@ -137,16 +198,17 @@ def get_sentences_probabilities(problem_json, symbol):
             else:
                 prob = probs[symbol]
             sentprob = prob if sentprob < prob else sentprob
-#                 if line['prediction'][1] == 'O':
-#                     continue
-#                 if line['label'] == line['prediction'][1]:
-#                     correct +=1
-#                 total += 1
         sentprobs.append((sentprob,important,i))
     sentprobs = sorted(sentprobs,reverse = True)
-    return sentprobs
+    return sentprobs[:n]
 
 def get_expected_sents(problem_json, symbol): 
+    '''
+    get the actual sentences for the given symbol
+    
+    :param problem_json:
+    :param symbol:
+    '''
     expected_sents = []
     for i,sentence in enumerate(problem_json):
         for line in sentence:
@@ -154,25 +216,70 @@ def get_expected_sents(problem_json, symbol):
                 expected_sents.append(i)
     return expected_sents
 
+def get_expected_type(sentence):
+    '''
+    get the actual type for the given sentence
+    
+    :param sentence:
+    '''
+    for line in sentence:
+        if line['label'] in types:
+            return line['label']
+    
 def check_problem(json_dir,fname,n):
-#         check if n most probable sentences contain all important sentences
+    '''
+    check if n most probable sentences contain all the sentences of a certain type, for all types
+      
+    :param json_dir:
+    :param fname:
+    :param n: number of possible sentences for each type
+    '''
     with open(os.path.join(json_dir,fname),'r') as inputjson:
         problem_json = json.load(inputjson)
     results = []
     for sentence_type in types:
         sentprobs = get_sentences_probabilities(problem_json,sentence_type)
-        probable_sents = zip(*sentprobs[:n])[-1]
+        probable_sents = zip(*sentprobs)[-1][:n]
         expected_sents = get_expected_sents(problem_json,sentence_type)
         result = set(expected_sents).issubset(set(probable_sents))
 #         result = all([not important for (sentprob,i,important) in sentprobs[n:]])
         if not result:
             logger.logging.info(fname)
-            logger.logging.info(sentence_type)            
+            logger.logging.info(sentence_type)
+            logger.logging.info(expected_sents)            
             logger.logging.info(sentprobs)
         results.append(result)
     return results
 
+# def check_problem(json_dir,fname,n):
+# #         check if n most probable sentences contain all important sentences
+#     with open(os.path.join(json_dir,fname),'r') as inputjson:
+#         problem_json = json.load(inputjson)
+#     results = []
+#     for sentence in problem_json:
+#         expected_type = get_expected_type(sentence)
+#         expected_type_sentprobs = get_sentences_probabilities(problem_json,expected_type)
+#         probable_type = get_possible_sentence_type(problem_json, sentence, n)
+#         probable_type_sentprobs = get_sentences_probabilities(problem_json,probable_type)
+#         result = not expected_type or expected_type == probable_type
+#         if not result:
+#             logger.logging.info(fname)
+#             logger.logging.info(problem_json.index(sentence))
+#             logger.logging.info(expected_type)
+#             logger.logging.info(expected_type_sentprobs)
+#             logger.logging.info(probable_type)
+#             logger.logging.info(probable_type_sentprobs)
+#         results.append(result)
+#     return results
+
 def calc_score(json_dir,n=4, problem_dir=None):
+    '''
+    calculate how many problems pass the check in the given path
+
+    :param json_dir: path to the problems
+    :param n: number of possible sentences for each label 
+    :param problem_dir: given to allow checking whether a problem has a solution 
+    '''
     correct = []
     total = 0
     fnames = sorted(os.listdir(json_dir))
@@ -189,28 +296,26 @@ def calc_score(json_dir,n=4, problem_dir=None):
     return correct
 
 
-
-if __name__ == '__main__':
-
-    main_indir = os.path.join('res', 'text&code5')
-    main_indir = os.path.join('res', 'text&code6')
-    main_train_dir = os.path.join(main_indir, 'sentence_train')
-    main_fname = 'ChocolateBar.py'
-    label_problem(main_indir, main_train_dir, main_fname)
-#     build_train(main_indir, main_train_dir)
+def main():
+    indir = os.path.join('res', 'text&code5')
+    indir = os.path.join('res', 'text&code6')
+    train_dir = os.path.join(indir, 'sentence_train')
+    fname = 'ChocolateBar.py'
+#     label_problem(indir, train_dir, fname)
+#     build_train(indir, train_dir)
 
 #     indir = 'res/problems_test/'
 #     test_dir = 'res/sentence_test'
-#     build_train(main_indir, main_test_dir)
+#     build_train(indir, test_dir)
 
 #     outdir = 'res/sentence_json'
 #     outdir = 'res/sentence_json_small'
-    main_outdir = os.path.join(main_indir, 'sentence_json')
-#     CRF.test(main_train_dir, main_outdir, features=1)
-#     CRF.test(main_train_dir, main_outdir, main_test_dir, features=1)
+    outdir = os.path.join(indir, 'sentence_json')
+#     CRF.test(train_dir, outdir)
+#     CRF.test(train_dir, outdir, test_dir)
 
     n = 1
-#     print(calc_score(main_outdir, n, main_indir))
+    print(calc_score(outdir, n, indir))
 
     main_fname = 'AverageAverage.label'
     main_fname = 'ChocolateBar.label'
@@ -219,3 +324,7 @@ if __name__ == '__main__':
 #     fname = 'FarFromPrimes.label'
 #     fname = 'LittleElephantAndBallsAgain.label'
 #     print(check_problem(main_outdir, main_fname,n))
+
+
+if __name__ == '__main__':
+    main()

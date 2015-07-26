@@ -11,6 +11,8 @@ from pprint import pprint
 import os
 from nltk.parse import stanford
 import re
+from nltk.tokenize.stanford import StanfordTokenizer
+import nltk
 
 
 
@@ -28,11 +30,16 @@ class StanfordNLP:
 #     return (dependencies)
 
 
+# def tokenize_sentences(sentences):
+#     parser = StanfordNLP()
+#     parse = parser.parse(sentences)
+#     sentences_words = [[word[0] for word in sentence_parse['words']] for sentence_parse in parse['sentences']]
+#     return sentences_words
+
 def tokenize_sentences(sentences):
-    parser = StanfordNLP()
-    parse = parser.parse(sentences)
-    sentences_words = [[word[0] for word in sentence_parse['words']] for sentence_parse in parse['sentences']]
-    return sentences_words
+#     sentences = nltk.sent_tokenize(sentences)
+    st = StanfordTokenizer('stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar')
+    return [st.tokenize(sentences)]
     
 def raw_parse_sents(sentences, verbose=False, output_format='typedDependencies'):
     """
@@ -60,6 +67,7 @@ def raw_parse_sents(sentences, verbose=False, output_format='typedDependencies')
 
 if __name__ == '__main__':
     sentence = 'hello my friend, how are you?'
+    sentences = ('this is the english parser test.', 'the parser is from stanford parser')
 #     print(sentence2dependencies(sentence))
 #     parser = StanfordNLP()
 #     parse = parser.parse(sentence)
@@ -78,5 +86,9 @@ if __name__ == '__main__':
 #     for line in sentences:
 #         for sentence in line:
 #             sentence.draw()
-#     print(raw_parse_sents(('this is the english parser test', 'the parser is from stanford parser')))
+#     print(raw_parse_sents(sentences))
 #     print(sentence2dependencies(sentence))
+    
+    sentences = ' '.join(sentences)
+    print(tokenize_sentences_(sentences))
+    print(tokenize_sentences(sentences))

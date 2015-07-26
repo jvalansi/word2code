@@ -20,7 +20,7 @@ import shutil
 from matplotlib.pyplot import imshow
 from dependency_parser import dep2dict, sentence2dependencies
 from operator import indexOf
-from utils import is_func, check_solution
+from utils import is_func, check_solution, get_features
 from stanford_corenlp import tokenize_sentences
 
 
@@ -32,57 +32,16 @@ non_callable = set()
 non_relevant = []
 
 
-#     phrase to code:
-#     phrase:         Return the number of different passwords Fred needs to try.
-#     dependencies:    det(number-3, the-2)
-#                      prep_return(needs-8, number-3)
-#                      amod(passwords-6, different-5)
-#                      prep_of(number-3, passwords-6)
-#                      nsubj(needs-8, Fred-7)
-#                      nsubj(try-10, Fred-7)
-#                      root(ROOT-0, needs-8)
-#                      aux(try-10, to-9)
-#                      xcomp(needs-8, try-10)
-#                     return(number(different(passwords(needs(Fred,try)))
-#                     return(number(different(possibility for possibility in passwords if valid(possibility))))
-#     code:           return(len(set(possibility for possibility in possibilities if valid(possibility))))
-#
-#     phrase:         the correct array can be done from S by removing exactly 1 element
-#                     det(array-3, the-1)
-#                     amod(array-3, correct-2) correct = lambda array:
-#                     nsubjpass(done-6, array-3)
-#                     aux(done-6, can-4)
-#                     auxpass(done-6, be-5)
-#                     root(ROOT-0, done-6)
-#                     prep_from(done-6, S-8)
-#                     agent(done-6, removing-10)
-#                     advmod(element-13, exactly-11)
-#                     num(element-13, 1-12)
-#                     dobj(removing-10, element-13) - removing
-#     ROOT(done(array(correct),S,removing(element(exactly,1)))
-#     ####    correct = lambda array: exactly(len(removing(S, array)), 1)
-#     code:   valid = lambda possibility: eq(len(diff(input_array, possibility)), 1)
-#
-#     every cell of the table covered by the amoeba must only contain antimatter.
-#                     det(cell-2, every-1)
-#                     nsubj(contain-12, cell-2)
-#                     det(table-5, the-4)
-#                     prep_of(cell-2, table-5)
-#                     vmod(table-5, covered-6)
-#                     det(amoeba-9, the-8)
-#                     agent(covered-6, amoeba-9)
-#                     aux(contain-12, must-10)
-#                     advmod(contain-12, only-11)
-#                     root(ROOT-0, contain-12)
-#                     dobj(contain-12, antimatter-13)
-#     ROOT(contain(cell(every,table(covered(amoeba)),must,only,antimatter)))
-#     ####    valid = lambda amoeba:     every(contain(cell, antimatter[0]) for cell of table if covered(cell, amoeba))
-#             valid = lambda possibility: all(contains(element, types[0]) for element in input_array if contains(element, possibility))
 
 types = ['mapping', 'valid', 'reduce']
 # types = ['I']
 
 def get_type(codewords):
+    '''
+    get word type from codewords
+    
+    :param codewords:
+    '''
     if not codewords:
         return ''
     for word_type in types:
@@ -91,27 +50,15 @@ def get_type(codewords):
     print(codewords[0])
     return ''
 
-def get_features(sentence):
-#     sentwords = nltk.word_tokenize(sentence.lower())
-    sentwords = tokenize_sentences(sentence)[0]
-#     print(sentwords)
-    dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
-    features = ['O']*len(sentwords)
-    for dep in dependencies:
-        m0 = dep2dict(dep[-1])
-        m1 = dep2dict(dep[-2])
-#         if m0['word'] != sentwords[int(m0['ind'])-1]:
-#             print(m0['word'])
-#         if m1['word'] != sentwords[int(m1['ind'])-1]:
-#             print(m1['word'])
-        features[int(m0['ind'])-1] = 'I'
-        features[int(m1['ind'])-1] = 'I'
-    for dep in dependencies:
-        m = dep2dict(dep[-1])
-        features[int(m['ind'])-1] = dep[0] 
-    return features
 
 def label_sentence_by_type(sentence,translations,code):
+    '''
+    label the sentence for each of the types in each codeline in the code
+    
+    :param sentence:
+    :param translations:
+    :param code:
+    '''
 #     sentwords = nltk.word_tokenize(sentence.lower())
     sentwords = tokenize_sentences(sentence.lower())[0]
     pos = zip(*nltk.pos_tag(sentwords))[1]
@@ -146,6 +93,12 @@ def label_sentence_by_type(sentence,translations,code):
 
 
 def label_sentence(sentence,translations,code):
+    '''
+    
+    :param sentence:
+    :param translations:
+    :param code:
+    '''
     sentwords = nltk.word_tokenize(sentence.lower())
     pos = zip(*nltk.pos_tag(sentwords))[1]
     N = len(sentwords)
@@ -164,6 +117,12 @@ def label_sentence(sentence,translations,code):
     return zip(sentwords,pos,labels)
 
 def label_problem(problem, only_code=True):
+    '''
+    label each sentence in the problem
+    
+    :param problem:
+    :param only_code: should sentences without code be labeled
+    '''
     parse = parse_problem(problem)
     problem_labels = []
     for sentence_parse in parse['sentences']:
@@ -180,6 +139,13 @@ def label_problem(problem, only_code=True):
     return problem_labels 
 
 def build_train(indir, outdir, only_code=True):
+    '''
+    build train database by labeling each problem in indir
+    
+    :param indir: path to problems to label
+    :param outdir: path to write labeled problems
+    :param only_code: should sentences without code be labeled
+    '''
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
     os.mkdir(outdir)
@@ -194,7 +160,14 @@ def build_train(indir, outdir, only_code=True):
         with open(os.path.join(outdir,fileBase+'.label'),'w') as f:
             f.write('\n\n'.join(['\n'.join(['\t'.join(label) for label in labels]) for labels in problem_labels]))
 
-def get_label_probs(sentence, label):
+def get_label_probs(sentence, label, n=None):
+    '''
+    get probability for the given label, for each of the words in the sentence
+    
+    :param sentence: sentence in json format
+    :param label:
+    :param n: number of possible words for each label 
+    '''
     sentprobs = []
     for line in sentence:
         important = line['label'] == label
@@ -205,9 +178,25 @@ def get_label_probs(sentence, label):
             prob = 0
         sentprobs.append((prob,important,line['word'],sentence.index(line)))
     sentprobs = sorted(sentprobs,reverse = True)
-    return sentprobs
+    return sentprobs[:n]
+
+def get_probable_label_words(sentence, label, n=None):
+    '''
+    get the words for the given label sorted by their probability
+    
+    :param sentence: sentence in json format
+    :param label:
+    :param n: number of possible words for each label 
+    '''
+    return zip(*get_label_probs(sentence, label, n))[-2]
 
 def get_label_words(sentence, label):
+    '''
+    get the actual words for the given label
+    
+    :param sentence: sentence in json format
+    :param label:
+    '''
     label_words = []
     for line in sentence:
         if line['label'] == label:
@@ -215,14 +204,17 @@ def get_label_words(sentence, label):
     return label_words
     
 def check_type(sentence, word_type, n):
+    '''
+    check whether the actual words of a certain word type are contained in the probable words for that word type 
+    
+    :param sentence: sentence in json format
+    :param label:
+    :param n: number of possible words for each label 
+    '''
     print(word_type)
-    sentprobs = get_label_probs(sentence, word_type)
-    expected_words = zip(*sentprobs[:n])[-1]
-    print('expected_words')
-    print(expected_words)
+    sentprobs = get_label_probs(sentence, word_type, n)
+    expected_words = zip(*sentprobs)[-1]
     label_words = get_label_words(sentence, word_type)
-    print('label_words')
-    print(label_words)
     if label_words:
         label_words = zip(*label_words)[-1]
         result = set(label_words).issubset(set(expected_words))
@@ -235,6 +227,14 @@ def check_type(sentence, word_type, n):
     return result
 
 def check_problem(json_dir,fname,n, labels=types):
+    '''
+    check each label for the given problem
+    
+    :param json_dir: path to the problems
+    :param fname: problem name
+    :param n: number of possible words for each label 
+    :param labels:
+    '''
     with open(os.path.join(json_dir,fname),'r') as inputjson:
         problem_json = json.load(inputjson)
 #     for problem in problems_json:
@@ -249,6 +249,14 @@ def check_problem(json_dir,fname,n, labels=types):
     return problem_result
 
 def calc_score(json_dir, n, problem_dir=None, labels=types):
+    '''
+    calculate how many problems pass the check in the given path
+    
+    :param json_dir: path to the problems
+    :param fname: problem name
+    :param problem_dir: given to allow checking whether a problem has a solution 
+    :param labels:
+    '''
     correct = []
 #     no_sol = []
     total = 0
@@ -268,26 +276,30 @@ def calc_score(json_dir, n, problem_dir=None, labels=types):
         print(float(len(correct))/total)
     return correct
 
-
-if __name__ == '__main__':
-
+def main():
+    
     indir = os.path.join('res','text&code6')
 #     train_dir = 'res/word_train'
     train_dir = os.path.join(indir, 'word_train')
-#     build_train(indir, train_dir)
+    fname = 'PalindromesCount.py'
+#     fname = 'TextStatistics.py'
+#     with open(os.path.join(indir,fname),'r') as fp:
+#         problem = fp.read()
+#     label_problem(problem)
+    build_train(indir, train_dir)
 
 #     test_indir = 'res/problems_test'
 #     test_dir = 'res/word_test'
 #     build_train(test_indir, test_dir)
 
-    output_dir = 'res/word_json'
-    output_dir_small = 'res/word_json_small'
+    output_dir = os.path.join(indir, 'word_json')
+    output_dir_small = os.path.join(indir, 'word_json_small')
     output_dir_small = os.path.join(indir, 'word_json')
     CRF.test(train_dir, output_dir_small)
 #     CRF.test(train_dir, output_dir, test_dir)
 
     check_dir = output_dir_small
-    m = 2
+    m = 1
     print(calc_score(check_dir, m, indir))
 #     scores = {}
 #     for m in range(1,20):
@@ -308,3 +320,7 @@ if __name__ == '__main__':
 #     fname = 'Elections.label'
 #     fname = 'LittleElephantAndBallsAgain.label'
 #     print(check_problem(output_dir, fname, m))
+
+
+if __name__ == '__main__':
+    main()

@@ -226,6 +226,20 @@ def all_possible_trees(funcs, arrays, primitives):
 #         if 1 arg: for tree in trees: add func(tree)
 #         if 2 args: for (tree1, tree2) in permutation(trees,2): add func(tree1, tree2)
 
+def get_possible_codelines(codewords):
+    '''
+    build all possible codelines from codewords
+    
+    :param codewords:
+    :param word_type:
+    '''
+    funcs = [word for word in codewords if is_func(word) and word != 'return']
+    variables = [word for word in codewords if not is_func(word)]
+    array_vars = [var for var in variables if isinstance(var, basestring)]
+    primitive_vars = [var for var in variables if not isinstance(var, basestring)]
+    possible_codelines = all_possible_trees(funcs, array_vars, primitive_vars)
+    return(possible_codelines)
+
 
 
 # #     input: sentence
