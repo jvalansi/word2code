@@ -14,31 +14,10 @@ import ast
 import CRF
 import shutil
 import logger
-from itertools import combinations
-from utils import check_solution, clean_word, get_features
+from itertools import combinations, combinations_with_replacement
+from utils import check_solution, clean_word, get_features, get_min_mask
 from stanford_corenlp import tokenize_sentences
 
-def get_min_mask(sentwords,relevantwords):
-    '''
-    get minimal continuous subset containing all relevant words
-    example:
-            sentence words: ["hello", "world", ",", "how", "are", "you", "?"]
-            relevant words: ["world", "are"]
-            smallest csubset: ["world", ",", "how", "are"]
-    
-    :param sentwords:
-    :param relevantwords:
-    '''
-    relevantset = set(relevantwords)
-    N = len(sentwords)
-    mask = [1] * N
-    for i,j in combinations(range(N), 2):
-        if relevantset.issubset(sentwords[i:j]):
-            new_mask = [0] * N
-            new_mask[i:j] = [1] * (j-i)
-            if sum(new_mask) < sum(mask):
-                mask = new_mask
-    return mask
 
 
 types = ['return', 'mapping', 'valid', 'reduce']
@@ -76,7 +55,7 @@ def get_type(sentence, translations, code, method):
 #     print(code)
     return 'O'
 
-def label_sentence(sentence,translations,code,symbol):
+def label_sentence(sentence,translations,code,method):
     '''
     label should be according to sentence type
     between first and last translated words, else 'O'
@@ -92,20 +71,18 @@ def label_sentence(sentence,translations,code,symbol):
     pos = zip(*nltk.pos_tag(sentwords))[1]
     N = len(sentwords)
     features = get_features(sentence)
+    symbol = get_type(sentence, translations, code, method)
     labels = ['O'] * N
+    relevantwords = set()
     for translation,codeline in zip(translations,code):
-        codewords = nltk.word_tokenize(codeline)
+#         codewords = nltk.word_tokenize(codeline)
         transwords = nltk.word_tokenize(translation)
-        if not codewords:
-            continue
-#         symbol = codewords[0][0].upper()
-#         symbol = 'I'
-        relevantwords = list(set(sentwords) & set(transwords))
-        relevantwords = [word for word in relevantwords if word not in string.punctuation]
-        mask = get_min_mask(sentwords,relevantwords)
-        if 1 not in mask:
-            continue
-        labels = [ symbol if mask[i] else labels[i] for i in range(N)]
+#         if not codewords:
+#             continue
+        relevantwords.update(set(sentwords) & set(transwords) - set(string.punctuation))
+#         relevantwords += [word for word in transwords if word not in string.punctuation]
+    mask = get_min_mask(sentwords,relevantwords)
+    labels = [ symbol if mask[i] else labels[i] for i in range(N)]
 #         index = mask.index(1)
 #         labels[index] = 'B'+symbol
     return zip(sentwords,pos,features, labels)
@@ -130,11 +107,8 @@ def label_problem(indir, outdir, fname):
         method = sentence_parse['method']
 #         if not code:
 #             continue
-        symbol = get_type(sentence, translations, code, method)
 #         print(symbol)
-        if not symbol:
-            continue               
-        labels = label_sentence(sentence, translations, code, symbol)
+        labels = label_sentence(sentence, translations, code, method)
         sentence_labels.append(labels)
     fileBase, fileExtension = os.path.splitext(fname)
     with open(os.path.join(outdir,fileBase+'.label'),'w') as f:
@@ -156,7 +130,7 @@ def build_train(indir, outdir):
         print(fname)
         label_problem(indir, outdir, fname)
 
-def get_possible_sentence_type(sentences_json, sentence, n):
+def get_probable_sentence_type(sentences_json, sentence, n):
     '''
     get the most probable sentence type for the given sentence
     
@@ -173,7 +147,6 @@ def get_possible_sentence_type(sentences_json, sentence, n):
                 possible_types.append((sentprob[0], sentence_type))
     if not possible_types:
         return None
-    print(possible_types)
     possible_types = sorted(possible_types, reverse=True)[0]
     return possible_types[-1]
 
@@ -226,51 +199,51 @@ def get_expected_type(sentence):
         if line['label'] in types:
             return line['label']
     
-def check_problem(json_dir,fname,n):
-    '''
-    check if n most probable sentences contain all the sentences of a certain type, for all types
-      
-    :param json_dir:
-    :param fname:
-    :param n: number of possible sentences for each type
-    '''
-    with open(os.path.join(json_dir,fname),'r') as inputjson:
-        problem_json = json.load(inputjson)
-    results = []
-    for sentence_type in types:
-        sentprobs = get_sentences_probabilities(problem_json,sentence_type)
-        probable_sents = zip(*sentprobs)[-1][:n]
-        expected_sents = get_expected_sents(problem_json,sentence_type)
-        result = set(expected_sents).issubset(set(probable_sents))
-#         result = all([not important for (sentprob,i,important) in sentprobs[n:]])
-        if not result:
-            logger.logging.info(fname)
-            logger.logging.info(sentence_type)
-            logger.logging.info(expected_sents)            
-            logger.logging.info(sentprobs)
-        results.append(result)
-    return results
-
 # def check_problem(json_dir,fname,n):
-# #         check if n most probable sentences contain all important sentences
+#     '''
+#     check if n most probable sentences contain all the sentences of a certain type, for all types
+#       
+#     :param json_dir:
+#     :param fname:
+#     :param n: number of possible sentences for each type
+#     '''
 #     with open(os.path.join(json_dir,fname),'r') as inputjson:
 #         problem_json = json.load(inputjson)
 #     results = []
-#     for sentence in problem_json:
-#         expected_type = get_expected_type(sentence)
-#         expected_type_sentprobs = get_sentences_probabilities(problem_json,expected_type)
-#         probable_type = get_possible_sentence_type(problem_json, sentence, n)
-#         probable_type_sentprobs = get_sentences_probabilities(problem_json,probable_type)
-#         result = not expected_type or expected_type == probable_type
+#     for sentence_type in types:
+#         sentprobs = get_sentences_probabilities(problem_json,sentence_type)
+#         probable_sents = zip(*sentprobs)[-1][:n]
+#         expected_sents = get_expected_sents(problem_json,sentence_type)
+#         result = set(expected_sents).issubset(set(probable_sents))
+# #         result = all([not important for (sentprob,i,important) in sentprobs[n:]])
 #         if not result:
 #             logger.logging.info(fname)
-#             logger.logging.info(problem_json.index(sentence))
-#             logger.logging.info(expected_type)
-#             logger.logging.info(expected_type_sentprobs)
-#             logger.logging.info(probable_type)
-#             logger.logging.info(probable_type_sentprobs)
+#             logger.logging.info(sentence_type)
+#             logger.logging.info(expected_sents)            
+#             logger.logging.info(sentprobs)
 #         results.append(result)
 #     return results
+
+def check_problem(json_dir,fname,n):
+#         check if n most probable sentences contain all important sentences
+    with open(os.path.join(json_dir,fname),'r') as inputjson:
+        problem_json = json.load(inputjson)
+    results = []
+    for sentence in problem_json:
+        expected_type = get_expected_type(sentence)
+        expected_type_sentprobs = get_sentences_probabilities(problem_json,expected_type)
+        probable_type = get_probable_sentence_type(problem_json, sentence, n)
+        probable_type_sentprobs = get_sentences_probabilities(problem_json,probable_type)
+        result = not expected_type or expected_type == probable_type
+        if not result:
+            logger.logging.info(fname)
+            logger.logging.info(problem_json.index(sentence))
+            logger.logging.info(expected_type)
+            logger.logging.info(expected_type_sentprobs)
+            logger.logging.info(probable_type)
+            logger.logging.info(probable_type_sentprobs)
+        results.append(result)
+    return results
 
 def calc_score(json_dir,n=4, problem_dir=None):
     '''
@@ -304,26 +277,27 @@ def main():
 #     label_problem(indir, train_dir, fname)
 #     build_train(indir, train_dir)
 
-#     indir = 'res/problems_test/'
-#     test_dir = 'res/sentence_test'
-#     build_train(indir, test_dir)
+    test_indir = os.path.join('res', 'problems_test')
+    test_dir = os.path.join(test_indir, 'sentence_test')
+#     build_train(test_indir, test_dir)
 
-#     outdir = 'res/sentence_json'
-#     outdir = 'res/sentence_json_small'
     outdir = os.path.join(indir, 'sentence_json')
 #     CRF.test(train_dir, outdir)
-#     CRF.test(train_dir, outdir, test_dir)
+
+    test_outdir = os.path.join(test_indir, 'sentence_json')
+#     CRF.test(train_dir, test_outdir, test_dir)
 
     n = 1
     print(calc_score(outdir, n, indir))
 
-    main_fname = 'AverageAverage.label'
-    main_fname = 'ChocolateBar.label'
+    fname = 'AverageAverage.label'
+    fname = 'ChocolateBar.label'
+    fname = 'CompetitionStatistics.label'
 #     fname = 'ChristmasTreeDecorationDiv2.label'
 #     fname = 'Elections.label'
 #     fname = 'FarFromPrimes.label'
 #     fname = 'LittleElephantAndBallsAgain.label'
-#     print(check_problem(main_outdir, main_fname,n))
+#     print(check_problem(outdir, fname, n))
 
 
 if __name__ == '__main__':

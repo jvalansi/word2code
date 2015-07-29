@@ -23,25 +23,26 @@ class StanfordNLP:
     def parse(self, text):
         return json.loads(self.server.parse(text))
 
-# def sentence2dependencies(sentence):
-#     parser = StanfordNLP()
-#     parse = parser.parse(sentence)
-#     dependencies = [sentence_parse['indexeddependencies'] for sentence_parse in parse['sentences']]
-#     return (dependencies)
+def sentence2dependencies(sentence):
+    parser = StanfordNLP()
+    parse = parser.parse(sentence)
+    dependencies = [sentence_parse['indexeddependencies'] for sentence_parse in parse['sentences']]
+    return (dependencies)
 
 
-# def tokenize_sentences(sentences):
-#     parser = StanfordNLP()
-#     parse = parser.parse(sentences)
-#     sentences_words = [[word[0] for word in sentence_parse['words']] for sentence_parse in parse['sentences']]
-#     return sentences_words
+def tokenize_sentences_(sentences):
+    parser = StanfordNLP()
+    parse = parser.parse(sentences)
+    sentences_words = [[word[0] for word in sentence_parse['words']] for sentence_parse in parse['sentences']]
+    return sentences_words
 
 def tokenize_sentences(sentences):
 #     sentences = nltk.sent_tokenize(sentences)
-    st = StanfordTokenizer('stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar')
+#     st = StanfordTokenizer('stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar')
+    st = StanfordTokenizer('stanford-parser-full-2015-04-20/stanford-parser.jar')
     return [st.tokenize(sentences)]
     
-def raw_parse_sents(sentences, verbose=False, output_format='typedDependencies'):
+def raw_parse_sents(sentences, verbose=False, output_format=' typedDependencies'):
     """
     Use StanfordParser to parse multiple sentences. Takes multiple sentences as a
     list of strings.
@@ -54,11 +55,14 @@ def raw_parse_sents(sentences, verbose=False, output_format='typedDependencies')
 #     parser = stanford.StanfordParser('stanford-parser-full-2015-04-20/stanford-parser.jar', 
     parser = stanford.StanfordParser('stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar', 
                                      'stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1-models.jar')
+#     parser = stanford.StanfordParser('stanford-parser-full-2015-04-20/stanford-parser.jar', 
+#                                      'stanford-parser-full-2015-04-20/stanford-parser-3.5.2-models.jar')
     cmd = [
         'edu.stanford.nlp.parser.lexparser.LexicalizedParser',
         '-model', parser.model_path,
-        '-sentences', 'newline',
+#         '-sentences', 'newline',
         '-outputFormat', output_format,
+#         '-outputFormatOptions', 'collapsedDependencies', #collapsedDependencies doesn't seem to work for 3.5.2
     ]
     trees_output = parser._execute(cmd, '\n'.join(sentences), verbose)
     return trees_output
@@ -89,6 +93,8 @@ if __name__ == '__main__':
 #     print(raw_parse_sents(sentences))
 #     print(sentence2dependencies(sentence))
     
+    print(raw_parse_sents(sentences))
+    print(sentence2dependencies(sentences[1]))
     sentences = ' '.join(sentences)
-    print(tokenize_sentences_(sentences))
+#     print(tokenize_sentences_(sentences))
     print(tokenize_sentences(sentences))

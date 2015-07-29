@@ -15,7 +15,6 @@ class TournamentsAmbiguityNumber:
         # The j-th character of the i-th element of table is '1' (one) if player i defeated player j, '0' (zero) if player j defeated player i, or '-' if the match between players i and j resulted in a draw.
         def defeated(i, j): return table[i][j] == '1' 
         # Return the ambiguity number of the given tournament.
-        # ROOT-0(root=Return-1(dobj=number-4(det=the-2, nn=ambiguity-3, prep_of=tournament-8(det=the-6, amod=given-7))))
         return(ambiguity_number())
 
 

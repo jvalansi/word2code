@@ -11,8 +11,6 @@ class WinterAndMandarins:
         # For each i, the i-th element of bags represents the number of mandarins in the i-th bag.
         # You are also given an int K .
         # You want to choose exactly K bags and distribute them among you and your friends.
-        # ROOT-0(root=want-2(nsubj=You-1, xcomp=choose-4(aux=to-3, advmod=exactly-5, dobj=bags-7(nn=K-6), conj_and=distribute-9(dobj=them-10, prep_among=you-12(conj_and=friends-15(poss=your-14))))))
-        # xcomp=choose-4(aux=to-3, advmod=exactly-5, dobj=bags-7(nn=K-6))
         choose = subsets
         chosen = choose(bags,K)
         # To be as fair as possible, you want to minimize the difference between the chosen bag with most mandarins and the chosen bag with fewest mandarins.

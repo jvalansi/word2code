@@ -24,12 +24,12 @@ from utils import is_func, check_solution, get_features
 from stanford_corenlp import tokenize_sentences
 
 
-mapping = lambda x: x
-valid = lambda x: True
-array = ['input_array','possibilities','types','possibility',]
-primitive = ['j', 'i', 'inf', 'N','element','number','input_int', '0', '1', '2']
-non_callable = set()
-non_relevant = []
+# mapping = lambda x: x
+# valid = lambda x: True
+# array = ['input_array','possibilities','types','possibility',]
+# primitive = ['j', 'i', 'inf', 'N','element','number','input_int', '0', '1', '2']
+# non_callable = set()
+# non_relevant = []
 
 
 
@@ -286,20 +286,19 @@ def main():
 #     with open(os.path.join(indir,fname),'r') as fp:
 #         problem = fp.read()
 #     label_problem(problem)
-    build_train(indir, train_dir)
+#     build_train(indir, train_dir)
 
-#     test_indir = 'res/problems_test'
-#     test_dir = 'res/word_test'
-#     build_train(test_indir, test_dir)
+    test_indir = os.path.join('res', 'problems_test')
+    test_dir = os.path.join(test_indir,'word_test')
+#     build_train(test_indir, test_dir, only_code=False)
 
     output_dir = os.path.join(indir, 'word_json')
-    output_dir_small = os.path.join(indir, 'word_json_small')
-    output_dir_small = os.path.join(indir, 'word_json')
-    CRF.test(train_dir, output_dir_small)
-#     CRF.test(train_dir, output_dir, test_dir)
+#     CRF.test(train_dir, output_dir)
+    test_output_dir = os.path.join(test_indir, 'word_json')
+#     CRF.test(train_dir, test_output_dir, test_dir)
 
-    check_dir = output_dir_small
-    m = 1
+    check_dir = output_dir
+    m = 2
     print(calc_score(check_dir, m, indir))
 #     scores = {}
 #     for m in range(1,20):

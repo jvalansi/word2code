@@ -12,6 +12,32 @@ import collections
 import re
 from stanford_corenlp import tokenize_sentences
 from dependency_parser import sentence2dependencies, dep2dict
+from problem_utils import *
+
+
+def get_min_mask(sentwords,relevantwords):
+    '''
+    get minimal continuous subset containing all relevant words
+    example:
+            sentence words: ["hello", "world", ",", "how", "are", "you", "?"]
+            relevant words: ["world", "are"]
+            smallest csubset: ["world", ",", "how", "are"]
+    
+    :param sentwords:
+    :param relevantwords:
+    '''
+    N = len(sentwords)
+    mask = [1] * N
+    for i,j in combinations_with_replacement(range(N), 2):
+        if relevantwords.issubset(sentwords[i:j]):
+            new_mask = [0] * N
+            new_mask[i:j] = [1] * (j-i)
+            if sum(new_mask) < sum(mask):
+                mask = new_mask
+    return mask
+
+def clean_name(fname):
+    return os.path.splitext(fname)[0]
 
 def get_features(sentence):
     '''

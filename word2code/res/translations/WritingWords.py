@@ -10,7 +10,6 @@ class WritingWords:
         # Thus, the last letter Z is typed by tapping the button 26 times without a pause.
         # You are given a String word .
         # Compute and return the answer to the following question: How many times will Ciel tap the button while typing this word?
-        # ROOT-0(root=Compute-1(conj_and=return-3(dobj=answer-5(det=the-4, prep_to=question-9(det=the-7, amod=following-8)), ccomp=Ciel-15(nsubj=times-13(amod=many-12(advmod=How-11)), aux=will-14, xcomp=tap-16(dobj=button-18(det=the-17), advcl=typing-20(mark=while-19, dobj=word-22(det=this-21)))))))
         return(how_many(times))
 
 

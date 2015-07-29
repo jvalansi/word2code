@@ -9,7 +9,7 @@ import sentence2word
 import word2codeword
 import codeline_gen
 import json
-from problem2sentence import get_possible_sentence_type
+from problem2sentence import get_probable_sentence_type
 from word2codeword import count_translations, word2codewords
 from problem_parser import parse_problem, compose_problem
 from itertools import product, combinations
@@ -19,8 +19,9 @@ import codeline_gen_dep
 import numpy
 import shutil
 import copy
-from utils import check_solution
+from utils import check_solution, clean_name
 from sentence2word import get_probable_label_words
+import problem_parser
 
 #     phrase to code:
 #     phrase:         Return the number of different passwords Fred needs to try.
@@ -84,8 +85,9 @@ def get_type_codelines(word_type, type_codewords):
             continue
         for codeword_combination in combinations(codeword_product, 1):
 #         codeword_combination = codeword_product
-            probs, codewords = zip(*codeword_combination) 
+            probs, codewords = zip(*codeword_combination)
             p = numpy.prod(probs)
+            codewords = list(codewords)
             if 'possibility' not in codewords: codewords.append('possibility')
             possible_codelines = get_possible_codelines(codewords)
             new_possible_codelines = set()
@@ -131,11 +133,13 @@ def generate_possible_code(sentence_json, m, translations_count, p, sentence_par
     :param possible_types: possible sentence types
     '''
     possible_codes = []
-    possibilities_codelines = set()
-    for func in possibilities_funcs:
-        possible_codelines =  get_possible_codelines([func], 'possibilities')
-        possible_codelines = [(1.0, codeline) for codeline in possible_codelines]
-        possibilities_codelines.update(possible_codelines)
+#     possibilities_codelines = set()
+    possibilities_codewords = [[[0.3, func] for func in possibilities_funcs]]
+    possibilities_codelines = get_type_codelines('possibilities', possibilities_codewords)
+#     for func in possibilities_funcs:
+#         possible_codelines =  get_type_codelines([func], 'possibilities')
+#         possible_codelines = [(1.0, codeline) for codeline in possible_codelines]
+#         possibilities_codelines.update(possible_codelines)
     possible_codes.append(possibilities_codelines)
 #     for translation, codeline in zip(sentence_parse['translations'], sentence_parse['code']):
 #         codewords = nltk.word_tokenize(codeline)
@@ -164,7 +168,7 @@ def generate_possible_code(sentence_json, m, translations_count, p, sentence_par
     product_code = [code for p, code in product_code]
     return product_code
 
-def check_solutions(problem_parse, possible_types, possible_solutions, tries, fname):
+def check_solutions(problem_parse, possible_types, possible_solutions, tries, indir, fname, solutions_dir):
     '''
     check possible solutions to find whether they solve the problem
     
@@ -175,7 +179,7 @@ def check_solutions(problem_parse, possible_types, possible_solutions, tries, fn
     :param fname:
     '''
     print('check_solutions')
-    sol_dir = os.path.join('res','solutions')
+    sol_dir = solutions_dir
     if not os.path.exists(sol_dir):
         os.mkdir(sol_dir)
     fpath = os.path.join(sol_dir, fname)
@@ -190,8 +194,8 @@ def check_solutions(problem_parse, possible_types, possible_solutions, tries, fn
     for sentence_parse in preprocessed_parse['sentences']:
         sentence_parse['code'] = []
     for j, possible_codes in enumerate(product(* possible_solutions)):
-#         if not j%1000:
-        print(j)
+        if not j%1000:
+            print(j)
         if j > tries:
             return False
 #         new_parse = copy.deepcopy(preprocessed_parse)
@@ -221,7 +225,7 @@ def check_solutions(problem_parse, possible_types, possible_solutions, tries, fn
     print(False)
     return False
 
-def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries):
+def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir):
     '''
     check problem:
         find sentence types and possible code
@@ -241,9 +245,15 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries):
     fnames = filter(lambda f: f != fname, fnames)
     translations_count = count_translations(problem_dir, fnames)
     fbase, fext = os.path.splitext(fname)
-    with open(os.path.join(sentence_dir, fbase+'.label'), 'r') as inputjson:
+    sentence_fpath = os.path.join(sentence_dir, fbase+'.label')
+    if not os.path.exists(sentence_fpath):
+        return
+    with open(sentence_fpath, 'r') as inputjson:
         sentences_json = json.load(inputjson)
-    with open(os.path.join(word_dir, fbase+'.label'), 'r') as inputjson:
+    word_fpath = os.path.join(word_dir, fbase+'.py')
+    if not os.path.exists(word_fpath):
+        return
+    with open(word_fpath, 'r') as inputjson: #TODO: fix ext
         words_json = json.load(inputjson)
     with open(os.path.join(problem_dir, fname), 'r') as f:
         problem = f.read()
@@ -253,7 +263,8 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries):
     all_sentences = zip(sentences_json, words_json, problem_parse['sentences'])
     for i, (sentence, word, sentence_parse) in enumerate(all_sentences):
         print(i)
-        sentence_type = get_possible_sentence_type(sentences_json, sentence, n)
+        sentence_type = get_probable_sentence_type(sentences_json, sentence, n)
+        print(sentence_type)
         if not sentence_type:
             continue
         possible_types.append((i, sentence_type))
@@ -270,12 +281,13 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries):
 #             print(indexOf(possible_codes, code))
 #         new_possible_solutions = []
         possible_solutions.append(possible_codes)
-    return check_solutions(problem_parse, possible_types, possible_solutions, tries, fname)
+    print(possible_types)
+    return check_solutions(problem_parse, possible_types, possible_solutions, tries, problem_dir, fname, solutions_dir)
 
 # def gen_code(possible_codelines):
 #     all_possible_code = product([type_codelines for codeline_type, type_codelines in possible_codelines.items()])
 
-def check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries):
+def check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries, solutions_dir):
     '''
     check all the problem in the problem dir
     for each problem:
@@ -289,6 +301,7 @@ def check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries):
     :param m: number of possible words for each type 
     :param p: number of possible codewords for each word
     :param tries: maximal number of solutions to check
+    :param solutions_dir:
     '''
     fnames = sorted(os.listdir(problem_dir))
     correct = []
@@ -297,66 +310,14 @@ def check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries):
         if not fname.endswith('.py'):
             continue
         print(fname)
-        success = check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries)
+        success = check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries, solutions_dir)
         if success:
             correct.append(fname)
 #       generate code from words
     print(float(len(correct))/len(fnames))
     return correct
 
-def clean_name(fname):
-    return os.path.splitext(fname)[0]
-
-def check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p):
-    '''
-    check the intersections of correctness of each of the stages:
-        sentence type extraction
-        word type extraction
-        codeword extraction
-    
-    :param sentence_dir: path to senteces json
-    :param n: number of possible sentences for each type
-    :param word_dir: path to words json
-    :param m: number of possible words for each type 
-    :param problem_dir: path to problems
-    :param p: number of possible codewords for each word
-    '''
-    sentence_score = problem2sentence.calc_score(sentence_dir, n)
-    sentence_score = map(clean_name, sentence_score)
-
-    word_score = sentence2word.calc_score(word_dir, m)
-    word_score = map(clean_name, word_score)
-
-    codeword_score = word2codeword.check_words(problem_dir, p)
-    codeword_score = map(clean_name, codeword_score)
-
-    codeline_score1 = codeline_gen.check_sentences(problem_dir)
-    codeline_score1 = map(clean_name, codeline_score1)
-
-#     codeline_score2 = codeline_gen_dep.check_sentences(problem_dir, 4)
-#     codeline_score2 = [os.path.splitext(fname)[0] for fname in codeline_score2]
-
-    s = ""
-    for fname in sorted(os.listdir(problem_dir)):
-        fname = clean_name(fname)
-        base_pattern = "{:30} : {:10} {:10} {:10} {:10}\n"
-        in_sentence = fname in sentence_score
-        in_word = fname in word_score
-        in_codeword = fname in codeword_score
-        in_codeline = fname in codeline_score1
-        s += base_pattern.format(fname, in_sentence, in_word, in_codeword, in_codeline)
-    with open('res/intersection', 'w') as f:
-        f.write(s)
-#     print(s)
-
-#     print('wo dep: '+ str(set(problem_score).intersection(set(word_score)).intersection(set(codeword_score)).intersection(codeline_score1)))
-    result = (set(sentence_score)\
-        .intersection(set(word_score))\
-        .intersection(set(codeword_score))\
-        .intersection(set(codeline_score1)))
-    return sorted(list(result))
-
-def check_all_problems_intersection(sentence_dir, word_dir, problem_dir, intersections_path):
+def check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path, all_range=True):
     '''
     check the intersections of correctness of each of the stages:
         sentence type extraction
@@ -369,19 +330,24 @@ def check_all_problems_intersection(sentence_dir, word_dir, problem_dir, interse
     :param problem_dir: path to problems
     :param intersections_path: path to write calculated intersection
     '''
+    if all_range:
+        N0 = M0 = P0 = 1
+    else:
+        N0 = N-1
+        M0 = M-1
+        P0 = P-1
     sentence_score = {}
-    N = M = P = 5 
-    for n in range(1,N):
+    for n in range(N0,N):
         sentence_score[n] = problem2sentence.calc_score(sentence_dir, n)
         sentence_score[n] = map(clean_name, sentence_score[n])
 
     word_score = {}
-    for m in range(1,M):
+    for m in range(M0,M):
         word_score[m] = sentence2word.calc_score(word_dir, m)
         word_score[m] = map(clean_name, word_score[m])
 
     codeword_score = {}
-    for p in range(1,P):
+    for p in range(P0,P):
         p_thresh = p
         codeword_score[p] = word2codeword.check_words(problem_dir, p_thresh)
         codeword_score[p] = map(clean_name, codeword_score[p])
@@ -394,13 +360,14 @@ def check_all_problems_intersection(sentence_dir, word_dir, problem_dir, interse
 
 #     print('wo dep: '+ str(set(problem_score).intersection(set(word_score)).intersection(set(codeword_score)).intersection(codeline_score1)))
     summary = ""
-    if os.path.exists(intersections_path):
+    if all_range and os.path.exists(intersections_path):
         shutil.rmtree(intersections_path)
-    os.mkdir(intersections_path)
+    if not os.path.exists(intersections_path):
+        os.mkdir(intersections_path)        
     summary += ' '.join(['{}: {}'.format(k, len(v)) for k, v in sentence_score.items()]) + '\n'
     summary += ' '.join(['{}: {}'.format(k, len(v)) for k, v in word_score.items()]) + '\n'
     summary += ' '.join(['{}: {}'.format(k, len(v)) for k, v in codeword_score.items()]) + '\n'
-    for n,m,p in product(range(1,N),range(1,M),range(1,P)):
+    for n,m,p in product(range(N0,N),range(M0,M),range(P0,P)):
         s = ""
         for fname in sorted(os.listdir(problem_dir)):
             if not fname.endswith('py'):
@@ -427,37 +394,49 @@ def check_all_problems_intersection(sentence_dir, word_dir, problem_dir, interse
 #                 print(word_score[m])
 #                 print(codeword_score[p])
         summary += 'n:{} m:{} p:{} - {}\n'.format(n,m,p,len(result))
-    with open(os.path.join(intersections_path, 'summary'), 'w') as f:
-        f.write(summary)
-    return 
+    if all_range:
+        with open(os.path.join(intersections_path, 'summary'), 'w') as f:
+            f.write(summary)
 
 def main():
-    problem_dir = os.path.join('res', 'problems_test')
-    problem_dir = os.path.join('res', 'text&code5')
+#     problem_dir = os.path.join('res', 'problems_test')
+#     problem_dir = os.path.join('res', 'text&code5')
     problem_dir = os.path.join('res', 'text&code6')
 #     p_thresh = 0.5
     p = 1
     sentence_dir = os.path.join(problem_dir, 'sentence_json')
-#     sentence_dir = 'res/sentence_json_small'
     n = 1
-#     word_dir = 'res/word_json'
     word_dir = os.path.join(problem_dir, 'word_json')
-#     word_dir = 'res/word_json_small'
+    word_dir = os.path.join(problem_dir, 'word_json_struct')
     m = 1
 #     print(check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thresh))
 
     intersections_path = os.path.join(problem_dir, 'intesections')
-    check_all_problems_intersection(sentence_dir, word_dir, problem_dir, intersections_path)
+    N = M = P = 5
+#     check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path)
     
     tries = 100000
-#     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries))
-#     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries))
+    solutions_dir = os.path.join(problem_dir, 'solutions')
+    solutions_dir = os.path.join(problem_dir, 'solutions_struct')
+    print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+#     results = []
+#     sol_path = os.path.join(problem_dir, 'solutions')
+#     for fname in sorted(os.listdir(sol_path)):
+#         print(fname)
+#         if not fname.endswith('.py'):
+#             continue
+#         problem_path = os.path.join(sol_path, fname)
+#         if check_solution(problem_path):
+#             results.append(fname)
+#     print(results)
+#     with open('results', 'w') as f:
+#         f.write(results)
 
 #     fname = 'AmoebaDivTwo.py'
-#     fname = 'AverageAverage.py'
+    fname = 'AverageAverage.py'
 #     fname = 'BlockTower.py'
-    fname = 'ChocolateBar.py'
-#     fname = 'CompetitionStatistics.py'
+#     fname = 'ChocolateBar.py'
+    fname = 'CompetitionStatistics.py'
 #     fname = 'Elections.py'
 #     print(check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries))
 

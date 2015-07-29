@@ -13,6 +13,7 @@ import string
 import os
 import copy
 import shutil
+from utils import clean_name
 
 labels = ['', 'N-', 'in',   'if', ' ',  'for',    'valid',
  '=',  'N+', 'return', 'string', 'mapping',  'else',
@@ -123,7 +124,7 @@ def output2json_dir(output_dir,json_dir):
         with open(output_file,'r') as outputfile:
             output = outputfile.read()
         sentences_json = output2json(output)
-        json_file = os.path.join(json_dir,fname)
+        json_file = os.path.join(json_dir,clean_name(fname)+'.json')
         with open(json_file, 'w') as outputjson:
     #             json.dump(problems_json, outputjson, indent = 4, separators=(',', ': '))
             json.dump(sentences_json, outputjson, indent = 4, separators=(',', ': '))

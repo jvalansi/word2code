@@ -21,143 +21,9 @@ from dependency_parser import dep2word, dep2ind, Node, sentence2dependencies
 import re
 import logger
 import ast
-from utils import is_func, check_solution
+from utils import is_func, check_solution, clean_name
 import sentence2word
 import problem2sentence
-
-
-# sentence: Return the number of different passwords Fred needs to try.
-# dependencies: ROOT-0(root=needs-8(dep=Return-1(dobj=number-3(det=the-2, prep_of=passwords-6(amod=different-5))), nsubj=Fred-7, xcomp=try-10(aux=to-9)))
-# pos: ROOT(root=V(dep=V(dobj=NN(det=article(prep_of=NNS(amod=ADJ))), nsubj=NNP, xcomp=V(aux=P)))
-# nodes: [ROOT, needs, Return,number, the, passwords, different, Fred, try, to]
-# edges: [(0,1), (1,2), ...]
-# edge_features: [root, dep,...] 
-# output: ROOT(root=O(reduce=return(reduce=len(O=O(var=possibilities(amod=set))), O=O, O=O(O=O)))
-# output: ROOT(O(reduce(reduce(O(var(reduce))), O, O(O)))
-# output: [ROOT, O, reduce, reduce, O, var, reduce, O, O, O]
-# def sentence2input(sentence_parse):
-#     sentence = sentence_parse['sentence']
-#     sentwords = tokenize_sentences(sentence)[0]
-#     pos = zip(*nltk.pos_tag(sentwords))[1]
-#     dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
-#     nodes = get_nodes(dependencies)
-#     print(pos)
-#     print(nodes)
-#     node_features = [(dep2word(n), pos[dep2ind(n)-1]) for n in nodes]
-#     edge_features, edge_sources, edge_targets = zip(*dependencies)
-#     edges = [[nodes.index(s), nodes.index(t)] for s, t in zip(edge_sources, edge_targets)]
-#      
-#     #TODO: clean words 
-#     return (node_features, edges, edge_features)
-
-def sentence2input(sentence_parse):
-    sentence = sentence_parse['sentence']
-    translations = sentence_parse['translations']
-    code = sentence_parse['code']
-    labels = ['sentence_type'] 
-#     labels = sentence2word.types + ['sentence_type'] 
-#     labels = sentence2word.types
-    dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
-    nodes = get_nodes(dependencies)
-    edge_features, edge_sources, edge_targets = zip(*dependencies)
-    label_features = [[dep2word(n) for n in nodes] + list(edge_features) for label in labels] #TODO: use pos
-    edges = [[labels.index(s), labels.index(t)] for s,t in combinations_with_replacement(labels, 2)] #TODO: fix (remove replacements)
-    edge_features = ['O' for s,t in combinations_with_replacement(labels, 2)]
-      
-    #TODO: clean words
-    #TODO: add the edges (with connected nodes) as features
-    #TODO: config file for features 
-    return (label_features, edges, edge_features)
-
-
-# def sentence2output(sentence_parse):
-#     sentence = sentence_parse['sentence']
-#     translations = sentence_parse['translations']
-#     code = sentence_parse['code']
-#     dependencies = sentence2dependencies(sentence)[0]
-#     nodes = get_nodes(dependencies)
-#     N = len(nodes)
-#     output = ['O']*N
-#     sentwords = nltk.word_tokenize(sentence)
-#     for translation, codeline in zip(translations, code):
-#         codewords = nltk.word_tokenize(codeline)
-#         transwords = nltk.word_tokenize(translation)
-#         label = sentence2word.get_type(codewords)
-#         if not label:
-#             continue
-#         transcodedict = dict(zip(transwords,codewords))
-#         word_nodes = map(dep2word, nodes)
-#         output = [label if n in transwords and is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
-#         output = ['var' if n in transwords and not is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
-#     if output == ['O']*N:
-#         return None 
-#     return output
-
-def sentence2output(sentence_parse):
-    sentence = sentence_parse['sentence']
-    translations = sentence_parse['translations']
-    code = sentence_parse['code']
-    method = sentence_parse['method']
-    sentence_type = problem2sentence.get_type(sentence, translations, code, method)
-#     dependencies = sentence2dependencies(sentence)[0]
-#     nodes = get_nodes(dependencies)
-    labels = sentence2word.types
-    N = len(labels)
-    output = [sentence_type]
-#     output = ['O']*N + [sentence_type]
-#     output = ['O']*N
-#     sentwords = nltk.word_tokenize(sentence)
-#     for translation, codeline in zip(translations, code):
-#         codewords = nltk.word_tokenize(codeline)
-#         transwords = nltk.word_tokenize(translation)
-#         label = sentence2word.get_type(codewords)
-#         if not label:
-#             continue
-#         funcwords = filter(is_func, codewords)
-#         if funcwords:
-#             output[labels.index(label)] = funcwords[-1]
-# #         transcodedict = dict(zip(transwords,codewords))
-# #         word_nodes = map(dep2word, nodes)
-# #         output = [label if n in transwords and is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
-# #         output = ['var' if n in transwords and not is_func(transcodedict[n]) else o for n, o in zip(word_nodes, output)]
-# #     if output == ['O']*N + [sentence_type]:
-#     if output == ['O']*N:
-#         return None 
-    return output
-
-
-def get_nodes(dependencies):
-    root = Node('ROOT-0')
-    nodes = root.deps2tree(dependencies).get_nodes()
-    return nodes
-
-def struct_problem(fname, indir, outdir):
-    with open(os.path.join(indir,fname),'r') as fp:
-        problem = fp.read()
-    parse = parse_problem(problem)
-    problem_labels = {}
-    problem_labels['inputs'] = []
-    problem_labels['outputs'] = []    
-    for sentence_parse in parse['sentences']:
-        struct_output = sentence2output(sentence_parse)
-        if struct_output == None:
-            continue
-        struct_input = sentence2input(sentence_parse)
-        problem_labels['inputs'].append(struct_input)
-        problem_labels['outputs'].append(struct_output)
-    with open(os.path.join(outdir,fname), 'w') as fp:
-        json.dump(problem_labels, fp, indent=4)
-    return problem_labels
-
-def build_train(indir, outdir):
-    if os.path.exists(outdir):
-        shutil.rmtree(outdir)
-    os.mkdir(outdir)    
-    for fname in sorted(os.listdir(indir)):
-        if not fname.endswith('.py'):
-            continue
-        print(fname)
-        problem_labels = struct_problem(fname, indir, outdir) 
 
 def features2matrix(features, all_features):
     N = len(features)
@@ -167,9 +33,13 @@ def features2matrix(features, all_features):
     for i, feature in enumerate(features):
         if hasattr(feature, "__iter__"):
             for f in feature:
+                if f not in all_features: #TODO: think whether to fix
+                    continue
                 j = all_features.index(f) 
                 mat[i,j] = 1
         else:
+            if feature not in all_features: #TODO: think whether to fix
+                continue
             j = all_features.index(feature) 
             mat[i,j] = 1
     return mat
@@ -183,6 +53,7 @@ def build_features(path):
             continue
         print(fname)
         with open(os.path.join(path, fname), 'r') as fp:
+            print(os.path.join(path, fname))
             fjson = json.load(fp)
         inputs = fjson['inputs']
         for (node_features_, edges_, edge_features_) in inputs:
@@ -206,37 +77,48 @@ def get_features(path, build=False):
         json.dump((node_features, edge_features, output_features), fp, indent = 4)
     return (node_features, edge_features, output_features)
 
-def get_data(path, fname, features):
+def get_data_from_file(train_dir, fname_, features):
+    with open(os.path.join(train_dir, fname_), 'r') as fp:
+        fjson = json.load(fp)
     all_node_features, all_edge_features, all_output_features = features 
+    matrix_inputs = []
+    for (node_features, edges, edge_features) in fjson['inputs']:
+        node_features = features2matrix(node_features, all_node_features)
+        edges = [list(edge) for edge in edges] #TODO: remove after running build train
+        edges = np.array(edges)
+        edge_features = features2matrix(edge_features, all_edge_features)
+        matrix_inputs.append((node_features, edges, edge_features))
+    matrix_outputs = []
+    for output in  fjson['outputs']:
+#             print(output)
+#             output = features2matrix(output, all_output_features)
+        output = np.array([all_output_features.index(o) for o in output])
+        matrix_outputs.append(output)
+    return matrix_inputs, matrix_outputs
+
+def get_data(train_dir, fname, features, test_dir=None):
     X_train = []
     Y_train = []
     X_test = []
     Y_test = []
-    for fname_ in sorted(os.listdir(path)):
+    for fname_ in sorted(os.listdir(train_dir)):
         if not fname_.endswith('.py'):
             continue
 #         print(os.path.join(path, fname_))
-        with open(os.path.join(path, fname_), 'r') as fp:
-            fjson = json.load(fp)
-        matrix_inputs = []
-        for (node_features, edges, edge_features) in fjson['inputs']:
-            node_features = features2matrix(node_features, all_node_features)
-            edges = [list(edge) for edge in edges] #TODO: remove after running build train
-            edges = np.array(edges)
-            edge_features = features2matrix(edge_features, all_edge_features)
-            matrix_inputs.append((node_features, edges, edge_features))
-        matrix_outputs = []
-        for output in  fjson['outputs']:
-#             print(output)
-#             output = features2matrix(output, all_output_features)
-            output = np.array([all_output_features.index(o) for o in output])
-            matrix_outputs.append(output)
-        if fname_ == fname:
+        matrix_inputs, matrix_outputs = get_data_from_file(train_dir, fname_, features)
+        if not test_dir and fname_ == fname:
             X_test.extend(matrix_inputs)
             Y_test.extend(matrix_outputs)
         else:
             X_train.extend(matrix_inputs)
             Y_train.extend(matrix_outputs)
+    if bool(test_dir):
+        for fname_ in sorted(os.listdir(test_dir)):
+            if not fname_.endswith('.py'):
+                continue
+            matrix_inputs, matrix_outputs = get_data_from_file(test_dir, fname_, features)
+            X_test.extend(matrix_inputs)
+            Y_test.extend(matrix_outputs)
     return (X_train, Y_train, X_test, Y_test)
 
 def output2json(model, learner, X_test, Y_test, Y_pred, features):
@@ -264,22 +146,22 @@ def output2json(model, learner, X_test, Y_test, Y_pred, features):
         sentences_json.append(lines_json)
     return sentences_json
 
-def test(indir, outdir, build=False):
+def test(train_dir, outdir, test_dir=None, build=False):
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
     os.mkdir(outdir)    
-    features = get_features(indir, build)
+    features = get_features(train_dir, build)
     inference_method = 'ad3'
     crf = EdgeFeatureGraphCRF(n_states=len(features[2]), inference_method=inference_method)
     print(crf.inference_method)
 #     learner = OneSlackSSVM(crf, inference_cache=50, C=.1, tol=.1, max_iter=100,
 #                         n_jobs=1)
     learner = StructuredPerceptron(crf)
-    for fname in sorted(os.listdir(indir)):
+    for fname in sorted(os.listdir(train_dir)):
         if not fname.endswith('.py'):
             continue
         print(fname)
-        X_train, Y_train, X_test, Y_test = get_data(indir, fname, features)
+        X_train, Y_train, X_test, Y_test = get_data(train_dir, fname, features, test_dir)
         train_states = np.unique(np.hstack([y.ravel() for y in Y_train]))
         if len(train_states) != len(features[2]):
             continue
@@ -305,7 +187,7 @@ def test(indir, outdir, build=False):
         print("Test accuracy: %.3f"
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
 #         print(output_json)
-        with open(os.path.join(outdir, fname), 'w') as fp:
+        with open(os.path.join(outdir, clean_name(fname)+'.label'), 'w') as fp:
             json.dump(output_json, fp, indent=4)
 
 
@@ -372,19 +254,25 @@ def calc_score(json_dir, n, problem_dir=None):
 def main():
     problem_dir = os.path.join('res', 'text&code6') 
     indir = problem_dir
-    outdir = os.path.join(problem_dir, 'word_train_struct')
+    train_dir = os.path.join(problem_dir, 'word_train_struct')
     fname = 'GogoXBallsAndBinsEasy.py'
     fname = 'PalindromesCount.py'
 #     struct_problem(fname, indir, outdir)
-#     build_train(indir, outdir)
-    indir = outdir
+#     build_train(indir, train_dir)
+    
+    test_indir = os.path.join('res', 'problems_test')
+    test_dir = os.path.join(test_indir,'word_test_struct')
+#     build_train(test_indir, test_dir, False)
+
     outdir = os.path.join(problem_dir, 'word_json_struct')
-#     test(indir, outdir, build=True)
+#     test(train_dir, outdir, build=True)
+    test_output_dir = os.path.join(test_indir, 'word_json_struct')
+    test(train_dir, test_output_dir, test_dir=test_dir)
 
     n = 1
-    labels = get_features(indir)[2]
+    labels = get_features(train_dir)[2]
     labels.remove('O')
-    print(calc_score(outdir, n))
+#     print(sentence2word.calc_score(outdir, n))
 
 if __name__ == '__main__':
     main()
