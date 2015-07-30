@@ -9,8 +9,8 @@ import sentence2word
 import word2codeword
 import codeline_gen
 import json
-from problem2sentence import get_probable_sentence_type
-from word2codeword import count_translations, word2codewords
+from word2codeword import count_translations, word2codewords,\
+    get_translation_dict
 from problem_parser import parse_problem, compose_problem
 from itertools import product, combinations
 from codeline_gen import get_possible_codelines
@@ -20,9 +20,14 @@ import numpy
 import shutil
 import copy
 from utils import check_solution, clean_name
-from sentence2word import get_probable_label_words
 import problem_parser
+from sentence2word import Sentence2Word
+from problem2sentence import Problem2Sentence
 
+
+golden_sentence = True
+golden_words = True
+golden_codewords = True
 #     phrase to code:
 #     phrase:         Return the number of different passwords Fred needs to try.
 #     dependencies:    det(number-3, the-2)
@@ -134,12 +139,8 @@ def generate_possible_code(sentence_json, m, translations_count, p, sentence_par
     '''
     possible_codes = []
 #     possibilities_codelines = set()
-    possibilities_codewords = [[[0.3, func] for func in possibilities_funcs]]
+    possibilities_codewords = [[(0.3, func) for func in possibilities_funcs]]
     possibilities_codelines = get_type_codelines('possibilities', possibilities_codewords)
-#     for func in possibilities_funcs:
-#         possible_codelines =  get_type_codelines([func], 'possibilities')
-#         possible_codelines = [(1.0, codeline) for codeline in possible_codelines]
-#         possibilities_codelines.update(possible_codelines)
     possible_codes.append(possibilities_codelines)
 #     for translation, codeline in zip(sentence_parse['translations'], sentence_parse['code']):
 #         codewords = nltk.word_tokenize(codeline)
@@ -147,8 +148,17 @@ def generate_possible_code(sentence_json, m, translations_count, p, sentence_par
 #         if type not in sentence2word.types:
 #             continue
     for word_type in sentence2word.types:
-        type_words = get_probable_label_words(sentence_json, word_type, m)
-        type_codewords = [word2codewords(word, translations_count, p=p) for word in type_words]
+        if golden_words:
+            type_words = Sentence2Word().get_expected_label_words(sentence_json, word_type)
+        else:
+            type_words = Sentence2Word().get_probable_label_words(sentence_json, word_type, m)
+        if golden_codewords:
+            transdict = get_translation_dict(sentence_parse['translations'], sentence_parse['code'], stem=False)
+            print(transdict)
+            type_codewords = [[(1.0, transdict[word]) for word in type_words]]
+        else:
+            type_codewords = [word2codewords(word, translations_count, p=p) for word in type_words]
+        print(type_codewords)
         type_codelines = get_type_codelines(word_type, type_codewords)
 #         type_codelines = get_type_codelines(word_type, [])
 #         if codeline.strip() not in type_codelines:
@@ -240,17 +250,16 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, so
     :param p: number of possible codewords for each word
     :param tries: maximal number of solutions to check
     '''
-#     success = True
     fnames = sorted(os.listdir(problem_dir))
     fnames = filter(lambda f: f != fname, fnames)
     translations_count = count_translations(problem_dir, fnames)
     fbase, fext = os.path.splitext(fname)
-    sentence_fpath = os.path.join(sentence_dir, fbase+'.label')
+    sentence_fpath = os.path.join(sentence_dir, fbase+'.json')
     if not os.path.exists(sentence_fpath):
         return
     with open(sentence_fpath, 'r') as inputjson:
         sentences_json = json.load(inputjson)
-    word_fpath = os.path.join(word_dir, fbase+'.py')
+    word_fpath = os.path.join(word_dir, fbase+'.json')
     if not os.path.exists(word_fpath):
         return
     with open(word_fpath, 'r') as inputjson: #TODO: fix ext
@@ -263,7 +272,10 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, so
     all_sentences = zip(sentences_json, words_json, problem_parse['sentences'])
     for i, (sentence, word, sentence_parse) in enumerate(all_sentences):
         print(i)
-        sentence_type = get_probable_sentence_type(sentences_json, sentence, n)
+        if golden_sentence:
+            sentence_type = Problem2Sentence().get_expected_sentence_type(sentence)
+        else:
+            sentence_type = Problem2Sentence().get_probable_sentence_type(sentences_json, sentence, n)
         print(sentence_type)
         if not sentence_type:
             continue
@@ -408,6 +420,7 @@ def main():
     n = 1
     word_dir = os.path.join(problem_dir, 'word_json')
     word_dir = os.path.join(problem_dir, 'word_json_struct')
+    word_dir = os.path.join(problem_dir, 'word_test_json')
     m = 1
 #     print(check_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p_thresh))
 
@@ -418,19 +431,17 @@ def main():
     tries = 100000
     solutions_dir = os.path.join(problem_dir, 'solutions')
     solutions_dir = os.path.join(problem_dir, 'solutions_struct')
-    print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
-#     results = []
-#     sol_path = os.path.join(problem_dir, 'solutions')
-#     for fname in sorted(os.listdir(sol_path)):
-#         print(fname)
-#         if not fname.endswith('.py'):
-#             continue
-#         problem_path = os.path.join(sol_path, fname)
-#         if check_solution(problem_path):
-#             results.append(fname)
-#     print(results)
-#     with open('results', 'w') as f:
-#         f.write(results)
+#     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+    results = []
+    sol_path = os.path.join(problem_dir, 'solutions')
+    for fname in sorted(os.listdir(sol_path)):
+        print(fname)
+        if not fname.endswith('.py'):
+            continue
+        problem_path = os.path.join(sol_path, fname)
+        if check_solution(problem_path):
+            results.append(fname)
+    print(results)
 
 #     fname = 'AmoebaDivTwo.py'
     fname = 'AverageAverage.py'
