@@ -10,70 +10,63 @@ import json
 import nltk
 import collections
 import re
-from stanford_corenlp import tokenize_sentences
-from dependency_parser import sentence2dependencies, dep2dict
 from problem_utils import *
+import resource
+import subprocess
+import threading
 
-
-def get_min_mask(sentwords,relevantwords):
-    '''
-    get minimal continuous subset containing all relevant words
-    example:
-            sentence words: ["hello", "world", ",", "how", "are", "you", "?"]
-            relevant words: ["world", "are"]
-            smallest csubset: ["world", ",", "how", "are"]
-    
-    :param sentwords:
-    :param relevantwords:
-    '''
-    N = len(sentwords)
-    mask = [1] * N
-    for i,j in combinations_with_replacement(range(N), 2):
-        if relevantwords.issubset(sentwords[i:j]):
-            new_mask = [0] * N
-            new_mask[i:j] = [1] * (j-i)
-            if sum(new_mask) < sum(mask):
-                mask = new_mask
-    return mask
+K = 1024
+M = K*K
 
 def clean_name(fname):
     return os.path.splitext(fname)[0]
-
-def get_features(sentence):
-    '''
-    extract dependency relations as features for sentence
-    
-    :param sentence:
-    '''
-#     sentwords = nltk.word_tokenize(sentence.lower())
-    sentwords = tokenize_sentences(sentence)[0]
-#     print(sentwords)
-    dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
-#     print(dependencies)
-    features = ['O']*len(sentwords)
-    for dep in dependencies:
-#         print(dep)
-        m0 = dep2dict(dep[-1])
-        m1 = dep2dict(dep[-2])
-        features[int(m0['ind'])-1] = 'I'
-        features[int(m1['ind'])-1] = 'I'
-    for dep in dependencies:
-        m = dep2dict(dep[-1])
-        features[int(m['ind'])-1] = dep[0] 
-    return features
-
 
 def clean_word(word):
     word = re.sub('\d?$', '', word)
     word = word.strip()
     return word
 
-def check_solution(problem_path, soln=1):
-#     with open('temp.py', 'w') as f:
-#         f.write(compose_problem(solution))
-#     import temp
-#     reload(temp)
+class Command(object):
+    def __init__(self, cmd):
+        self.cmd = cmd
+        self.process = None
+
+    def run(self, timeout=None):
+        def target():
+            print 'Thread started'
+            self.process = subprocess.Popen(self.cmd, shell=True)
+            self.process.communicate()
+            print 'Thread finished'
+
+        thread = threading.Thread(target=target)
+        thread.start()
+        thread.join(timeout)
+        if thread.is_alive():
+            print 'Terminating process'
+            self.process.terminate()
+            thread.join()
+
+def check_solution_(problem_path):#TODO: make it portable
+    problem_path = os.path.abspath(problem_path)
+    limit_cmd = 'ulimit -v '+str(1*M)
+    cmd = limit_cmd+'; '+'python \"'+problem_path+'\"'
     try:
+        result = subprocess.check_output(cmd, shell=True)
+    
+    #     command = Command(cmd)
+    #     command.run()
+    #     result = command.process.stdout
+    
+        return eval(result)
+    except Exception:
+        pass
+    return False
+
+def check_solution(problem_path, soln=1):
+#     resource.setrlimit(resource.RLIMIT_DATA, (M, 100*M))   
+    try:
+        
+
         if os.path.exists(problem_path+'c'):
             os.remove(problem_path+'c')
         temp = imp.load_source('tmp', problem_path)
@@ -85,7 +78,7 @@ def check_solution(problem_path, soln=1):
                 return False
         return True
     except Exception:
-#                 traceback.print_exc()
+#         traceback.print_exc()
         pass
     return False
 
@@ -150,11 +143,15 @@ class WordCount:
 
 if __name__ == '__main__':
 #     main_data_dir = 'res/brute_force_easy/'
-    wc = WordCount()
+#     wc = WordCount()
 #     wc.compare_count(main_data_dir, '>')
 
-    fpath = 'res/intersection'
-    with open(fpath) as f:
-        data = f.read()
-    wc.count_words(data, 'intersection') 
-
+#     fpath = 'res/intersection'
+#     with open(fpath) as f:
+#         data = f.read()
+#     wc.count_words(data, 'intersection')
+    problem_path = 'res/text&code6/solutions_struct/TextStatistics.py' 
+#     problem_path = 'res/text&code6/solutions_struct/AverageAverage.py' 
+#     problem_path = 'res/text&code6/solutions_struct/ArrayHash.py' 
+#     problem_path = 'test.py'
+    check_solution(problem_path)

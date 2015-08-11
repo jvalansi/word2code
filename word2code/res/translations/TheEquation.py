@@ -1,18 +1,24 @@
 from problem_utils import *
 
+
 class TheEquation:
     def leastSum(self, X, Y, P):
         input_int0 = X
         input_int1 = Y
         input_int2 = P
+        
         # You are given three positive integers, X , Y and P .
         # Return the least sum of two positive integers a and b such that P is a divisor of a* X +b* Y .
-        # ROOT-0(root=Return-1(dep=sum-4(det=the-2, amod=least-3, prep_of=integers-8(num=two-6, amod=positive-7)), rcmod=divisor-17(nsubj=a-9(conj_and=b-11, dep=such-12, prep_that=P-14), cop=is-15, det=a-16, prep_of=X-21(det=a-19, nn=*-20, conj_+=b-23), dep=Y-25(dep=*-24))))
-        least = min
-        divisor = is_divisor
-        return(least(sum((a,b)) for a,b in product(range(1,P),repeat=2) if divisor(P,a*X+b*Y)))
-
-
+        #### reduce = lambda possibility: least(possibility)
+        reduce = (lambda possibility: min(possibility))
+        #### mapping = lambda (a, b): sum((a, b))
+        mapping = (lambda (a, b): sum((a, b)))
+        #### possibilities = product(range(1, P), repeat=2)
+        possibilities = product(range(1, P), repeat=2)
+        #### valid = lambda (a, b): divisor(P, ((a * X) + (b * Y)))
+        valid = (lambda (a, b): is_divisor(P, ((a * X) + (b * Y))))
+        #### return(reduce(map(mapping, filter(valid, possibilities))))
+        return reduce(map(mapping, filter(valid, possibilities)))
 
 def example0():
 	cls = TheEquation()

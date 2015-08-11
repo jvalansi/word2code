@@ -7,17 +7,10 @@ from stanford_corenlp import tokenize_sentences
 # import sentence2word
 import nltk
 import os
-from problem_parser import parse_problem
-import shutil
-import json
 from dependency_parser import dep2word, dep2ind, Node, sentence2dependencies
 # import problem2sentence
-import re
-import logger
-import ast
 from utils import is_func, check_solution, clean_name
 import sentence2word
-import CRF_struct
 from CRF_struct import get_features
 from CRF_struct import CrfStruct
 from sentence2word import Sentence2Word

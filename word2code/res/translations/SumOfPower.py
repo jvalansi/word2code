@@ -1,21 +1,26 @@
 from problem_utils import *
 
+
 class SumOfPower:
     def findSum(self, array):
         input_array = array
+        
         # You are given a int[] array .
         # At any moment, you may choose a nonempty contiguous subsequence of array .
-        coniguous_subsequence = csubsets
-        possibilities = coniguous_subsequence(array)
+        #### possibilities = subsequence(array)
+        possibilities = csubsets(array)
         # Whenever you do so, you will gain power equal to the sum of all elements in the chosen subsequence.
-        def power(subsequence): return sum(subsequence) 
+        def mapping(possibility):
+            #### reduce = lambda possibility: sum(possibility)
+            reduce = lambda possibility: sum(possibility)
+            #### return reduce(subsequence)
+            return reduce(possibility)
         # You chose each possible contiguous subsequence exactly once, each time gaining some power.
         # Compute and return the total amount of power you gained.
-        # ROOT-0(root=gained-10(dep=Compute-1(conj_and=return-3(dobj=amount-6(det=the-4, amod=total-5, prep_of=power-8))), nsubj=you-9))
-        total = sum
-        return(total(map(power, possibilities)))
-
-
+        #### reduce = lambda total: sum(possibility)
+        reduce = lambda possibility: sum(possibility)
+        #### return reduce(map(power, possibilities))
+        return reduce(map(mapping, possibilities))
 
 def example0():
 	cls = SumOfPower()

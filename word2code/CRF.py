@@ -15,7 +15,7 @@ from problem_parser import parse_problem
 
 class Crf(LearnerWrapper):
 
-    def label_problem(self, indir, fname, outdir, only_code=True):
+    def label_problem(self, indir, fname, outdir, only_code=False):
         '''
         label each sentence in the problem
         
@@ -54,31 +54,37 @@ class Crf(LearnerWrapper):
         with open(outfname, 'w') as outfile:
             outfile.write(s)
     
+    def test_file(self, train_dir, fname, output_dir, test_dir=None, features=2):
+        if not test_dir:
+            test_dir = train_dir
+        train_fnames = sorted(os.listdir(train_dir))
+        train_fnames_ = copy.copy(train_fnames)
+        if fname in train_fnames:
+            train_fnames_.remove(fname)
+        self.join_files(train_dir, train_fnames_)
+        cmd = '/home/jordan/Downloads/CRF++-0.58/crf_learn res/features{} res/train res/model'.format(features)
+        output = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+        cmd = '/home/jordan/Downloads/CRF++-0.58/crf_test -v2 -m res/model {}'.format(os.path.join(test_dir,fname))
+        output = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+        sentences_json = self.output2json(output)
+        json_file = os.path.join(output_dir,clean_name(fname) + '.json')
+        with open(json_file, 'w') as outputjson:
+            json.dump(sentences_json, outputjson, indent = 4, separators=(',', ': '))
+#         with open(os.path.join(output_dir,fname),'w') as outputfile:
+#             outputfile.write(output)
+# #             outputfile.write('----------------------\n')
+    
     def test(self, train_dir, output_dir, test_dir=None, features=2):
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
         os.mkdir(output_dir)
         if not test_dir:
             test_dir = train_dir
-        test_fnames = sorted(os.listdir(test_dir))
-        train_fnames = sorted(os.listdir(train_dir))
-        for index,fname in enumerate(test_fnames):
+        for fname in sorted(os.listdir(test_dir)):            
+            if not fname.endswith('.label'):
+                continue
             print(fname)
-            train_fnames_ = copy.copy(train_fnames)
-            if fname in train_fnames:
-                train_fnames_.remove(fname)
-            self.join_files(train_dir, train_fnames_)
-            cmd = '/home/jordan/Downloads/CRF++-0.58/crf_learn res/features{} res/train res/model'.format(features)
-            output = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
-            cmd = '/home/jordan/Downloads/CRF++-0.58/crf_test -v2 -m res/model {}'.format(os.path.join(test_dir,fname))
-            output = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
-            sentences_json = self.output2json(output)
-            json_file = os.path.join(output_dir,clean_name(fname) + '.json')
-            with open(json_file, 'w') as outputjson:
-                json.dump(sentences_json, outputjson, indent = 4, separators=(',', ': '))
-    #         with open(os.path.join(output_dir,fname),'w') as outputfile:
-    #             outputfile.write(output)
-    # #             outputfile.write('----------------------\n')
+            self.test_file(train_dir, fname, output_dir, test_dir, features)
     
         
     def output2json(self, output):

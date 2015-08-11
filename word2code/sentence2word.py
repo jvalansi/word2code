@@ -13,29 +13,32 @@ import json
 import ast
 
 from matplotlib.pyplot import imshow
-from utils import is_func, check_solution, get_features, clean_name
+from utils import is_func, check_solution, clean_name, clean_word
 from stanford_corenlp import tokenize_sentences
 from CRF import Crf
+from dependency_parser import get_features
 
 
-types = ['mapping', 'valid', 'reduce']
+types = ['mapping', 'valid', 'reduce', 'possibilities', 'return']
 # types = ['I']
+def get_type(codewords):
+    '''
+    get word type from codewords
+    
+    :param codewords:
+    '''
+    if not codewords:
+        return ''
+    word_type = clean_word(codewords[0])
+    if word_type in types:
+        return word_type
+    if word_type == 'def' and clean_word(codewords[1]) in types:
+        return clean_word(codewords[1])
+    print(word_type)
+    return ''
 
 class Sentence2Word(Crf):
 
-    def get_type(self, codewords):
-        '''
-        get word type from codewords
-        
-        :param codewords:
-        '''
-        if not codewords:
-            return ''
-        for word_type in types:
-            if codewords[0].startswith(word_type):
-                return word_type
-        print(codewords[0])
-        return ''
     
     
     def label_sentence(self, sentence, translations, code, method):
@@ -55,7 +58,7 @@ class Sentence2Word(Crf):
         for translation,codeline in zip(translations,code):
             codewords = nltk.word_tokenize(codeline)
             transwords = nltk.word_tokenize(translation)
-            label = self.get_type(codewords)
+            label = get_type(codewords)
             if not label:
                 continue
             if ':' in transwords:
@@ -131,19 +134,14 @@ class Sentence2Word(Crf):
         :param label:
         :param n: number of possible words for each label 
         '''
-        print(word_type)
-        sentprobs = self.get_label_probs(sentence, word_type, n)
-        expected_words = zip(*sentprobs)[-1]
-        label_words = self.get_label_words(sentence, word_type)
-        if label_words:
-            label_words = zip(*label_words)[-1]
-            result = set(label_words).issubset(set(expected_words))
-        else:
-            result = True
+        probable_words = self.get_probable_label_words(sentence, word_type, n)
+        expected_words = self.get_expected_label_words(sentence, word_type)
+        result = set(expected_words).issubset(set(probable_words))
     #     result = all([not important for (sentprob,important,word) in sentprobs[n:]])
-        if not result:
-            logger.logging.info(word_type)
-            logger.logging.info(sentprobs)
+#         if not result:
+        logger.logging.info(word_type)
+        logger.logging.info(set(probable_words))
+        logger.logging.info(set(expected_words))
         return result
     
     def check_problem(self, json_dir,fname,n, labels=None):
@@ -168,34 +166,33 @@ class Sentence2Word(Crf):
                 problem_result.append(result)
     #         result = check_type(sentence, 'var', n)
     #         problem_result.append(result)
-        return problem_result    
+        return problem_result
 
 def main():
     s2w = Sentence2Word()
     
-    indir = os.path.join('res','text&code6')
-    train_dir = os.path.join(indir, 'word_train')
-    fname = 'PalindromesCount.py'
-#     fname = 'TextStatistics.py'
-#     with open(os.path.join(indir,fname),'r') as fp:
-#         problem = fp.read()
-#     label_problem(problem)
-#     s2w.build_train(indir, train_dir)
+    indir = os.path.join('res','text&code7')
 
-    test_indir = os.path.join('res', 'problems_test')
+    fname = 'PalindromesCount.py'
+    fname = 'RandomColoringDiv2.py'
+    train_dir = os.path.join(indir, 'word_train')
+#     s2w.label_problem(indir, fname, train_dir)
+#     s2w.build_train(indir, train_dir, only_code=True)
+
+    test_indir = os.path.join('res', 'problems_test1')
     test_indir = indir
     test_dir = os.path.join(test_indir,'word_test')
-    s2w.build_train(test_indir, test_dir, only_code=False)
+#     s2w.build_train(test_indir, test_dir)
 
     output_dir = os.path.join(indir, 'word_json')
-#     s2w.test(train_dir, output_dir)
+    s2w.test(train_dir, output_dir)
 
     test_output_dir = os.path.join(test_indir, 'word_test_json')
-    s2w.test(train_dir, test_output_dir, test_dir)
+#     s2w.test(train_dir, test_output_dir, test_dir)
 
     check_dir = output_dir
     m = 2
-    print(s2w.calc_score(check_dir, m, indir))
+#     print(s2w.calc_score(check_dir, m, indir))
 #     scores = {}
 #     for m in range(1,20):
 #         scores[m] = len(calc_score(check_dir, m, indir))
@@ -205,7 +202,7 @@ def main():
 #     plt.ylabel('some numbers')
 #     plt.show()
     
-    fname = 'AverageAverage.label'
+    fname = 'MountainRanges.label'
 #     fname = 'BlockTower.label'
 #     fname = 'ChocolateBar.label'
 #     fname = 'CompetitionStatistics.label'
@@ -214,7 +211,7 @@ def main():
 #     fname = 'FarFromPrimes.label'
 #     fname = 'Elections.label'
 #     fname = 'LittleElephantAndBallsAgain.label'
-#     print(check_problem(output_dir, fname, m))
+#     print(s2w.check_problem(check_dir, fname, m))
 
 
 if __name__ == '__main__':

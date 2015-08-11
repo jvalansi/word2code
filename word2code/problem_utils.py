@@ -115,6 +115,12 @@ def swap(S, (i,j)):
 def startswith(s, x):
     return str(s).startswith(str(x))
 
+def insert(A, possibility, B):
+    return ((A[:possibility] + B) + A[possibility:])
+
+def join(S, c):
+    return c.join(S)
+
 if __name__ == '__main__':
 #     with open('res/logger.log','r') as fp:
 #         lines = fp.readlines()

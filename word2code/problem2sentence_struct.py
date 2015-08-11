@@ -7,29 +7,12 @@ from stanford_corenlp import tokenize_sentences
 # import sentence2word
 import nltk
 import os
-from problem_parser import parse_problem
-from pystruct.models.edge_feature_graph_crf import EdgeFeatureGraphCRF
-from pystruct.learners.one_slack_ssvm import OneSlackSSVM
-import shutil
-import json
-import numpy as np
-from sklearn.metrics import accuracy_score
-from pystruct.learners.structured_perceptron import StructuredPerceptron
-from itertools import combinations, combinations_with_replacement
 from dependency_parser import dep2word, dep2ind, Node, sentence2dependencies
 # import problem2sentence
-import re
-import logger
-import ast
-from utils import is_func, check_solution, clean_name, get_min_mask
-import sentence2word
 import problem2sentence
 import string
-import datetime
-import CRF_struct
-from CRF_struct import get_features
-from CRF_struct import CrfStruct
-from problem2sentence import Problem2Sentence
+from CRF_struct import CrfStruct, get_features
+from problem2sentence import Problem2Sentence, get_min_mask
 
 
 class Problem2Sentence_Struct(CrfStruct):
@@ -138,7 +121,7 @@ class Problem2Sentence_Struct(CrfStruct):
 
 def main():
     p2ss = Problem2Sentence_Struct()
-    problem_dir = os.path.join('res', 'text&code6') 
+    problem_dir = os.path.join('res', 'text&code7') 
 #     problem_dir = os.path.join('res', 'small') 
     indir = problem_dir
     train_dir = os.path.join(problem_dir, 'sentence_train_struct')
@@ -157,7 +140,7 @@ def main():
     test_output_dir = os.path.join(test_indir, 'sentence_json_struct')
 #     CRF_struct.test(train_dir, test_output_dir, test_dir=test_dir)
 
-    n = 2
+    n = 1
     labels = get_features(train_dir)[2]
     labels.remove('O')
     p2s = Problem2Sentence()

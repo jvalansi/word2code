@@ -1,5 +1,6 @@
 from problem_utils import *
 
+
 class RandomColoringDiv2:
     def getCount(self, maxR, maxG, maxB, startR, startG, startB, d1, d2):
         input_int0 = maxR
@@ -10,24 +11,30 @@ class RandomColoringDiv2:
         input_int5 = startB
         input_int6 = d1
         input_int7 = d2
+        
         # Little Arthur has a new frisbee and he would like to color it.
         # A frisbee has the shape of a disc.
         # Arthur will color the disc using two colors: one for the top side, one for the bottom side.
         # Each color is defined by three integer components: R, G, and B (meaning red, green, and blue, respectively), where 0 <= R < maxR , 0 <= G < maxG , and 0 <= B < maxB .
         # It is known that Arthur can use any of the maxR * maxG * maxB possible colors.
-        colors = product(range(maxR),range(maxG),range(maxB))
+        #### colors = product(range(maxR),range(maxG),range(maxB))
+        possibilities = product(range(maxR), range(maxG), range(maxB))
         # Arthur is going to perform the coloring in the following way: In the first step, he will color the top side of the frisbee using the color ( startR , startG , startB ).
         # In the second step, he will color the bottom side of the frisbee using a color that makes a good transition from the first color.
         # (This is explained below.)
         # A transition from color (R, G, B) to color (R', G', B') is called good if all components differ by at most d2 units (formally, |R - R'| <= d2 , |G - G'| <= d2 , |B - B'| <= d2 ) and at least one component differs by at least d1 units (formally, at least one of the conditions |R - R'| >= d1 , |G - G'| >= d1 , |B - B'| >= d1 holds).
-        def good((R,G,B),(R_,G_, B_)): return all([abs(R - R_) <= d2 , abs(G - G_) <= d2 ,  abs(B - B_) <= d2]) and any([abs(R - R_) >= d1 , abs(G - G_) >= d1 , abs(B - B_) >= d1]) 
+        def valid0((R, G, B), (R_, G_, B_)):
+            #### return (all([(abs((R - R_)) <= d2), (abs((G - G_)) <= d2), (abs((B - B_)) <= d2)]) and any([(abs((R - R_)) >= d1), (abs((G - G_)) >= d1), (abs((B - B_)) >= d1)]))
+            return (all([(abs((R - R_)) <= d2), (abs((G - G_)) <= d2), (abs((B - B_)) <= d2)]) and any([(abs((R - R_)) >= d1), (abs((G - G_)) >= d1), (abs((B - B_)) >= d1)]))
         # Intuitively, a transition between two colors is called good if they are neither too similar, nor too different.
         # After coloring the top side Arthur is wondering how many different options there are now for the color of the bottom side of the frisbee.
         # Given ints maxR , maxG , maxB , startR , startG , startB , d1 , and d2 , return the number of valid colors that make a good transition from the color ( startR , startG , startB ).
-        number = len
-        return(number([color for color in colors if good(( startR , startG , startB ),color)]))
-
-
+        #### valid = lambda possibility: good((startR, startG, startB), possibility)
+        valid = lambda possibility: valid0((startR, startG, startB), possibility)
+        #### reduce = lambda possibility: number(possibility)
+        reduce = lambda possibility: len(possibility)
+        #### return reduce(filter(valid, possibilities))
+        return reduce(filter(valid, possibilities))
 
 def example0():
 	cls = RandomColoringDiv2()

@@ -1,24 +1,26 @@
-*	problem2sentences:
-	* n = 2
-	* 2^3 = 8 options to label sentences
-* 	sentence2words:
-	* m = 4
-	* (2 4)^3 = 12^3 ~= 1700 options of word extractions
-*	word2codeword
-	* p = 0.3
-	* ~3 codeword for each word 
-*	codeword2codeline
-	* ~10-20 codelines for each codeword combination
-	-> ~1000-8000 codelines for each sentence
-	-> ~10^9-5*10^11 codelines for each problem
-	
-	(8 4) = 1680	
-	each word has ~3 codewords -> each 4 words has 3^4 = 81 options
-	-> 81*1680 = 136080
-	
-	
-find variables
-	exchange variables with generic name
-	use crf to find vars
-	
-	
+SumOfPower: 
+* should work
+FarFromPrimes:
+* literal expression
+* possibilities
+EggCartons:
+* types
+TextStatistics:
+* possibilities
+TournamentsAmbiguityNumber:
+* standard form
+DecipherabilityEasy:
+* if else
+* standard form
+SemiPerfectSquare:
+* literal expression
+* if else
+
+SquareDigitNumbers: 
+* literal expression
+* ...
+ArrayHash:
+* matrix
+* literal expression
+* types
+* possibilities

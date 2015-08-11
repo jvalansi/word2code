@@ -161,7 +161,7 @@ class TopCoderSpider:
             for child in children:
                 if children.index(child)%6 == 1:
                     inputs = list(child.table.children)
-                    example_dict['inputs'] = [inp.get_text().strip() for inp in inputs if inputs.index(input)%2 == 1]
+                    example_dict['inputs'] = [inp.get_text().strip() for inp in inputs if inputs.index(inp)%2 == 1]
                 if children.index(child)%6 == 3:
                     example_dict['output'] = child.get_text().strip()[9:]
             examples_list.append(example_dict)
@@ -173,10 +173,15 @@ class TopCoderSpider:
 
 if __name__ == '__main__':
     tcs = TopCoderSpider()
-    root = "/tc?module=ProblemArchive&sr=1&er=100&sc=&sd=&class=&cat=Brute+Force&div1l=&div2l=1&mind1s=&mind2s=&maxd1s=&maxd2s=&wr="
+    cat = 'Brute+Force'
+    cat = 'Simple+Search%2C+Iteration'
+    root = "/tc?module=ProblemArchive&sr=1&er=1000&sc=&sd=&class=&cat="+cat+"&div1l=&div2l=1&mind1s=&mind2s=&maxd1s=&maxd2s=&wr="
 #     rootsoup = tcs.link2soup(root)
 
-    path = 'res/brute_force_easy/'
+    name = cat
+    name = re.sub(r'\%\w{2}', r'_', name)
+    name = re.sub(r'\+', r'_', name)
+    path = os.path.join('res', name)
 #     tcs.get_problems(path, root)
 #     fname = '10152'
 #     tcs.parse_problem(os.path.join(dir,fname))

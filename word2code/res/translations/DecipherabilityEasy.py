@@ -1,5 +1,6 @@
 from problem_utils import *
 
+
 class DecipherabilityEasy:
     def check(self, s, t):
         s = list(s)
@@ -7,20 +8,17 @@ class DecipherabilityEasy:
         input_array0 = s
         input_array1 = t
         N0 = len(s)
+        
         # You had a non-empty string s but you lost it.
         # Cat Snuke found the string and removed one character from the string.
         # Later, Snuke gave you the string t .
         # Can this be the string created from your string s ?
         # You are given the Strings s and t .
         # Return "Possible" (quotes for clarity) if t can be obtained from s by erasing exactly one character.
-        one = 1
-        obtained = contains
-        erasing = sub
-        return "Possible" if obtained(subsets(s, erasing(N0,one)), tuple(t)) else "Impossible"
+        #### return ('Possible' if obtained(subsets(s, erasing(N0, one)), tuple(t)) else 'Impossible')
+        return ('Possible' if contains(subsets(s, sub(N0, 1)), tuple(t)) else 'Impossible')
         # Otherwise, return "Impossible".
         # Note that the return value is case-sensitive.
-
-
 
 def example0():
 	cls = DecipherabilityEasy()

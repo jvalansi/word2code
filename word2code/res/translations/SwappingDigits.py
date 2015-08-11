@@ -2,32 +2,28 @@ from problem_utils import *
 import copy
 import string
 
+
 class SwappingDigits:
     def minNumber(self, num):
         input_array = num
         N = len(num)
+        
         # Given is a String num .
         # This String contains the digits of a (possibly large) positive integer.
         # For example, num ="1147" represents the integer 1147.
         # The String num will not have any leading zeros.
         # You are allowed to swap one pair of digits in the given number.
         # In other words, you may choose a pair of distinct indices i and j, and swap the characters num [i] and num [j].
-        choose = combinations_with_replacement
-        pair = 2
-        indices = range
-        integers = [''.join(swap(list(num), (i,j))) for i,j in choose(indices(N), pair)]
+        #### integers = [''.join(swap(list(num), (i, j))) for (i, j) in choose(indices(N), pair)]
+        possibilities = [''.join(swap(list(num), (i, j))) for (i, j) in combinations_with_replacement(range(N), 2)]
         # Note that you may also leave the original number unchanged.
         # The new String must again describe a valid positive integer, i.e., it must not have any leading zeros.
-        zeros = 0
-        leading = startswith
-        def valid(s): return not(leading(s, zeros)) 
+        def valid(possibility):
+            #### return (not leading(s, zeros))
+            return (not startswith(possibility, 0))
         # Find and return the String that represents the smallest possible integer that can be obtained.
-        # ROOT-0(root=Find-1(conj_and=return-3(dobj=String-5(det=the-4, rcmod=represents-7(nsubj=that-6, dobj=integer-11(det=the-8, amod=smallest-9, amod=possible-10, rcmod=obtained-15(nsubjpass=that-12, aux=can-13, auxpass=be-14)))))))
-        smallest = min
-        possible = valid
-        return(smallest(filter(possible, integers)))
-
-
+        #### return smallest(filter(possible, integers))
+        return min(filter(valid, possibilities))
 
 def example0():
 	cls = SwappingDigits()

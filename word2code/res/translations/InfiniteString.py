@@ -1,22 +1,26 @@
 from problem_utils import *
 
+
 class InfiniteString:
-	def equal(self, s, t):
-		input_array0 = s
-		input_array1 = t
-		inf = 1000
-		#  Given a string s, let f(s) denote the infinite string obtained by concatenating infinitely many copies of s. For example, if s = "abc" then f(s) = "abcabcabcabc...".
-		def f(s): return(s*inf)[:inf]
-		# Note that the string f(s) still has a beginning.
-		# Hence, f("abc") and f("bca") are two different infinite strings: the first one starts with an 'a' while the other starts with a 'b'.
-		# Sometimes, two different finite strings can produce the same infinite string.
-		# For example, f("abc") is the same as f("abcabc").
-		# You are given Strings s and t .
-		# Check whether f( s ) equals f( t ).
-		# If the two infinite strings are equal, return "Equal".
-		equal = eq
-		return "Equal" if equal(f(s),f(t)) else "Not equal" 
-		# Otherwise, return "Not equal". 
+    def equal(self, s, t):
+        input_array0 = s
+        input_array1 = t
+        inf = 1000
+        
+        # Given a string s, let f(s) denote the infinite string obtained by concatenating infinitely many copies of s. For example, if s = "abc" then f(s) = "abcabcabcabc...".
+        def mapping(s):
+            #### return copies(s, inf)[:inf]
+            return mul(s, inf)[:inf]
+        # Note that the string f(s) still has a beginning.
+        # Hence, f("abc") and f("bca") are two different infinite strings: the first one starts with an 'a' while the other starts with a 'b'.
+        # Sometimes, two different finite strings can produce the same infinite string.
+        # For example, f("abc") is the same as f("abcabc").
+        # You are given Strings s and t .
+        # Check whether f( s ) equals f( t ).
+        # If the two infinite strings are equal, return "Equal".
+        #### return ('Equal' if equal(f(s), f(t)) else 'Not equal')
+        return ('Equal' if eq(mapping(s), mapping(t)) else 'Not equal')
+        # Otherwise, return "Not equal".
 
 def example0():
 	cls = InfiniteString()
@@ -68,4 +72,3 @@ def example5():
 
 if __name__ == '__main__':
 	print(example0())
-

@@ -1,21 +1,24 @@
 from problem_utils import *
 
+
 class UniqueDigits:
     def count(self, n):
         input_int = n
         inf = 10000
+        
         # Given an int n find all positive integers less than n whose digits are all different.
-        less_than = lt
-        different = ne
-        positive = is_positive
-        def valid(integer): return positive(integer) and less_than(integer, n) and all(different(* digits) for digits in pairs(str(integer)))
+        def valid(possibility):
+            #### reduce = lambda possibility: (positive(integer) and less_than(integer, n) and all(possibility))
+            reduce = (lambda possibility0: (is_positive(possibility) and lt(possibility, n) and all(possibility0)))
+            #### mapping = lambda digits: different(*digits)
+            mapping = (lambda digits: ne(*digits))
+            #### possibilities = pairs(str(integer))
+            possibilities = pairs(str(possibility))
+            #### return(reduce(map(mapping, possibilities)))
+            return reduce(map(mapping, possibilities))
         # Return the total number of such integers.
-        number = len
-        such = valid
-        integers = range
-        return(number(filter(such, integers(inf))))
-
-
+        #### return number(filter(such, integers(inf)))
+        return len(filter(valid, range(inf)))
 
 def example0():
 	cls = UniqueDigits()

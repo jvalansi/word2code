@@ -1,9 +1,11 @@
 from problem_utils import *
 
+
 class WinterAndMandarins:
     def getNumber(self, bags, K):
         input_array = bags
         input_int = K
+        
         # It's winter time!
         # Time to eat a lot of mandarins with your friends.
         # You have several bags with mandarins.
@@ -11,19 +13,15 @@ class WinterAndMandarins:
         # For each i, the i-th element of bags represents the number of mandarins in the i-th bag.
         # You are also given an int K .
         # You want to choose exactly K bags and distribute them among you and your friends.
-        choose = subsets
-        chosen = choose(bags,K)
+        #### chosen = choose(bags, K)
+        possibilities = subsets(bags, K)
         # To be as fair as possible, you want to minimize the difference between the chosen bag with most mandarins and the chosen bag with fewest mandarins.
-        fewest = min
-        most = max
-        difference = sub
-        minimize = min
-        mapping = lambda possibility: difference(most(possibility),fewest(possibility))
+        def mapping(possibility):
+            #### return difference(most(possibility), fewest(possibility))
+            return sub(max(possibility), min(possibility))
         # Return the smallest difference that can be achieved.
-        smallest = min
-        return smallest(map(mapping, chosen))
-
-
+        #### return smallest(map(mapping, chosen))
+        return min(map(mapping, possibilities))
 
 def example0():
 	cls = WinterAndMandarins()

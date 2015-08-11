@@ -228,6 +228,7 @@ def check_problem(path, fname, p):
                 logger.logging.info(fname)
                 logger.logging.info(clean_word(transword))
                 logger.logging.info(stemmer.lemmatize(transword, 'v'))
+                logger.logging.info(codeword_dict)
                 logger.logging.info(codeword_dict[codeword])
                 logger.logging.info(codeword)
                 try:

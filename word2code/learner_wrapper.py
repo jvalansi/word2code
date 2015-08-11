@@ -4,11 +4,8 @@ Created on Apr 2, 2015
 @author: jordan
 '''
 
-import logger
 
-import re
 import os
-from problem_parser import parse_problem
 import shutil
 
 from utils import check_solution, clean_name
@@ -17,7 +14,7 @@ from utils import check_solution, clean_name
 class LearnerWrapper:
     
     
-    def build_train(self, indir, outdir, only_code=True):
+    def build_train(self, indir, outdir, only_code=False):
         '''
         build train database by labeling each problem in indir
         
@@ -54,11 +51,9 @@ class LearnerWrapper:
                 continue
             print(fname)
             problem_result = self.check_problem(json_dir, fname, n, labels)
-            if any(problem_result) and all(problem_result):
+            if all(problem_result):
                 correct.append(fname)
-            else:
-                logger.logging.info(fname)
-            total += any(problem_result)
+            total += 1
     #     print(total)
         if total:
             print(float(len(correct))/total)

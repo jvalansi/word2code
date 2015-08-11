@@ -1,18 +1,25 @@
 from problem_utils import *
 
+
 class SquareDigitNumbers:
     def getNumber(self, n):
         input_int = n
         inf = 10000
+        
         # You enjoy working with numbers that contain only square digits (namely, 0, 1, 4 and 9).
-        only = all
-        def valid(number): return only(contains(('0','1','4','9'), digit) for digit in str(number))
-        # The sequence containing only these digits is 0, 1, 4, 9, 10, 11, 14... 
-        sequence = filter(valid, range(inf))
+        def valid(possibility):
+            #### reduce = lambda possibility: only(possibility)
+            reduce = (lambda possibility: all(possibility))
+            #### mapping = lambda digit: contains(('0', '1', '4', '9'), digit)
+            mapping = (lambda digit: contains(('0', '1', '4', '9'), digit))
+            #### possibilities = str(number)
+            possibilities = str(possibility)
+            #### return(reduce(map(mapping, possibilities)))
+            return reduce(map(mapping, possibilities))
+        # The sequence containing only these digits is 0, 1, 4, 9, 10, 11, 14...
         # Return the n -th term (indexed from 0) in this sequence.
-        return(sequence[n])
-
-
+        #### return term(filter(valid, range(inf)), input_int)
+        return getitem(filter(valid, range(inf)), input_int)
 
 def example0():
 	cls = SquareDigitNumbers()

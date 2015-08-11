@@ -6,7 +6,8 @@ Created on Jul 19, 2015
 import copy
 import re
 from nltk.parse import stanford
-from stanford_corenlp import raw_parse_sents
+from stanford_corenlp import raw_parse_sents, tokenize_sentences
+
 class Node:
     def __init__(self, name = '', parent = None, children = None, ntype = None):
         self.name = name
@@ -117,7 +118,7 @@ class Node:
 
 
 def dep2list(dep):
-    m = re.match('^(\w+)\((.+\-\d+)\'?, (.+\-\d+)\'?\)$', dep)
+    m = re.match('^(.+)\((.+\-\d+)\'?, (.+\-\d+)\'?\)$', dep)
     if not m:
         return []
     return list(m.groups())
@@ -130,7 +131,7 @@ def dep2word(dep):
     return re.search('(.+)?-(?:\d+)\'?', dep).group(1)
 
 def dep2dict(dep):
-    m = re.search('(?P<word>[\w\-\+\=]+)?-(?P<ind>\d+)', dep)
+    m = re.search('(?P<word>.+)?-(?P<ind>\d+)', dep)
     return m.groupdict()
 
 # filter dependencies according to words
@@ -186,6 +187,26 @@ def sentence2dependencies(sentence):
     dependencies = raw_parse_sents([sentence])
     dependencies = [[dep2list(dep) for dep in sentence_dependencies.split('\n')] for sentence_dependencies in dependencies.split('\n\n')]
     return (dependencies)
+
+def get_features(sentence):
+    '''
+    extract dependency relations as features for sentence
+    
+    :param sentence:
+    '''
+#     sentwords = nltk.word_tokenize(sentence.lower())
+    sentwords = tokenize_sentences(sentence)[0]
+    dependencies = sentence2dependencies(sentence)[0] #TODO: check if bug
+    features = ['O']*len(sentwords)
+    for dep in dependencies:
+        m0 = dep2dict(dep[-1])
+        m1 = dep2dict(dep[-2])
+        features[int(m0['ind'])-1] = 'I'
+        features[int(m1['ind'])-1] = 'I'
+    for dep in dependencies:
+        m = dep2dict(dep[-1])
+        features[int(m['ind'])-1] = dep[0] 
+    return features
 
 if __name__ == '__main__':
     sentence = 'hello my friend, how are you?'

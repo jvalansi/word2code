@@ -9,6 +9,9 @@ import shutil
 import json
 from nltk.tokenize import sent_tokenize
 from dependency_parser import Node, sentence2dependencies
+from utils import check_solution, WordCount
+from code_parser import sentence_to_codeline_type, to_generic_names,\
+    count_problem_code, to_generic_vars, lambda2def, to_generic_methods
 # from utils import check_solution
 
 # from problem_utils import *
@@ -42,7 +45,7 @@ from dependency_parser import Node, sentence2dependencies
 #         \s*(?P<sentences>(?:.*\n)+)
 #         \s*(?P<example>def\s+example\d+\(\):\s*\n(?:[^\n]*\w[^\n]+\n)+)+
 #         \s*(?P<main>if\s+__name__\s*==\s*\'__main__\'\s*:\s*\n.*)
-def parse_problem(problem):
+def parse_problem(problem): #TODO: change to accept path
     parse = {}
     problem_pattern = re.compile(r'''
         \s*(?P<imports>(?:.*\bimport\b.*\n)+)?\s*
@@ -239,18 +242,96 @@ def json2problem_dir(indir, outdir):
         with open(os.path.join(outdir, fbase+'.py'), 'w') as fp:
             fp.write(json2problem(problem_json))
 
-if __name__ == '__main__':
-    with open('res/translations/CorruptedMessage.py') as f:
+def count_code(path):
+    '''
+    count code words
+    :param path:
+    :return: word count of code
+    '''
+#     go through all files in directory
+    for fname in os.listdir(path):
+        with open(os.path.join(path, fname), 'r') as fobj:
+            problem = fobj.read()
+        problem_parse = parse_problem(problem)
+        code_data = count_problem_code(problem_parse)
+    word_counter = WordCount()
+    word_counter.count_words(code_data, "res/code_data")
+#         go through all lines in file
+    return(word_counter)
+
+def parse_problem_code(fname, in_path, out_path):
+    fpath = os.path.join(in_path, fname)
+    with open(fpath) as f:
         problem = f.read()
-    parse = parse_problem(problem)
-    print(parse)
+    problem_parse = parse_problem(problem)
+    for sentence_parse in problem_parse['sentences']:
+        if re.search(r'ROOT-0', sentence_parse['sentence']):
+            sentence_parse['sentence'] = ''
+        sentence_parse['code'] = lambda2def(sentence_parse['code'])
+        sentence_parse['translations'] = lambda2def(sentence_parse['translations'])        
+# #         sentence_to_single_line(sentence_parse)
+        sentence_parse = sentence_to_codeline_type(sentence_parse)
+    problem_parse = to_generic_names(problem_parse)
+    problem_parse = to_generic_vars(problem_parse)
+    problem_parse = to_generic_methods(problem_parse)
+    problem = compose_problem(problem_parse)
+    out_fpath = os.path.join(out_path, fname) 
+    with open(out_fpath, 'w') as f:
+        f.write(problem)
+    out_fpath = os.path.join(out_path, fname)
+    if check_solution(out_fpath):
+        return True 
+
+def parse_problems_code(path, out_path):
+    fail = []
+#     not_empty = []
+    if os.path.exists(out_path):
+        shutil.rmtree(out_path)
+    os.mkdir(out_path)
+    for fname in sorted(os.listdir(path)):
+        if not fname.endswith('.py'):
+            continue
+        print(fname)
+        fpath = os.path.join(path, fname)
+        if not check_solution(fpath):
+#             not_empty.append(fname)
+            continue
+        success = parse_problem_code(fname, path, out_path)
+        if not success:
+            fail.append(fname)
+    return fail
+
+def parse_problems(indir, outdir):
+    if os.path.exists(outdir):
+        shutil.rmtree(outdir)
+    os.mkdir(outdir)
+    for fname in sorted(os.listdir(indir)):
+        fbase, fext = os.path.splitext(fname)
+        if fext != '.py':
+            continue
+        print(fname)
+        if not check_solution(os.path.join(indir, fname)):
+            continue
+        with open(os.path.join(indir,fname)) as fp:
+            problem = fp.read()
+        parse = parse_problem(problem)
+        with open(os.path.join(outdir, fname), 'w') as fp:
+            fp.write(compose_problem(parse))
+        if not check_solution(os.path.join(outdir, fname)):
+            print(fname)
+
+if __name__ == '__main__':
+#     with open('res/translations/CorruptedMessage.py') as f:
+#         problem = f.read()
+#     parse = parse_problem(problem)
+#     print(parse)
 #     with open('res/parse', 'w') as f:
 #         json.dump(parse,f,indent=4, separators=(',', ': '))
-    with open('res/compose.py', 'w') as f:
-        f.write(compose_problem(parse))
+#     with open('res/compose.py', 'w') as f:
+#         f.write(compose_problem(parse))
 
-#     indir = 'res/brute_force_easy/'
-#     outdir = 'res/problems_test/'
+    indir = os.path.join('res', 'Simple_Search__Iteration')
+    outdir = os.path.join('res','problems_test1')
 #     json2problem_dir(indir, outdir)
 
 #     root = codeline_gen_dep.Node('ROOT-0')
@@ -260,23 +341,20 @@ if __name__ == '__main__':
 #     print(deps)
 #     print(root.deps2tree(deps))
 
+    indir = 'res/text&code6/'
+    outdir = 'res/text&code7/'
+#     parse_problems(indir, outdir)
 
-#     indir = 'res/text&code6/'
-#     outdir = 'res/test/'
-#     if os.path.exists(outdir):
-#         shutil.rmtree(outdir)
-#     os.mkdir(outdir)
-#     for fname in sorted(os.listdir(indir)):
-#         fbase, fext = os.path.splitext(fname)
-#         if fext != '.py':
-#             continue
-#         if not check_solution(os.path.join(indir, fname)):
-#             continue
-# #         print(fname)
-#         with open(os.path.join(indir,fname)) as fp:
-#             problem = fp.read()
-#         parse = parse_problem(problem)
-#         with open(os.path.join(outdir, fname), 'w') as fp:
-#             fp.write(compose_problem(parse))
-#         if not check_solution(os.path.join(outdir, fname)):
-#             print(fname)
+    indir = 'res/translations/'
+    outdir = 'res/translations1/'
+    fname = 'CorruptedMessage.py'
+#     parse_problem_code(fname, indir, outdir)
+    print(parse_problems_code(indir, outdir))
+
+#     fpath = os.path.join(indir, fname)
+#     with open(fpath) as f:
+#         problem = f.read()
+#     problem_parse = parse_problem(problem)
+#     problem_parse = to_generic_methods(problem_parse)
+#     print(compose_problem(problem_parse))
+

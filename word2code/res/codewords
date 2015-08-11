@@ -8,8 +8,6 @@ elements, elements,
 possibilities, possibilities, 
 possibility, possibility, 
 pair,pair,
-pairs,pairs,
-cpairs,successive,
 input_array,array, 
 and, and 
 all, all
@@ -17,6 +15,7 @@ set, set
 inclusive, inclusive 
 not_, not
 gt,greater 
+le, less
 valid,valid,  
 in,in,  
 diff, difference, 
@@ -48,8 +47,6 @@ sorted, sorted,
 mod, modulo,
 list, list, 
 countOf, count 
-subsets, subsets, 
-csubsets, subsets, 
 where, where, 
 is_even, even
 is_prime, prime
@@ -68,8 +65,15 @@ map, map
 filter, filter
 reduce, reduce
 swap, swap
+is_, is
+reversed, reverse
+pairs,pairs,
+cpairs,successive,
+subsets, subsets, 
+csubsets, subsets, 
+permutations, permutations
+product, product
 combinations_with_replacement, combinations
 combinations, combinations
-is_, is
-permutations, permutations
-reversed, reverse 
+insert, insert 
+getitem, item

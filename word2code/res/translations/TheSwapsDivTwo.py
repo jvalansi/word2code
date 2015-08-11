@@ -1,23 +1,20 @@
 from problem_utils import *
 import copy
 
+
 class TheSwapsDivTwo:
     def find(self, sequence):
         input_array = sequence
         N = len(sequence)
+        
         # John has a sequence of integers.
         # Brus is going to choose two different positions in John's sequence and swap the elements at those positions.
-        two = 2
-        choose = combinations
-        positions = range
-        sequences = (tuple(swap(sequence, p)) for p in choose(positions(N), two))
+        #### possibilities = choose(positions(N), two)
+        possibilities = combinations(range(N), 2)
         # (The two swapped elements may have the same value.)
         # Return the number of different sequences Brus can obtain after he makes the swap.
-        different = set
-        number = len
-        return(number(different(sequences)))
-
-
+        #### return number(different(sequences))
+        return len(set((tuple(swap(sequence, p)) for p in possibilities)))
 
 def example0():
 	cls = TheSwapsDivTwo()
