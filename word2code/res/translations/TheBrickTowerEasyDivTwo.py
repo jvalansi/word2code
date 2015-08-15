@@ -40,8 +40,10 @@ class TheBrickTowerEasyDivTwo:
         # Return the number of different towers that John and Brus can build.
         #### towers = transformations(red+blue)
         possibilities = transformations((red + blue))
-        #### return number(different(map(height, filter(valid, towers))))
-        return len(set(map(mapping, filter(valid, possibilities))))
+        #### reduce = lambda possibility: number(different(possibility)) 
+        reduce = lambda possibility: len(set(possibility)) 
+        #### return reduce(map(height, filter(valid, towers))))
+        return reduce(map(mapping, filter(valid, possibilities)))
 
 def example0():
 	cls = TheBrickTowerEasyDivTwo()

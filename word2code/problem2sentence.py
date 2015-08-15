@@ -209,23 +209,22 @@ class Problem2Sentence(Crf):
 
 def main():
     p2s = Problem2Sentence()
-    indir = os.path.join('res', 'text&code7')
+    indir = os.path.join('res', 'text&code8')
     train_dir = os.path.join(indir, 'sentence_train')
-#     p2s.build_train(indir, train_dir)
+    p2s.build_train(indir, train_dir)
 
     test_indir = os.path.join('res', 'problems_test1')
     test_dir = os.path.join(test_indir, 'sentence_test')
 #     p2s.build_train(test_indir, test_dir, only_code=False)
 
     outdir = os.path.join(indir, 'sentence_json')
-#     p2s.test(train_dir, outdir)
+    p2s.test(train_dir, outdir)
 
     test_outdir = os.path.join(test_indir, 'sentence_json')
 #     p2s.test(train_dir, test_outdir, test_dir)
 
-    n = 3
     n = 1
-#     print(p2s.calc_score(outdir, n, indir))
+    print(p2s.calc_score(outdir, n, indir))
 
     fname = 'AverageAverage.label'
     fname = 'ChocolateBar.label'

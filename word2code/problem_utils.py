@@ -121,6 +121,9 @@ def insert(A, possibility, B):
 def join(S, c):
     return c.join(S)
 
+def if_(cond, opt):
+    return opt[0] if cond else opt[1]
+
 if __name__ == '__main__':
 #     with open('res/logger.log','r') as fp:
 #         lines = fp.readlines()

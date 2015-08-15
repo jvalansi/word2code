@@ -20,8 +20,10 @@ class WinterAndMandarins:
             #### return difference(most(possibility), fewest(possibility))
             return sub(max(possibility), min(possibility))
         # Return the smallest difference that can be achieved.
-        #### return smallest(map(mapping, chosen))
-        return min(map(mapping, possibilities))
+        #### reduce = lambda possibility: smallest(possibility)
+        reduce = lambda possibility: min(possibility)
+        #### return reduce(map(mapping, chosen))
+        return reduce(map(mapping, possibilities))
 
 def example0():
 	cls = WinterAndMandarins()

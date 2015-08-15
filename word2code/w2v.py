@@ -4,6 +4,7 @@ import logging
 import os
 import nltk
 import datetime
+from utils import clean_name
 
 
 def pos_file(fname):
@@ -37,14 +38,17 @@ class W2V:
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         
         if not fname:
-            fname = os.path.join('res', 'GoogleNews-vectors-negative300.bin.gz')
-            fname = os.path.join('res', '1-billion-word-language-modeling-benchmark-r13output.tar.gz')
+            fname = 'GoogleNews-vectors-negative300.bin.gz'
+            fname = '1-billion-word-language-modeling-benchmark-r13output.tar.gz'
             # create_model('news')
-            fname = os.path.join('res', 'text8.bin')
-            fname = os.path.join('res', 'brown.bin')
-            fname = os.path.join('res', 'news.bin')
-            fname = os.path.join('res', 'news_pos.bin')
-        self.model = self.get_model(fname)
+            fname = 'text8.bin'
+            fname = 'brown.bin'
+            fname = 'news.bin'
+            fname = 'news_pos.bin'
+        fpath = os.path.join('res', fname)
+        if not os.path.exists(fpath):
+            self.create_model(clean_name(fname))
+        self.model = self.get_model(fpath)
     
     def get_model(self, fname):
         return word2vec.Word2Vec.load_word2vec_format(fname, binary=True)
@@ -62,10 +66,13 @@ class W2V:
             fpaths = []
             for i in range(1,7):
                 fname = 'news.en-{:05}-of-00100'.format(i)
+                fpath = os.path.join('res', 'training-monolingual.tokenized.shuffled', fname)
                 if name == 'news_pos':
-#                     pos_file(os.path.join('res', 'training-monolingual.tokenized.shuffled', fname))
-                    fname = 'news.en-{:05}-of-00100'.format(i) + '.pos'
-                fpaths.append(os.path.join('res', 'training-monolingual.tokenized.shuffled', fname))                
+                    fname = fname + '.pos'
+                    fpath = os.path.join('res', 'training-monolingual.tokenized.shuffled', fname)
+                    if not os.path.exists(fpath):
+                        pos_file(fpath)
+                fpaths.append(fpath)                
             target_fpath = os.path.join('res', name+'.txt')
             join_files(fpaths, target_fpath)
             sentences = word2vec.LineSentence(target_fpath)
@@ -79,7 +86,7 @@ class W2V:
         return(self.model.similarity(word1,word2))
     
 
-if __name__ == '__main__':
+def main():
 #     name = 'text8'
 #     name = 'brown'
 #     name = 'GoogleNews-vectors-negative300'
@@ -90,4 +97,7 @@ if __name__ == '__main__':
 #     print(w2v.model.vocab.items()[:10])
     print(w2v.model.similarity('add_VB','remove_VB'))
 
-#     print(len(model.vocab.keys()))
+#     print(len(model.vocab.keys()))    
+
+if __name__ == '__main__':
+    main()

@@ -82,6 +82,22 @@ def check_solution(problem_path, soln=1):
         pass
     return False
 
+def check_solution_path(path):
+    fail = []
+    total = 0
+#     not_empty = []
+    for fname in sorted(os.listdir(path)):
+        if not fname.endswith('.py'):
+            continue
+        print(fname)
+        fpath = os.path.join(path, fname)
+        if not check_solution(fpath):
+            fail.append(fname)
+        total += 1
+    if total:
+        print(len(fail)/float(total))
+    return fail
+            
 
 def is_func(codeword):
     try:

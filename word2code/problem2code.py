@@ -32,9 +32,10 @@ golden_method = False #90%
 golden_possibilities_codeline = True #10%
 golden_codeline = False #50%
 golden_return_codeline = True #10%
-golden_sentence = False #10%
-golden_words = False #10%
-golden_codewords = False #10%
+golden_sentence = True #10%
+golden_words = True #10%
+golden_codewords = True #10%
+
 #     phrase to code:
 #     phrase:         Return the number of different passwords Fred needs to try.
 #     dependencies:    det(number-3, the-2)
@@ -97,11 +98,12 @@ def get_type_codelines(word_type, type_codewords):
     :param type_codewords:
     '''
     type_codelines = set()
-    type_codelines.add((0.1, word_type +' = lambda possibility: possibility'))
+    if word_type != 'possibilities':
+        type_codelines.add((0.1, word_type +' = lambda possibility: possibility'))
     for codeword_product in product(*type_codewords):
         if not codeword_product:
             continue
-        for codeword_combination in combinations(codeword_product, 1):
+        for codeword_combination in combinations(codeword_product, min(len(codeword_product),2)):
 #         codeword_combination = codeword_product
             probs, codewords = zip(*codeword_combination)
             p = numpy.prod(probs)
@@ -110,7 +112,10 @@ def get_type_codelines(word_type, type_codewords):
             possible_codelines = get_possible_codelines(codewords)
             new_possible_codelines = set()
             for possible_codeline in possible_codelines:
-                possible_codeline = word_type +' = lambda possibility: ' + possible_codeline
+                if word_type == 'possibilities':
+                    possible_codeline = word_type + '= ' + possible_codeline
+                else:
+                    possible_codeline = word_type +' = lambda possibility: ' + possible_codeline
                 new_possible_codelines.add(possible_codeline)
             possible_codelines = new_possible_codelines
             possible_codelines = [(p, type_codeline) for type_codeline in possible_codelines]
@@ -131,26 +136,35 @@ def get_possibilities_codeline(sentence_parse, possible_types):
         possibilities_codelines = get_type_codelines('possibilities', possibilities_codewords)
     return possibilities_codelines
 
-def get_return_codeline(types):
+def get_return_codelines(sentence_parse, sentence_types):
     '''
     generate return codeline according to sentence type
     
-    :param types:
+    :param sentence_parse:
+    :param sentence_types:
     '''
-    if not types or types[-1] != 'return':
-        types = []
-    else: 
-        inds, types = zip(*types)
-    valid0 = 'filter(valid0, ' if 'valid' in types else ''
-    valid0_ = ')' if 'valid' in types else ''
-    mapping0 = 'map(mapping0, ' if 'mapping' in types else ''
-    mapping0_ = ')' if 'mapping' in types else ''
-    reduce0 = 'reduce0(' if 'reduce' in types else ''
-    reduce0_ = ')' if 'reduce' in types else ''
-    base_pattern = 'return({}reduce(map(mapping, filter(valid, {}{} possibilities(input_array))))){}{}{}'
-    return base_pattern.format(reduce0, mapping0, valid0, valid0_, mapping0_, reduce0_)
+    if golden_return_codeline:
+        return_codelines = get_expected_codeline(sentence_parse, 'return')
+    else:
+        return_codelines = set()
+        inds, sentence_types = zip(*sentence_types)
+        if not sentence_types or sentence_types[-1] != 'return':
+            sentence_types = []
+        valid0 = 'filter(valid0, ' if 'valid' in sentence_types else ''
+        valid0_ = ')' if 'valid' in sentence_types else ''
+        mapping0 = 'map(mapping0, ' if 'mapping' in sentence_types else ''
+        mapping0_ = ')' if 'mapping' in sentence_types else ''
+        reduce0 = 'reduce0(' if 'reduce' in sentence_types else ''
+        reduce0_ = ')' if 'reduce' in sentence_types else ''
+        base_pattern = 'return(reduce({}map(mapping, filter(valid, {}{} possibilities)))){}{}{}'
+        return_codeline = base_pattern.format(reduce0, mapping0, valid0, valid0_, mapping0_, reduce0_)
+        return_codelines.add((1.0, return_codeline))
+        return_codeline = base_pattern.format(reduce0, valid0, mapping0, mapping0_, valid0_, reduce0_)
+        return_codelines.add((1.0, return_codeline))
+    return return_codelines
 
-def generate_possible_code(sentence_json, m, translations_count, p, sentence_parse, possible_types):
+
+def generate_possible_code(sentence_json, m, translations_count, p, sentence_parse, sentence_types):
     '''
     generate all possible code for sentence 
     
@@ -162,46 +176,52 @@ def generate_possible_code(sentence_json, m, translations_count, p, sentence_par
     :param possible_types: possible sentence types
     '''
     possible_codes = []
-    possibilities_codelines = get_possibilities_codeline(sentence_parse, possible_types)
-    if possibilities_codelines:
-        possible_codes.append(possibilities_codelines)
 #     for translation, codeline in zip(sentence_parse['translations'], sentence_parse['code']):
 #         codewords = nltk.word_tokenize(codeline)
 #         type = codewords[0]
 #         if type not in sentence2word.types:
 #             continue
     for word_type in sentence2word.types:
-        if word_type in ['possibilities', 'return']:
+#         if word_type in ['possibilities', 'return']:
+        if word_type in ['return']:
             continue
-        if golden_codeline:
+        if sentence_types[-1][1] == 'possibilities' and word_type != 'possibilities':
+            continue
+        if (word_type != 'possibilities' and golden_codeline) or (word_type == 'possibilities' and golden_possibilities_codeline):
             type_codelines = get_expected_codeline(sentence_parse, word_type)
             if not type_codelines:
-                type_codelines.add((1.0, word_type +' = lambda possibility: possibility'))
+                if word_type == 'possibilities':
+                    type_codelines.add((0.5, 'pass'))
+                elif word_type == 'valid':
+                    type_codelines.add((1.0, word_type +' = lambda possibility: True'))
+#                     type_codelines.add((1.0, word_type +' = lambda possibility: possibility'))
+                else:
+                    type_codelines.add((1.0, word_type +' = lambda possibility: possibility'))
             possible_codes.append(type_codelines)
             continue
         if golden_words:
             type_words = Sentence2Word().get_expected_label_words(sentence_json, word_type)
+            print(type_words)
         else:
             type_words = Sentence2Word().get_probable_label_words(sentence_json, word_type, m)
         if golden_codewords:
             transdict = get_translation_dict(sentence_parse['translations'], sentence_parse['code'], stem=False)
-            type_codewords = [[(1.0, transdict[word]) for word in type_words]]
+            type_codewords = [[(1.0, transdict[word])] for word in type_words]
         else:
             type_codewords = [word2codewords(word, translations_count, p=p) for word in type_words]
-            type_codewords = [[(prob,word) for prob,word in word_codewords if word not in possibilities_funcs] for word_codewords in type_codewords]
+#             if word_type != 'possibilities':
+#                 type_codewords = [[(prob,word) for prob,word in word_codewords if word not in possibilities_funcs] for word_codewords in type_codewords]
         type_codelines = get_type_codelines(word_type, type_codewords)
 #         type_codelines = get_type_codelines(word_type, [])
 #         if codeline.strip() not in type_codelines:
 #             print(False)
         possible_codes.append(type_codelines)
-    if golden_return_codeline:
-        return_codelines = get_expected_codeline(sentence_parse, 'return')
-    else:
-        return_codelines = set()
-        return_codeline = get_return_codeline(possible_types)
-        return_codelines.add((1.0, return_codeline))
-#     return_codelines.add((1.0, 'return(reduce(map(mapping, filter(valid, possibilities(input_array)))))'))
-    possible_codes.append(return_codelines)
+    if sentence_types[-1][1] != 'possibilities':
+        return_codelines = get_return_codelines(sentence_parse, sentence_types)
+    #     return_codelines.add((1.0, 'return(reduce(map(mapping, filter(valid, possibilities(input_array)))))'))
+        possible_codes.append(return_codelines)
+    if not possible_codes:
+        return []
     product_code = []
     for possible_code in product(*possible_codes):
         probs, codes = zip(*possible_code)
@@ -313,19 +333,16 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, so
         print(sentence_type)
         if not sentence_type:
             continue
-        possible_types.append((i, sentence_type))
+        possible_types.append((i, sentence_type)) #TODO: maybe only sentence_type
         if golden_code:
             possible_codes = [sentence_parse['code']]
         else:
-            if sentence_type == 'possibilities':
-                possible_codes = [[c for prob, c in get_possibilities_codeline(sentence_parse, possible_types)]]
-            else:
-                possible_codes = generate_possible_code(word_json,
-                                                        m,
-                                                        translations_count,
-                                                        p,
-                                                        sentence_parse,
-                                                        possible_types)
+            possible_codes = generate_possible_code(word_json,
+                                                    m,
+                                                    translations_count,
+                                                    p,
+                                                    sentence_parse,
+                                                    possible_types)
                                         
 #         possible_codes = []
 #         print(len(list(possible_codes)))
@@ -455,7 +472,7 @@ def check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P
 
 def main():
 #     problem_dir = os.path.join('res', 'problems_test1')
-    problem_dir = os.path.join('res', 'text&code7')
+    problem_dir = os.path.join('res', 'text&code8')
 #     p_thresh = 0.5
     p = 1
     sentence_dir = os.path.join(problem_dir, 'sentence_json')
@@ -470,9 +487,15 @@ def main():
 #     check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path)
     
     tries = 10000
+    solutions_dir = os.path.join(problem_dir, 'solutions_return')
+    success1 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+    global golden_return_codeline
+    golden_return_codeline = False
     solutions_dir = os.path.join(problem_dir, 'solutions')
-    solutions_dir = os.path.join(problem_dir, 'solutions_struct')
-    print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+    success2 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+    print(success1)
+    print(success2)
+    print(sorted(set(success2).difference(success1)))
 
 #     results = []
 #     for fname in sorted(os.listdir(solutions_dir)):
@@ -485,7 +508,6 @@ def main():
 #     print(results)
 
 #     fname = 'AmoebaDivTwo.py'
-    fname = 'AverageAverage.py'
 #     fname = 'BlockTower.py'
 #     fname = 'ChocolateBar.py'
     fname = 'CompetitionStatistics.py'
@@ -494,9 +516,14 @@ def main():
 #     fname = 'TheEquation.py'
     fname = 'IdentifyingWood.py'
     fname = 'PalindromesCount.py'
-    fname = 'FibonacciDiv2.py'
+#     fname = 'FibonacciDiv2.py'
+    fname = 'AlienAndPassword.py'
+#     fname = 'AverageAverage.py'
+#     fname = 'BasketsWithApples.py'
 #     print(check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
-
+#     fpath = os.path.join(solutions_dir, fname)
+#     print(check_solution(fpath))
+    
 #     fnames = sorted(os.listdir(problem_dir))
 #     translations_count = count_translations(problem_dir, fnames)
 #     print(translations_count)

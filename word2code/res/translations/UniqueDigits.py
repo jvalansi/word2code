@@ -16,9 +16,13 @@ class UniqueDigits:
             possibilities = pairs(str(possibility))
             #### return(reduce(map(mapping, possibilities)))
             return reduce(map(mapping, possibilities))
-        # Return the total number of such integers.
-        #### return number(filter(such, integers(inf)))
-        return len(filter(valid, range(inf)))
+        # Return the total number of such integers.        
+        #### possibilities = range(inf)
+        possibilities = range(inf)
+        #### reduce = lambda possibility: number(possibility) 
+        reduce = lambda possibility: len(possibility) 
+        #### return reduce(filter(such, possibilities))
+        return reduce(filter(valid, possibilities))
 
 def example0():
 	cls = UniqueDigits()

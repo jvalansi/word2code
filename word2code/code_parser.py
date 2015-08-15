@@ -70,7 +70,6 @@ def clean_code(code):
 #     marks = r'\+\-=/\*\.,\''
 #     code = re.sub('(['+marks+']+)', ' \\1 ', code)
     code = re.sub(r'\s+', ' ', code)
-    print(code)
     code += '\n'
     return code
 
@@ -174,6 +173,16 @@ def gen_codeline_type(codeline):
         return [codeline]
     reduce_parse = return_parse.value
     generator_parse = find_node_type(reduce_parse, 'GeneratorExp')
+    if_parse = find_node_type(reduce_parse, 'IfExp')
+    map_parse = find_func_name(reduce_parse, 'map')
+    filter_parse = find_func_name(reduce_parse, 'filter')
+    if if_parse and hasattr(if_parse.body, 's'):
+        new_code.append('possibilities = ["'+if_parse.body.s+'", "'+if_parse.orelse.s+'"]')  
+        new_code.append('reduce = lambda possibility: if_('+astor.to_source(if_parse.test)+', possibility)')
+        new_code.append('return reduce(possibilities)')
+        return new_code
+    if map_parse or filter_parse:
+        return [astor.to_source(return_parse)]
     if not generator_parse:
 #         map_parse = find_func_name(reduce_parse, 'map')
 #         if map_parse:
@@ -182,10 +191,11 @@ def gen_codeline_type(codeline):
 #             new_code.append('reduce = lambda possibility: '+astor.to_source(reduce_parse))
 #             new_code.append('return(reduce('+astor.to_source(map_parse)+'))')
 #         else:
+        new_code.append('possibilities = possibility')
         new_code.append('reduce = lambda possibility: '+astor.to_source(reduce_parse))
         new_code.append('return(reduce(possibilities))')
-        return ['return ' + astor.to_source(reduce_parse)]
-#         return new_code
+#         return ['return ' + astor.to_source(reduce_parse)]
+        return new_code
     dg = DelGen(Name(id='possibility', ctx=Load()))
     dg.visit(reduce_parse)
     new_code.append('reduce = lambda possibility: '+astor.to_source(reduce_parse))
@@ -223,7 +233,9 @@ def sentence_to_codeline_type(sentence_parse):
     :param sentence_parse:
     '''
     if not sentence_parse['code']:
-        return
+        return sentence_parse
+    if len(sentence_parse['code']) != 1:
+        return sentence_parse
     codeline = sentence_parse['code'].pop()
     translation = sentence_parse['translations'].pop() if sentence_parse['translations'] else copy.deepcopy(codeline)
     try: 
@@ -238,7 +250,7 @@ def sentence_to_codeline_type(sentence_parse):
             args_name = args_parse[0].id
             transdict = {args_name : 'possibilities'}
             tc.transdict = transdict
-#             tc.visit(method_parse)
+            tc.visit(method_parse)
         del method_parse.body[0].body[0]
         sentence_parse['method'] = [astor.to_source(method_parse)]
     sentence_parse['translations'].extend(gen_codeline_type(translation))
@@ -273,7 +285,7 @@ class TranslateCode(NodeTransformer):
             elif type(node.value).__name__ == 'Num':
                 value_parse = node.value.n
 #             value_parse =  node.value
-            if hasattr(target_parse, 'id'):
+            if hasattr(target_parse, 'id') and target_parse.id != 'possibilities':
                 self.transdict[target_parse.id] = value_parse
                 return
         self.generic_visit(node)
@@ -409,15 +421,39 @@ def to_generic_vars(problem_parse):
             sentence_parse['sentence'] = re.sub(r'\b'+str(v)+r'\b', str(k), sentence_parse['sentence'])
     return problem_parse
 
+def translate_translations(translations, transdict):
+    new_translations = []
+    for translation in translations:
+        new_tranlation = translation
+        for k,v in transdict.items():
+            new_tranlation = re.sub(r'\b'+k+r'\b', v, new_tranlation)
+        new_translations.append(new_tranlation)
+    return new_translations
+
+def translate_codelines(code, transdict):
+    print(code)
+    tc = TranslateCode(transdict)
+    new_code = []
+    for codeline in code: 
+        codeline_parse = ast.parse(codeline.strip())
+        tc.generic_visit(codeline_parse)
+        new_code.append(clean_code(astor.to_source(codeline_parse)))
+    print(new_code)
+    return new_code
+
 def to_generic_methods(problem_parse):
     transdict = {}
-    tc = TranslateCode(transdict)
     for sentence_parse in problem_parse['sentences']:
         method = sentence_parse['method']
         if method[0]:
             method_str = method[0].strip()+' pass'
             method_parse = ast.parse(method_str) #TODO: change method from list to string
-            print(astor.dump(method_parse))
+            if hasattr(method_parse.body[0].args.args[0], 'id'):
+                transdict0 = {}
+                transdict0[method_parse.body[0].args.args[0].id] = 'possibility'
+                method_parse.body[0].args.args[0].id = 'possibility'
+                sentence_parse['translations'] = translate_translations(sentence_parse['translations'], transdict0)
+                sentence_parse['code'] = translate_codelines(sentence_parse['code'], transdict0)
             method_name = method_parse.body[0].name
             if 'mapping' in method_name:
                 method_parse.body[0].name = 'mapping0'
@@ -425,16 +461,10 @@ def to_generic_methods(problem_parse):
             if 'valid' in method_name:
                 method_parse.body[0].name = 'valid0' 
                 transdict[method_name] = 'valid0'
-            tc.transdict.update(transdict) 
-            print(astor.to_source(method_parse))
             sentence_parse['method'] = [re.sub('pass', '', astor.to_source(method_parse))]
         if not method[0]: #only for return statement
-            new_code = []
-            for codeline in sentence_parse['code']: 
-                codeline_parse = ast.parse(codeline.strip())
-                tc.generic_visit(codeline_parse)
-                new_code.append(clean_code(astor.to_source(codeline_parse)))
-            sentence_parse['code'] = new_code
+            sentence_parse['translations'] = translate_translations(sentence_parse['translations'], transdict)
+            sentence_parse['code'] = translate_codelines(sentence_parse['code'], transdict)
     return problem_parse
             
 def lambda2def(code):

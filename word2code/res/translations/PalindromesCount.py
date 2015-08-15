@@ -24,8 +24,10 @@ class PalindromesCount:
         #### variants = range(inclusive(N0))
         possibilities = range(inclusive(N0))
         # Return the number of possible insertion variants.
-        #### return number(filter(possible, map(insertion, variants)))
-        return len(filter(valid, map(mapping, possibilities)))
+        #### reduce = lambda possibility: number(possibility) 
+        reduce = lambda possibility: len(possibility) 
+        #### return reduce(filter(possible, map(insertion, variants)))
+        return reduce(filter(valid, map(mapping, possibilities)))
         # For example, let A ="aba" and B ="b".
         # You can insert B in 4 different places: Before the first letter of A .
         # The result is "baba" and it is not a palindrome.

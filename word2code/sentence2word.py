@@ -13,13 +13,15 @@ import json
 import ast
 
 from matplotlib.pyplot import imshow
-from utils import is_func, check_solution, clean_name, clean_word
+from utils import is_func, check_solution, clean_name, clean_word,\
+    check_solution_path
 from stanford_corenlp import tokenize_sentences
 from CRF import Crf
 from dependency_parser import get_features
 
 
 types = ['mapping', 'valid', 'reduce', 'possibilities', 'return']
+# types = ['mapping', 'valid', 'reduce']
 # types = ['I']
 def get_type(codewords):
     '''
@@ -138,10 +140,10 @@ class Sentence2Word(Crf):
         expected_words = self.get_expected_label_words(sentence, word_type)
         result = set(expected_words).issubset(set(probable_words))
     #     result = all([not important for (sentprob,important,word) in sentprobs[n:]])
-#         if not result:
-        logger.logging.info(word_type)
-        logger.logging.info(set(probable_words))
-        logger.logging.info(set(expected_words))
+        if not result:
+            logger.logging.info(word_type)
+            logger.logging.info(set(probable_words))
+            logger.logging.info(set(expected_words))
         return result
     
     def check_problem(self, json_dir,fname,n, labels=None):
@@ -171,7 +173,7 @@ class Sentence2Word(Crf):
 def main():
     s2w = Sentence2Word()
     
-    indir = os.path.join('res','text&code7')
+    indir = os.path.join('res','text&code8')
 
     fname = 'PalindromesCount.py'
     fname = 'RandomColoringDiv2.py'
@@ -185,14 +187,14 @@ def main():
 #     s2w.build_train(test_indir, test_dir)
 
     output_dir = os.path.join(indir, 'word_json')
-    s2w.test(train_dir, output_dir)
+#     s2w.test(train_dir, output_dir)
 
     test_output_dir = os.path.join(test_indir, 'word_test_json')
 #     s2w.test(train_dir, test_output_dir, test_dir)
 
     check_dir = output_dir
     m = 2
-#     print(s2w.calc_score(check_dir, m, indir))
+    print(s2w.calc_score(check_dir, m, indir))
 #     scores = {}
 #     for m in range(1,20):
 #         scores[m] = len(calc_score(check_dir, m, indir))
@@ -205,14 +207,13 @@ def main():
     fname = 'MountainRanges.label'
 #     fname = 'BlockTower.label'
 #     fname = 'ChocolateBar.label'
-#     fname = 'CompetitionStatistics.label'
+    fname = 'CompetitionStatistics.json'
 #     fname = 'CucumberMarket.label'
 #     fname = 'DifferentStrings.label'
 #     fname = 'FarFromPrimes.label'
 #     fname = 'Elections.label'
 #     fname = 'LittleElephantAndBallsAgain.label'
 #     print(s2w.check_problem(check_dir, fname, m))
-
 
 if __name__ == '__main__':
     main()

@@ -24,11 +24,8 @@ class PalindromizationDiv2:
         # In the previous example Arthur would have to pay 8 dollars.
         # Of course Arthur would like to palindromize X spending the least amount of money.
         # Given X return the minimum amount of money Arthur needs.
-        #### return minimum([money(X, integer) for integer in integers if palindromic(str(integer))])
-        return min([cost(X, integer) for integer in integers if palindromic(str(integer))])
-        # pass
-        #### pass
-        pass
+        #### return minimum(list(money(X, integer) for integer in integers if palindromic(str(integer))))
+        return min(list(cost(X, integer) for integer in integers if palindromic(str(integer))))
 
 def example0():
 	cls = PalindromizationDiv2()

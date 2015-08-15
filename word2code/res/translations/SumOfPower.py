@@ -11,10 +11,12 @@ class SumOfPower:
         possibilities = csubsets(array)
         # Whenever you do so, you will gain power equal to the sum of all elements in the chosen subsequence.
         def mapping(possibility):
+            #### possibilities = possibility
+            possibilities = possibility
             #### reduce = lambda possibility: sum(possibility)
             reduce = lambda possibility: sum(possibility)
             #### return reduce(subsequence)
-            return reduce(possibility)
+            return reduce(possibilities)
         # You chose each possible contiguous subsequence exactly once, each time gaining some power.
         # Compute and return the total amount of power you gained.
         #### reduce = lambda total: sum(possibility)

@@ -22,8 +22,10 @@ class SwappingDigits:
             #### return (not leading(s, zeros))
             return (not startswith(possibility, 0))
         # Find and return the String that represents the smallest possible integer that can be obtained.
-        #### return smallest(filter(possible, integers))
-        return min(filter(valid, possibilities))
+        #### reduce = lambda possibility: smallest(possibility)
+        reduce = lambda possibility: min(possibility)
+        #### return reduce(filter(possible, integers))
+        return reduce(filter(valid, possibilities))
 
 def example0():
 	cls = SwappingDigits()

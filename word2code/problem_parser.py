@@ -9,7 +9,7 @@ import shutil
 import json
 from nltk.tokenize import sent_tokenize
 from dependency_parser import Node, sentence2dependencies
-from utils import check_solution, WordCount
+from utils import check_solution, WordCount, check_solution_path
 from code_parser import sentence_to_codeline_type, to_generic_names,\
     count_problem_code, to_generic_vars, lambda2def, to_generic_methods
 # from utils import check_solution
@@ -269,7 +269,7 @@ def parse_problem_code(fname, in_path, out_path):
             sentence_parse['sentence'] = ''
         sentence_parse['code'] = lambda2def(sentence_parse['code'])
         sentence_parse['translations'] = lambda2def(sentence_parse['translations'])        
-# #         sentence_to_single_line(sentence_parse)
+#         sentence_to_single_line(sentence_parse)
         sentence_parse = sentence_to_codeline_type(sentence_parse)
     problem_parse = to_generic_names(problem_parse)
     problem_parse = to_generic_vars(problem_parse)
@@ -282,10 +282,11 @@ def parse_problem_code(fname, in_path, out_path):
     if check_solution(out_fpath):
         return True 
 
-def parse_problems_code(path, out_path):
+def parse_problems_code(path, out_path, remove=True):
     fail = []
+    total = 0
 #     not_empty = []
-    if os.path.exists(out_path):
+    if os.path.exists(out_path) and remove:
         shutil.rmtree(out_path)
     os.mkdir(out_path)
     for fname in sorted(os.listdir(path)):
@@ -299,12 +300,15 @@ def parse_problems_code(path, out_path):
         success = parse_problem_code(fname, path, out_path)
         if not success:
             fail.append(fname)
+        total += 1
+    print(len(fail)/float(total))
     return fail
 
 def parse_problems(indir, outdir):
     if os.path.exists(outdir):
         shutil.rmtree(outdir)
-    os.mkdir(outdir)
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
     for fname in sorted(os.listdir(indir)):
         fbase, fext = os.path.splitext(fname)
         if fext != '.py':
@@ -319,6 +323,7 @@ def parse_problems(indir, outdir):
             fp.write(compose_problem(parse))
         if not check_solution(os.path.join(outdir, fname)):
             print(fname)
+    
 
 if __name__ == '__main__':
 #     with open('res/translations/CorruptedMessage.py') as f:
@@ -347,9 +352,13 @@ if __name__ == '__main__':
 
     indir = 'res/translations/'
     outdir = 'res/translations1/'
-    fname = 'CorruptedMessage.py'
-#     parse_problem_code(fname, indir, outdir)
+#     indir = 'res/text&code7/'
+#     outdir = 'res/text&code8/'
+    fname = 'AlienAndPassword.py'
+    fname = 'InfiniteString.py'
+#     print(parse_problem_code(fname, indir, outdir))
     print(parse_problems_code(indir, outdir))
+#     print(check_solution_path(outdir))
 
 #     fpath = os.path.join(indir, fname)
 #     with open(fpath) as f:

@@ -18,8 +18,12 @@ class SquareDigitNumbers:
             return reduce(map(mapping, possibilities))
         # The sequence containing only these digits is 0, 1, 4, 9, 10, 11, 14...
         # Return the n -th term (indexed from 0) in this sequence.
-        #### return term(filter(valid, range(inf)), input_int)
-        return getitem(filter(valid, range(inf)), input_int)
+        #### possibilities = range(inf)
+        possibilities = range(inf)
+        #### reduce = lambda possibility: term(possibility, input_int) 
+        reduce = lambda possibility: getitem(possibility, input_int) 
+        #### return reduce(filter(valid, possibilities))
+        return reduce(filter(valid, possibilities))
 
 def example0():
 	cls = SquareDigitNumbers()
