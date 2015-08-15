@@ -68,10 +68,10 @@ class W2V:
                 fname = 'news.en-{:05}-of-00100'.format(i)
                 fpath = os.path.join('res', 'training-monolingual.tokenized.shuffled', fname)
                 if name == 'news_pos':
-                    fname = fname + '.pos'
-                    fpath = os.path.join('res', 'training-monolingual.tokenized.shuffled', fname)
-                    if not os.path.exists(fpath):
+                    pos_fpath = fpath + '.pos'
+                    if not os.path.exists(pos_fpath):
                         pos_file(fpath)
+                    fpath =pos_fpath
                 fpaths.append(fpath)                
             target_fpath = os.path.join('res', name+'.txt')
             join_files(fpaths, target_fpath)
