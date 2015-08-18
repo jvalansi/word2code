@@ -140,10 +140,10 @@ class Sentence2Word(Crf):
         expected_words = self.get_expected_label_words(sentence, word_type)
         result = set(expected_words).issubset(set(probable_words))
     #     result = all([not important for (sentprob,important,word) in sentprobs[n:]])
-        if not result:
-            logger.logging.info(word_type)
-            logger.logging.info(set(probable_words))
-            logger.logging.info(set(expected_words))
+#         if not result:
+        logger.logging.info(word_type)
+        logger.logging.info(set(probable_words))
+        logger.logging.info(set(expected_words))
         return result
     
     def check_problem(self, json_dir,fname,n, labels=None):

@@ -117,29 +117,31 @@ class Sentence2WordStruct(CrfStruct):
 
 def main():
     s2ws = Sentence2WordStruct()
-    problem_dir = os.path.join('res', 'text&code6') 
+    problem_dir = os.path.join('res', 'text&code8') 
 #     problem_dir = os.path.join('res', 'small') 
     indir = problem_dir
     train_dir = os.path.join(problem_dir, 'word_train_struct')
     fname = 'GogoXBallsAndBinsEasy.py'
     fname = 'PalindromesCount.py'
 #     struct_problem(fname, indir, outdir)
-#     s2ws.build_train(indir, train_dir)
+#     s2ws.build_train(indir, train_dir, True)
     
-    test_indir = os.path.join('res', 'problems_test')
+    test_indir = indir
+#     test_indir = os.path.join('res', 'problems_test')
     test_dir = os.path.join(test_indir,'word_test_struct')
-#     build_train(test_indir, test_dir, False)
+#     s2ws.build_train(test_indir, test_dir, False)
 
     outdir = os.path.join(problem_dir, 'word_json_struct')
-#     s2ws.test(train_dir, outdir, build=True)
+#     s2ws.test(train_dir, outdir, build_features=True, overwrite=False)
     
-    test_output_dir = os.path.join(test_indir, 'word_json_struct')
-#     CRF_struct.test(train_dir, test_output_dir, test_dir=test_dir)
+    test_output_dir = os.path.join(test_indir, 'word_json_test_struct')
+#     s2ws.test(train_dir, test_output_dir, test_dir=test_dir)
 
     n = 2
     labels = get_features(train_dir)[2]
     labels.remove('O')
     s2w = Sentence2Word()
+#     print(s2w.calc_score(outdir, n, labels=labels))
     print(s2w.calc_score(outdir, n))
 
 if __name__ == '__main__':

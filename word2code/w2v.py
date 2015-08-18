@@ -5,6 +5,7 @@ import os
 import nltk
 import datetime
 from utils import clean_name
+from multiprocessing import Pool
 
 
 def pos_file(fname):
@@ -53,7 +54,7 @@ class W2V:
     def get_model(self, fname):
         return word2vec.Word2Vec.load_word2vec_format(fname, binary=True)
         
-    def create_model(self, name):
+    def create_model(self, name, max_news=100, n_proc=8):
         model = word2vec.Word2Vec()
         if name == 'text8':
             sentences = word2vec.Text8Corpus(os.path.join('res', 'text8'))
@@ -63,16 +64,13 @@ class W2V:
             sentences = brown.sents()
             model.train(sentences)
         if name.startswith('news'):
-            fpaths = []
-            for i in range(1,7):
-                fname = 'news.en-{:05}-of-00100'.format(i)
-                fpath = os.path.join('res', 'training-monolingual.tokenized.shuffled', fname)
-                if name == 'news_pos':
-                    pos_fpath = fpath + '.pos'
-                    if not os.path.exists(pos_fpath):
-                        pos_file(fpath)
-                    fpath =pos_fpath
-                fpaths.append(fpath)                
+            fnames = ['news.en-{:05}-of-00100'.format(i+1) for i in range(max_news)]
+            fpaths = [os.path.join('res', 'training-monolingual.tokenized.shuffled', fname) for fname in fnames]
+            if name == 'news_pos':
+                p = Pool(n_proc)
+                p.map(pos_file, [fpath for fpath in fpaths if not os.path.exists(fpath+'.pos')])
+#                 [pos_file(fpath) for fpath in fpaths if not os.path.exists(fpath+'.pos')]
+                fpaths = [fpath+'.pos' for fpath in fpaths]
             target_fpath = os.path.join('res', name+'.txt')
             join_files(fpaths, target_fpath)
             sentences = word2vec.LineSentence(target_fpath)

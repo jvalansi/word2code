@@ -23,6 +23,9 @@ import logger
 import ast
 from utils import is_func, check_solution, clean_name
 from learner_wrapper import LearnerWrapper
+import online_learning
+from online_learning import online_learn
+from datetime import datetime
 
 
 def features2matrix(features, all_features):
@@ -49,11 +52,9 @@ def build_features(path):
     edge_features = set()
     output_features = set()
     for fname in sorted(os.listdir(path)):
-        if not fname.endswith('.py'):
+        if not fname.endswith('.label'):
             continue
-        print(fname)
         with open(os.path.join(path, fname), 'r') as fp:
-            print(os.path.join(path, fname))
             fjson = json.load(fp)
         inputs = fjson['inputs']
         for (node_features_, edges_, edge_features_) in inputs:
@@ -126,24 +127,24 @@ class CrfStruct(LearnerWrapper):
         Y_train = []
         X_test = []
         Y_test = []
-        for fname_ in sorted(os.listdir(train_dir)):
-            if not fname_.endswith('.py'):
+        if not test_dir:
+            test_dir = train_dir
+        train_fnames = sorted(os.listdir(train_dir))
+        if fname in train_fnames:
+            train_fnames.remove(fname)
+        test_fnames = [fname]            
+        for fname_ in train_fnames:
+            if not fname_.endswith('.label'):
                 continue
-    #         print(os.path.join(path, fname_))
             matrix_inputs, matrix_outputs = self.get_data_from_file(train_dir, fname_, features)
-            if not test_dir and fname_ == fname:
-                X_test.extend(matrix_inputs)
-                Y_test.extend(matrix_outputs)
-            else:
-                X_train.extend(matrix_inputs)
-                Y_train.extend(matrix_outputs)
-        if bool(test_dir):
-            for fname_ in sorted(os.listdir(test_dir)):
-                if not fname_.endswith('.py'):
-                    continue
-                matrix_inputs, matrix_outputs = self.get_data_from_file(test_dir, fname_, features)
-                X_test.extend(matrix_inputs)
-                Y_test.extend(matrix_outputs)
+            X_train.extend(matrix_inputs)
+            Y_train.extend(matrix_outputs)
+        for fname_ in test_fnames:
+            if not fname_.endswith('.label'):
+                continue
+            matrix_inputs, matrix_outputs = self.get_data_from_file(test_dir, fname_, features)
+            X_test.extend(matrix_inputs)
+            Y_test.extend(matrix_outputs)
         return (X_train, Y_train, X_test, Y_test)
     
     def output2json(self, model, learner, X_test, Y_test, Y_pred, features):
@@ -158,64 +159,79 @@ class CrfStruct(LearnerWrapper):
             y_relaxed = model.inference(x, w, relaxed=True)
             for j,y in enumerate(sentence):
                 d = {}
-                d['word'] = node_features[list(X_test[i][0][j]).index(1)]
+                if 1 in list(X_test[i][0][j]):
+                    idxs = [idx for idx, v in enumerate(X_test[i][0][j]) if v == 1]
+                    for idx in idxs:
+                        d['word'] = node_features[idx]
+                        if d['word'] != d['word'].upper():
+                            break #isn't pos
+                else:
+                    d['word'] = 'None'
                 d['prediction'] = (s, output_features[Y_pred[i][j]])
                 d['label'] = output_features[Y_test[i][j]]
-                if type(y_relaxed) is tuple: 
-                    d['probs'] = str([(y_relaxed[0][j][k], output_features[k]) for k in range(len(output_features))])
-                else:
-                    d['probs'] = str([(float(k == Y_pred[i][j]), output_features[k]) for k in range(len(output_features))])
-    #             print(features)
-    #             print(Y_pred[i][j])
+#                 if type(y_relaxed) is tuple: 
+                d['probs'] = str([(y_relaxed[0][j][k], output_features[k]) for k in range(len(output_features))])
+#                 else:
+#                     d['probs'] = str([(float(k == Y_pred[i][j]), output_features[k]) for k in range(len(output_features))])
                 lines_json.append(d)
             sentences_json.append(lines_json)
         return sentences_json
     
-    def test_file(self, train_dir, fname, features, test_dir=None, learner, model, outdir):
+    def test_file(self, train_dir, fname, features, learner, model, outdir, test_dir=None, overwrite=True):
+        fpath_json = os.path.join(outdir, clean_name(fname)+'.json')
+        if not overwrite and os.path.exists(fpath_json):
+            return
         X_train, Y_train, X_test, Y_test = self.get_data(train_dir, fname, features, test_dir)
         train_states = np.unique(np.hstack([y.ravel() for y in Y_train]))
         if len(train_states) != len(features[2]):
-            continue
+            return
         print(X_train[0][0].shape)
         print(Y_train[0].shape)
+        print(len(X_test))
+        print(len(Y_test))
 # #         for x, y in zip(X_train, Y_train):
 # #             n_nodes = x[0].shape[0]
 # #             y = y.reshape(n_nodes)
 # #             print(y)
+
         learner.fit(X_train, Y_train)
+#         learner = online_learn(X_train, Y_train, learner)
         
         # Evaluate using confusion matrix.
-#         Y_pred = ssvm.predict(X_test)
         Y_pred = learner.predict(X_test)
         
         output_json = self.output2json(model, learner, X_test, Y_test, Y_pred, features)
-        print(Y_test)
-        print(Y_pred)
+#         print(Y_test)
+#         print(Y_pred)
         if not Y_pred:
-            continue
+            return
         print("weights: {}".format(learner.w))
         print("Results using only directional features for edges")
         print("Test accuracy: %.3f"
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
-        with open(os.path.join(outdir, clean_name(fname)+'.label'), 'w') as fp:
+        with open(fpath_json, 'w') as fp:
             json.dump(output_json, fp, indent=4)
     
-    def test(self, train_dir, outdir, test_dir=None, build=False):
-        if os.path.exists(outdir):
+    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True):
+        if os.path.exists(outdir) and overwrite:
             shutil.rmtree(outdir)
-        os.mkdir(outdir)    
-        features = get_features(train_dir, build)
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)    
+        features = get_features(train_dir, build_features)
         inference_method = 'ad3'
+        inference_method = 'lp'
         crf = EdgeFeatureGraphCRF(n_states=len(features[2]), inference_method=inference_method)
         print(crf.inference_method)
     #     learner = OneSlackSSVM(crf, inference_cache=50, C=.1, tol=.1, max_iter=100,
     #                         n_jobs=1)
-        learner = StructuredPerceptron(crf)
+        learner = StructuredPerceptron(crf, batch=True, n_jobs=3)
+#         learner = StructuredPerceptron(crf)
         for fname in sorted(os.listdir(train_dir)):
             if not fname.endswith('.label'):
                 continue
+            print(datetime.now())
             print(fname)
-            self.test_file(train_dir, fname, features, test_dir, learner, crf, outdir)
+            self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite)
     
     
 
