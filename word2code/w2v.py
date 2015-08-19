@@ -55,7 +55,7 @@ class W2V:
         return word2vec.Word2Vec.load_word2vec_format(fname, binary=True)
         
     def create_model(self, name, max_news=99, n_proc=8):
-        model = word2vec.Word2Vec()
+        model = word2vec.Word2Vec(workers=8)
         if name == 'text8':
             sentences = word2vec.Text8Corpus(os.path.join('res', 'text8'))
             model.train(sentences)

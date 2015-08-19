@@ -200,15 +200,19 @@ class CrfStruct(LearnerWrapper):
         # Evaluate using confusion matrix.
         Y_pred = learner.predict(X_test)
         
-        output_json = self.output2json(model, learner, X_test, Y_test, Y_pred, features)
-#         print(Y_test)
-#         print(Y_pred)
+        #TODO: only if correct
+        learner = online_learn(X_test, Y_pred, learner)
+
+        Y_pred = learner.predict(X_test)
+        
         if not Y_pred:
             return
         print("weights: {}".format(learner.w))
         print("Results using only directional features for edges")
         print("Test accuracy: %.3f"
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
+
+        output_json = self.output2json(model, learner, X_test, Y_test, Y_pred, features)
         with open(fpath_json, 'w') as fp:
             json.dump(output_json, fp, indent=4)
     
