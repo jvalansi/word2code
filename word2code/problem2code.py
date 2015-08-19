@@ -480,22 +480,23 @@ def main():
     word_dir = os.path.join(problem_dir, 'word_json')
     word_dir = os.path.join(problem_dir, 'word_test_json')
     word_dir = os.path.join(problem_dir, 'word_json_struct')
+    word_dir = os.path.join(problem_dir, 'word_json_test_struct')
     m = 2
 
     intersections_path = os.path.join(problem_dir, 'intesections')
     N = M = P = 4
-    check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path)
+#     check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path)
     
     tries = 10000
-#     solutions_dir = os.path.join(problem_dir, 'solutions_return')
-#     success1 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
-#     global golden_return_codeline
-#     golden_return_codeline = False
-#     solutions_dir = os.path.join(problem_dir, 'solutions')
-#     success2 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
-#     print(success1)
-#     print(success2)
-#     print(sorted(set(success2).difference(success1)))
+    solutions_dir = os.path.join(problem_dir, 'solutions_return')
+    success1 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+    global golden_return_codeline
+    golden_return_codeline = False
+    solutions_dir = os.path.join(problem_dir, 'solutions')
+    success2 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+    print(success1)
+    print(success2)
+    print(sorted(set(success2).difference(success1)))
 
 #     results = []
 #     for fname in sorted(os.listdir(solutions_dir)):

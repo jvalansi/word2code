@@ -135,7 +135,7 @@ def main():
 #     s2ws.test(train_dir, outdir, build_features=True, overwrite=False)
     
     test_output_dir = os.path.join(test_indir, 'word_json_test_struct')
-#     s2ws.test(train_dir, test_output_dir, test_dir=test_dir)
+    s2ws.test(train_dir, test_output_dir, test_dir=test_dir, overwrite=False)
 
     n = 2
     labels = get_features(train_dir)[2]
