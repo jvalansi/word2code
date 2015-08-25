@@ -104,6 +104,9 @@ class CrfStruct(LearnerWrapper):
         return problem_labels
 
     
+    def labels2output(self, all_output_features, output):
+        return np.array([all_output_features.index(o) for o in output])
+    
     def get_data_from_file(self, train_dir, fname_, features):
         with open(os.path.join(train_dir, fname_), 'r') as fp:
             fjson = json.load(fp)
@@ -118,7 +121,7 @@ class CrfStruct(LearnerWrapper):
         for output in  fjson['outputs']:
     #             print(output)
     #             output = features2matrix(output, all_output_features)
-            output = np.array([all_output_features.index(o) for o in output])
+            output = self.labels2output(all_output_features, output)
             matrix_outputs.append(output)
         return matrix_inputs, matrix_outputs
     
@@ -169,61 +172,89 @@ class CrfStruct(LearnerWrapper):
                     d['word'] = 'None'
                 d['prediction'] = (s, output_features[Y_pred[i][j]])
                 d['label'] = output_features[Y_test[i][j]]
-#                 if type(y_relaxed) is tuple: 
-                d['probs'] = str([(y_relaxed[0][j][k], output_features[k]) for k in range(len(output_features))])
-#                 else:
-#                     d['probs'] = str([(float(k == Y_pred[i][j]), output_features[k]) for k in range(len(output_features))])
+                if type(y_relaxed) is tuple: 
+                    d['probs'] = str([(y_relaxed[0][j][k], output_features[k]) for k in range(len(output_features))])
+                else:
+                    d['probs'] = str([(float(k == Y_pred[i][j]), output_features[k]) for k in range(len(output_features))])
                 lines_json.append(d)
             sentences_json.append(lines_json)
         return sentences_json
     
-    def test_file(self, train_dir, fname, features, learner, model, outdir, test_dir=None, overwrite=True):
-        fpath_json = os.path.join(outdir, clean_name(fname)+'.json')
-        if not overwrite and os.path.exists(fpath_json):
+    def get_probable_Y(self, fpath_json, output_features, n):
+        Y = []
+        with open(fpath_json, 'r') as inputjson:
+            problem_json = json.load(inputjson)
+        for sentence in problem_json:
+#         get probable labels
+            y = ['O']*len(sentence)
+            for label in output_features:
+                label_idx = self.get_label_probs(sentence, label, n)
+                y = [label if i in label_idx else y for i,y in enumerate(y)]
+#         use probable labels to generate Y
+            y = self.labels2output(output_features, y)
+            Y.append(y)
+        return Y
+    
+    def test_file(self, train_dir, fname, features, learner, model, outdir, test_dir=None, overwrite=True, online=False, n=2, online_dir=None):
+        if online and online_dir:
+            json_dir = outdir
+            outdir = online_dir
+        fpath_out = os.path.join(outdir, clean_name(fname)+'.json')
+        if not overwrite and os.path.exists(fpath_out):
             return
         X_train, Y_train, X_test, Y_test = self.get_data(train_dir, fname, features, test_dir)
+        (node_features, edge_features, output_features) = features
+        if online:
+            #TODO: only if correct
+            #    get the probable Y which solves the problem
+            fpath_json = os.path.join(json_dir, clean_name(fname)+'.json')
+            probable_Y = self.get_probable_Y(fpath_json, output_features, n)
+            
+            X_train.extend(X_test)
+            Y_train.extend(probable_Y)
+
         train_states = np.unique(np.hstack([y.ravel() for y in Y_train]))
-        if len(train_states) != len(features[2]):
+        if len(train_states) != len(output_features):
             return
         print(X_train[0][0].shape)
         print(Y_train[0].shape)
-        print(len(X_test))
-        print(len(Y_test))
+        print(len(X_train))
+        print(len(Y_train))
 # #         for x, y in zip(X_train, Y_train):
 # #             n_nodes = x[0].shape[0]
 # #             y = y.reshape(n_nodes)
 # #             print(y)
 
         learner.fit(X_train, Y_train)
-#         learner = online_learn(X_train, Y_train, learner)
         
         # Evaluate using confusion matrix.
         Y_pred = learner.predict(X_test)
-        
-        #TODO: only if correct
-        learner = online_learn(X_test, Y_pred, learner)
-
-        Y_pred = learner.predict(X_test)
-        
         if not Y_pred:
             return
+
+        output_json = self.output2json(model, learner, X_test, Y_test, Y_pred, features)
+        with open(fpath_out, 'w') as fp:
+            json.dump(output_json, fp, indent=4)
+
         print("weights: {}".format(learner.w))
         print("Results using only directional features for edges")
         print("Test accuracy: %.3f"
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
 
-        output_json = self.output2json(model, learner, X_test, Y_test, Y_pred, features)
-        with open(fpath_json, 'w') as fp:
-            json.dump(output_json, fp, indent=4)
     
-    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True):
+    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, n=2, online_dir=None):
         if os.path.exists(outdir) and overwrite:
             shutil.rmtree(outdir)
         if not os.path.exists(outdir):
             os.mkdir(outdir)    
+        if not online_dir:
+            online_dir = outdir+'_online'
+        if not os.path.exists(online_dir):
+            os.mkdir(online_dir)
         features = get_features(train_dir, build_features)
         inference_method = 'ad3'
         inference_method = 'lp'
+#         inference_method = None
         crf = EdgeFeatureGraphCRF(n_states=len(features[2]), inference_method=inference_method)
         print(crf.inference_method)
     #     learner = OneSlackSSVM(crf, inference_cache=50, C=.1, tol=.1, max_iter=100,
@@ -236,6 +267,7 @@ class CrfStruct(LearnerWrapper):
             print(datetime.now())
             print(fname)
             self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite)
+            self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite, online=True, n=2, online_dir=online_dir)
     
     
 

@@ -14,6 +14,7 @@ import sentence2word
 from CRF_struct import get_features
 from CRF_struct import CrfStruct
 from sentence2word import Sentence2Word
+import ast
 
 
 class Sentence2WordStruct(CrfStruct):
@@ -95,7 +96,7 @@ class Sentence2WordStruct(CrfStruct):
     #     output = [sentence_type]
     # #     output = ['O']*N + [sentence_type]
     # #     output = ['O']*N
-    # #     sentwords = nltk.word_tokenize(sentence)
+    # #     sentkwords = nltk.word_tokenize(sentence)
     # #     for translation, codeline in zip(translations, code):
     # #         codewords = nltk.word_tokenize(codeline)
     # #         transwords = nltk.word_tokenize(translation)
@@ -115,6 +116,28 @@ class Sentence2WordStruct(CrfStruct):
     #     return output
         
 
+    
+    def get_label_probs(self, sentence, label, n=None):
+        '''
+        get probability for the given label, for each of the words in the sentence
+        
+        :param sentence: sentence in json format
+        :param label:
+        :param n: number of possible words for each label 
+        '''
+        sentprobs = []
+        for line in sentence:
+            important = line['label'] == label
+            probs = {v: k for k, v in ast.literal_eval(line['probs'])}
+            if label in probs:
+                prob = probs[label]
+            else:
+                prob = 0
+            sentprobs.append((prob,important,line['word'],sentence.index(line)))
+        sentprobs = sorted(sentprobs,reverse = True)
+        return sentprobs[:n]
+
+
 def main():
     s2ws = Sentence2WordStruct()
     problem_dir = os.path.join('res', 'text&code8') 
@@ -132,8 +155,7 @@ def main():
 #     s2ws.build_train(test_indir, test_dir, False)
 
     outdir = os.path.join(problem_dir, 'word_json_struct')
-    outdir = os.path.join(problem_dir, 'word_json_struct_online')
-    s2ws.test(train_dir, outdir, build_features=True, overwrite=False)
+#     s2ws.test(train_dir, outdir, build_features=True, overwrite=True)
     
     test_output_dir = os.path.join(test_indir, 'word_json_test_struct')
 #     s2ws.test(train_dir, test_output_dir, test_dir=test_dir, overwrite=False)
@@ -143,7 +165,10 @@ def main():
     labels.remove('O')
     s2w = Sentence2Word()
 #     print(s2w.calc_score(outdir, n, labels=labels))
-    print(s2w.calc_score(outdir, n))
+    result1 = s2w.calc_score(outdir, n)
+    online_dir = outdir+'_online'
+    result2 = s2w.calc_score(online_dir, n)
+    print(set(result2).difference(set(result1)))
 
 if __name__ == '__main__':
     main()

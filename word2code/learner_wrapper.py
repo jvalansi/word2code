@@ -9,6 +9,7 @@ import os
 import shutil
 
 from utils import check_solution, clean_name
+import ast
 
 
 class LearnerWrapper:
@@ -30,8 +31,7 @@ class LearnerWrapper:
                 continue
             print(fname)
             self.label_problem(indir, fname, outdir, only_code=only_code) 
-    
-    
+
     
     def calc_score(self, json_dir, n, problem_dir=None, labels=None):
         '''
