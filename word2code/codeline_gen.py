@@ -17,30 +17,6 @@ import itertools
 import operator
 from utils import is_func
 
-N = 2
-input_array = range(N)
-input_array0 = range(N)
-input_array1 = range(N)
-input_array2 = range(N)
-types = range(N)
-input_int = N
-input_int0 = N
-input_int1 = N
-input_int2 = N
-possibilities = list(subsets(input_array))
-possibility = range(N)
-possibility0 = range(N)
-possibility1 = range(N)
-possibility2 = range(N)
-mapping = lambda possibility: N
-mapping0 = lambda possibility: N
-mapping1 = lambda possibility: N
-mapping2 = lambda possibility: N
-valid = lambda possibility: True
-valid0 = lambda possibility: True
-valid1 = lambda possibility: True
-valid2 = lambda possibility: True
-element = N
 
 
 array = ['input_array', 'possibilities', 'types', 'possibility', 'pair']

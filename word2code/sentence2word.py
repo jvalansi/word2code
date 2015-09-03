@@ -14,30 +14,13 @@ import ast
 
 from matplotlib.pyplot import imshow
 from utils import is_func, check_solution, clean_name, clean_word,\
-    check_solution_path
+    check_solution_path, get_codeline_type, codeline_types, clean_codeline,\
+    get_transdict
 from stanford_corenlp import tokenize_sentences
 from CRF import Crf
 from dependency_parser import get_features
 
 
-types = ['mapping', 'valid', 'reduce', 'possibilities', 'return']
-# types = ['mapping', 'valid', 'reduce']
-# types = ['I']
-def get_type(codewords):
-    '''
-    get word type from codewords
-    
-    :param codewords:
-    '''
-    if not codewords:
-        return ''
-    word_type = clean_word(codewords[0])
-    if word_type in types:
-        return word_type
-    if word_type == 'def' and clean_word(codewords[1]) in types:
-        return clean_word(codewords[1])
-    print(word_type)
-    return ''
 
 class Sentence2Word(Crf):
 
@@ -58,19 +41,12 @@ class Sentence2Word(Crf):
         N = len(sentwords)
         labels = ['O'] * N
         for translation,codeline in zip(translations,code):
-            codewords = nltk.word_tokenize(codeline)
-            transwords = nltk.word_tokenize(translation)
-            label = get_type(codewords)
+            label = get_codeline_type(codeline)
             if not label:
                 continue
-            if ':' in transwords:
-                transwords = transwords[transwords.index(':')+1:]
-                codewords = codewords[codewords.index(':')+1:]
-            if '=' in transwords:
-                transwords = transwords[transwords.index('=')+1:]
-                codewords = codewords[codewords.index('=')+1:]
-            transcodedict = dict(zip(transwords,codewords))
-            if not codewords:
+            transcodedict = get_transdict(translation, codeline)
+            transwords = transcodedict.keys() 
+            if not transcodedict:
                 continue
     #         label = re.sub('\d$', '', codewords[0])
     #         codewords = ['array' if codeword in array else 'primitive' if codeword in primitive else 'mapping' for codeword in codewords]
@@ -156,7 +132,7 @@ class Sentence2Word(Crf):
         :param labels:
         '''
         if not labels:
-            labels = types
+            labels = codeline_types
         with open(os.path.join(json_dir,fname),'r') as inputjson:
             problem_json = json.load(inputjson)
     #     for problem in problems_json:

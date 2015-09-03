@@ -4,7 +4,7 @@ from operator import *
 
 class AlienAndPassword:
     def getNumber(self, S):
-        input_array = list(S)
+        input_array = S
         N = len(input_array)
         
         
@@ -16,14 +16,14 @@ class AlienAndPassword:
         def valid0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: exactly(len(removing(S, array)), 1)
+            #### reduce = (lambda array: exactly(len(removing(S, array)), 1))
             reduce = (lambda possibility: eq(len(diff(input_array, possibility)), 1))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Return the number of different passwords Fred needs to try.
         #### possibilities = subsets(input_array)
         possibilities = subsets(input_array)
-        #### def reduce(possibility): return number(different(possibility))
+        #### def reduce(passwords): return number(different(passwords))
         def reduce(possibility): return len(set(possibility))
         #### return reduce(filter(valid0, possibility))
         return reduce(filter(valid0, possibilities))

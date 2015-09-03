@@ -18,7 +18,7 @@ class CandidatesSelectionEasy:
         # You are also given an int input_int.
         # Ciel thinks that skill input_int is the most important skill a maid should have.
         # Return a int[] with n elements: the numbers of all candidates, ordered according to their level in skill input_int from the best to the worst.
-        #### possibilities = ordered(input_array, key=itemgetter(x))
+        #### possibilities = ordered(input_array, according=itemgetter(x))
         possibilities = sorted(input_array, key=itemgetter(input_int))
         #### def mapping(possibility): return numbers(input_array, possibility)
         def mapping(possibility): return indexOf(input_array, possibility)

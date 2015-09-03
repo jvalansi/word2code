@@ -9,13 +9,13 @@ class AverageAverage:
         
         
         # Given a int[] input_array, for each non-empty subset of input_array, compute the average of its elements, then return the average of those averages.
-        #### possibilities = subset(numList)
+        #### possibilities = subset(input_array)
         possibilities = subsets(input_array)
         #### def valid(possibility): return possibility
         def valid(possibility): return possibility
-        #### def mapping(possibility): return average(possibility)
+        #### def mapping(elements): return average(elements)
         def mapping(possibility): return average(possibility)
-        #### def reduce(possibility): return average(possibility)
+        #### def reduce(averages): return average(averages)
         def reduce(possibility): return average(possibility)
         #### return reduce(map(mapping, filter(valid, possibilities)))
         return reduce(map(mapping, filter(valid, possibilities)))

@@ -19,9 +19,9 @@ class BlockTower:
         def valid0(possibility):
             #### possibilities = top(possibility)
             possibilities = cpairs(possibility)
-            #### def mapping(box): return >(*box)
-            def mapping(possibility): return gt(*possibility)
-            #### def reduce(possibility): return whenever(possibility)
+            #### def mapping(box): return >(* box)
+            def mapping(possibility): return gt(* possibility)
+            #### def reduce(box): return whenever(box)
             def reduce(possibility): return all(possibility)
             #### return reduce(map(mapping, possibilities))
             return reduce(map(mapping, possibilities))
@@ -29,7 +29,7 @@ class BlockTower:
         def valid0(possibility):
             #### possibilities = top(possibility)
             possibilities = cpairs(possibility)
-            #### def mapping(possibility): return even(possibility[0])
+            #### def mapping(possibility): return even(box[0])
             def mapping(possibility): return is_even(possibility[0])
             #### def valid(possibility): return odd(box[1])
             def valid(possibility): return is_odd(possibility[1])
@@ -49,7 +49,7 @@ class BlockTower:
         # Return the height of the tallest possible block tower Josh can build.
         #### possibilities = transformations(input_array)
         possibilities = transformations(input_array)
-        #### def reduce(possibility): return tallest(possibility)
+        #### def reduce(possibility): return tallest(tower)
         def reduce(possibility): return max(possibility)
         #### return reduce(map(mapping0, filter(valid1, filter(valid0, possibilities))))
         return reduce(map(mapping0, filter(valid0, filter(valid0, possibilities))))

@@ -14,6 +14,33 @@ from problem_utils import *
 import resource
 import subprocess
 import threading
+from code_parser import clean_codeline
+
+
+N = 2
+input_array = range(N)
+input_array0 = range(N)
+input_array1 = range(N)
+input_array2 = range(N)
+types = range(N)
+input_int = N
+input_int0 = N
+input_int1 = N
+input_int2 = N
+possibilities = list(subsets(input_array))
+possibility = range(N)
+possibility0 = range(N)
+possibility1 = range(N)
+possibility2 = range(N)
+mapping = lambda possibility: N
+mapping0 = lambda possibility: N
+mapping1 = lambda possibility: N
+mapping2 = lambda possibility: N
+valid = lambda possibility: True
+valid0 = lambda possibility: True
+valid1 = lambda possibility: True
+valid2 = lambda possibility: True
+element = N
 
 K = 1024
 M = K*K
@@ -155,6 +182,35 @@ class WordCount:
         diff = sorted(diff, key=lambda item: item[1],reverse = True)
         print(diff)
         self.tuple2file(diff, 'diff')
+
+
+def get_transdict(translation, codeline):
+    codeline = clean_codeline(codeline)
+    codewords = nltk.word_tokenize(codeline)
+    translation = clean_codeline(translation)
+    transwords = nltk.word_tokenize(translation)
+    transdict = dict(zip(transwords,codewords))
+    return transdict
+
+codeline_types = ['mapping', 'valid', 'reduce', 'possibilities', 'return']
+# types = ['mapping', 'valid', 'reduce']
+# types = ['I']
+def get_codeline_type(codeline):
+    '''
+    get word type from codewords
+    
+    :param codewords:
+    '''
+    codewords = nltk.word_tokenize(codeline)
+    if not codewords:
+        return ''
+    word_type = clean_word(codewords[0])
+    if word_type in codeline_types:
+        return word_type
+    if word_type == 'def' and clean_word(codewords[1]) in codeline_types:
+        return clean_word(codewords[1])
+    print(word_type)
+    return ''
 
 
 if __name__ == '__main__':

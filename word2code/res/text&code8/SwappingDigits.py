@@ -15,8 +15,8 @@ class SwappingDigits:
         # The String input_array will not have any leading zeros.
         # You are allowed to swap one pair of digits in the given number.
         # In other words, you may choose a pair of distinct indices i and j, and swap the characters input_array [i] and input_array [j].
-        #### integers = [''.join(swap(list(num), (i, j))) for (i, j) in choose(indices(N), pair)]
-        possibilities = [''.join(swap(list(num), (i, j))) for (i, j) in combinations_with_replacement(range(N), 2)]
+        #### integers = [list2str(swap(list(num), (i, j))) for (i, j) in choose(indices(N), pair)]
+        possibilities = [list2str(swap(list(num), (i, j))) for (i, j) in combinations_with_replacement(range(N), 2)]
         # Note that you may also leave the original number unchanged.
         # The new String must again describe a valid positive integer, i.e., it must not have any leading zeros.
         def valid0(possibility):

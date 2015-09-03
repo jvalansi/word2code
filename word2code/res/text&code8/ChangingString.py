@@ -17,8 +17,8 @@ class ChangingString:
         def mapping1(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: absolute(difference(*letters))
-            reduce = (lambda possibility: abs(sub(*possibility)))
+            #### reduce = lambda possibility: absolute(difference(* letters))
+            reduce = (lambda possibility: abs(sub(* possibility)))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # The distance between input_array1 and input_array2 is defined as the sum of the differences between each letter in input_array1 and the letter in input_array2 at the same position.

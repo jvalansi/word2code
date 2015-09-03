@@ -12,8 +12,8 @@ class PalindromizationDiv2:
         def palindromic(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: same(possibility, ''.join(backwards(possibility)))
-            reduce = (lambda possibility: eq(possibility, ''.join(reversed(possibility))))
+            #### reduce = lambda possibility: same(possibility, list2str(backwards(possibility)))
+            reduce = (lambda possibility: eq(possibility, list2str(reversed(possibility))))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # A palindromic number is a non-negative integer such that its decimal representation (without insignificant leading zeros) is a palindromic string.

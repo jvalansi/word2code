@@ -17,7 +17,7 @@ class ArrayHash:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: ((position(alphabet, input[possibility[i]][possibility[j]]) + possibility[i]) + possibility[j])
+            #### reduce = lambda possibility: ((position(alphabet, input[Element[i]][Position[j]]) + Element[i]) + Position[j])
             reduce = (lambda possibility: ((indexOf(types, input_array[possibility[0]][possibility[1]]) + possibility[0]) + possibility[1]))
             #### return(reduce(possibilities))
             return reduce(possibilities)
@@ -26,7 +26,7 @@ class ArrayHash:
         # The returned hash is the sum of all character values in input.
         #### possibilities = product(range(M),range(N))
         possibilities = product(range(M), range(N))
-        #### def reduce(possibility): return sum(possibility)
+        #### def reduce(values): return sum(values)
         def reduce(possibility): return sum(possibility)
         #### returned(reduce(map(mapping0, input)))
         return reduce(map(mapping0, possibilities))

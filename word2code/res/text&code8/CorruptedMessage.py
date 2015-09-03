@@ -20,7 +20,7 @@ class CorruptedMessage:
         # Unfortunately, on its way to you the message became corrupted: exactly input_int letters of the original message were changed to some other letters.
         def valid0(possibility):
             #### def reduce(possibility): return exactly(k, len(changed(message, possibility)))
-            def reduce(possibility): return eq(k, len(diff(s, possibility)))
+            def reduce(possibility): return eq(input_int, len(diff(input_array, possibility)))
             #### return reduce(possibility)
             return reduce(possibility)
         # The message you received is input_array .

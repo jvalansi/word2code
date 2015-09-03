@@ -6,6 +6,7 @@ class AmoebaDivTwo:
     def count(self, table, K):
         input_array = table
         input_int = K
+        types = ['A', 'M']
         
         
         # Little Romeo likes cosmic amoebas a lot.
@@ -18,21 +19,19 @@ class AmoebaDivTwo:
         def valid0(possibility):
             #### possibilities = input_array
             possibilities = input_array
-            #### def valid(possibility0): return covered(cell,amoeba)
+            #### def valid(cell): return covered(cell,amoeba)
             def valid(possibility0): return contains(possibility0, possibility)
-            #### def mapping(possibility0): return contain(cell,antimatter[0])
+            #### def mapping(cell): return contain(cell,antimatter[0])
             def mapping(possibility0): return contains(possibility0, types[0])
-            #### def reduce(possibility): return every(possibility)
+            #### def reduce(cell): return every(cell)
             def reduce(possibility): return all(possibility)
             #### return reduce(map(mapping, filter(valid, input_array)))
             return reduce(map(mapping, filter(valid, possibilities)))
         # You are given a String[] input_array, where the j-th character of the i-th element is 'A' if the cell in row i, column j of the input_array contains antimatter or 'M' if it contains matter.
-        #### types = ['A','M']
-        types = ['A', 'M']
         # Return the number of different ways that Romeo can place the cosmic amoeba on the input_array.
         #### possibilities = csubsets(input_array,input_int)
         possibilities = csubsets(input_array, input_int)
-        #### def reduce(possibility): return number(different(possibility))
+        #### def reduce(ways): return number(different(ways))
         def reduce(possibility): return len(set(possibility))
         #### return reduce(filter(can, ways))
         return reduce(filter(valid0, possibilities))

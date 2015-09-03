@@ -11,6 +11,7 @@ import astor
 import copy
 from ast import NodeTransformer, copy_location
 from _ast import Name, Load
+import doctest
 # from problem2code import check_solution
 # from problem2sentence import types
 
@@ -499,6 +500,42 @@ def is_empty(problem_parse):
             return False
     return True
 
+def clean_codeline(codeline):
+    '''
+    >>> codeline = "reduce = (lambda possibility: eq(len(diff(input_array, possibility)), 1))"
+    >>> print(clean_codeline(codeline))
+    eq(len(diff(input_array, possibility)), 1)
+    
+    >>> codeline = "def reduce(possibility): return len(set(possibility))"
+    >>> print(clean_codeline(codeline))
+    len(set(possibility))
+    
+    :param codeline:
+    '''
+    
+    codeline = codeline.strip()
+    try:
+        code_parse = ast.parse(codeline)
+    except SyntaxError:
+        return ''
+    if not code_parse.body:
+        return ''
+    code_parse = code_parse.body[0] #TODO: maybe needs to be more generic
+    if type(code_parse).__name__ == 'Assign':
+        code_parse = code_parse.value
+    if type(code_parse).__name__ == 'Lambda':
+        code_parse = code_parse.body
+    if type(code_parse).__name__ == 'FunctionDef':
+        code_parse = code_parse.body[0]
+    if type(code_parse).__name__ == 'Return':
+        code_parse = code_parse.value
+    codeline = astor.to_source(code_parse)
+    codeline = re.sub('^.+return\s', '', codeline)
+#     codeline = re.sub('\sfor\s',', ', codeline)
+#     codeline = re.sub('\sin\s',', ', codeline)
+#     codeline = re.sub('\sif\s',', ', codeline)
+    return codeline
+
 
 if __name__ == '__main__':
 #     print(count_code('res/text&code5/'))
@@ -520,5 +557,6 @@ if __name__ == '__main__':
 #     fname = 'InfiniteString.py'
 #     fname = 'TextStatistics.py'    
 #     print(parse_problem_code(fname, path, out_path))
+    doctest.testmod()
 
 #TODO: fix reduce only sentences

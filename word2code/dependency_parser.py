@@ -7,6 +7,10 @@ import copy
 import re
 from nltk.parse import stanford
 from stanford_corenlp import raw_parse_sents, tokenize_sentences
+import astor
+from utils import *
+import logger
+
 
 class Node:
     def __init__(self, name = '', parent = None, children = None, ntype = None):
@@ -16,6 +20,11 @@ class Node:
         if not children:
             self.children = []
     
+    def insert_child(self, node):
+        self.children.append(node)
+        node.parent = self
+
+    
     def is_loop(self, name):
         node = self
         while node: #prevent loop
@@ -24,11 +33,9 @@ class Node:
             node = node.parent
         return False
     
-    def deps2tree(self, deps):
+    def deps2tree_(self, deps):
+        
         for dep in deps:
-#             print(dep)
-#             if dep[-2] == dep[-1]: #prevent loop
-#                 continue
             if not dep[-2] == self.name:
                 continue
             if self.is_loop(dep[-1]):
@@ -37,7 +44,24 @@ class Node:
             if len(dep) > 2:
                 node.ntype = dep[0]
             self.children.append(node)
-            node.deps2tree(deps)
+            node.deps2tree_(deps)
+        return self
+
+    def deps2tree(self, deps):
+        deps_ = copy.copy(deps)
+        for dep in deps:
+            node = None
+            if self.name == dep[-2]:
+                node = Node(dep[-1],self)
+            if self.name == dep[-1]:
+                node = Node(dep[-2],self)
+            if not node:
+                continue                
+            if len(dep) > 2:
+                node.ntype = dep[0]
+            self.children.append(node)
+            deps_.remove(dep)
+            node.deps2tree(deps_)
         return self
 
     def tree2deps(self):
@@ -61,6 +85,33 @@ class Node:
                 s = i+1
         args_.append(args[s:])
         return args_                
+    
+    def ast2tree(self, parse):
+        if hasattr(parse, 'func'):
+            self.name = parse.func.id
+        elif hasattr(parse, 'id'):
+            self.name = parse.id
+        elif hasattr(parse, 'n'):
+            self.name = str(parse.n)
+        if hasattr(parse, 'args'):
+            for arg in parse.args:
+                node = Node(parent=self)
+                self.children.append(node)
+                node.ast2tree(arg)
+#         if isinstance(parse, list):
+#             for p in parse:
+#                 node = Node(parent=self)
+#                 self.children.append(node)
+#                 node.ast2tree(p)
+#         else: 
+#             for k,v in parse.__dict__.items():
+#                 if not hasattr(v, '__dict__') and not isinstance(v, list):
+#                     continue
+#                 node = Node(parent=self, ntype=k)
+#                 self.children.append(node)
+#                 node.ast2tree(v)
+        return self
+        
     
     def code2tree(self, code):
     #     return(min([mapping(possibility, input_array) for possibility in possibilities]))
@@ -115,7 +166,88 @@ class Node:
             nodes.extend(child.get_nodes())
         return nodes
         
+    def safe_remove(self):
+        if self.parent:
+            self.parent.children.remove(self)
+        for child in self.children:
+            child.parent = self.parent
+            if self.parent:
+                self.parent.children.append(child)
+        
+    def filter_words(self, words):
+        '''
+        reduce tree to consist of only the given words
+        
+        :param words:
+        '''
+        children = copy.copy(self.children)
+        for child in children:
+            child.filter_words(words)
+        if self.name not in words:
+                self.safe_remove()
 
+    def translate(self,transdict):
+        if self.name in transdict:
+            self.name = transdict[self.name]
+        for child in self.children:
+            child.translate(transdict)
+        return self
+
+    def clear_ntypes(self):
+        self.ntype = None
+        for child in self.children:
+            child.clear_ntypes()
+            
+    def clean_ind(self):
+        self.name = dep2word(self.name)
+        for child in self.children:
+            child.clean_ind()
+
+    def swap(self, node):
+        self.name, node.name = node.name, self.name 
+
+    def rearrange(self):
+        if not self.children and is_func(self.name):
+            node = Node("possibility")
+            self.insert_child(node)
+        for child in self.children:
+            if not is_func(self.name) and is_func(child.name):
+                self.swap(child)
+            child.rearrange()
+            
+    def compare(self, tree):
+        deps1 = self.tree2deps()
+        deps2 = tree.tree2deps()
+        return [dep for dep in deps1 if dep not in deps2]
+
+    def fix_type(self):
+        '''
+        make sure all children have the same type, otherwise, cast
+        '''
+        for child in self.children:
+            child.fix_type()
+        try:
+#             print(map(str, self.children))
+            children_types = [type(eval(str(child))).__name__ for child in self.children]
+        except TypeError:
+            logger.logging.warning('type error')
+            return
+        except NameError:
+            logger.logging.warning('name error')
+            return
+        except SyntaxError:
+            logger.logging.warning('SyntaxError')
+            return
+        if 'int' in children_types:
+#             children = copy.copy(self.children)
+            for child, child_type in zip(self.children, children_types):
+                if child_type == 'list':
+                    node = Node('len')
+                    self.children.remove(child)
+                    self.children.append(node)
+                    node.parent = self
+                    node.children.append(child)
+                    child.parent = node
 
 def dep2list(dep):
     m = re.match('^(.+)\((.+\-\d+)\'?, (.+\-\d+)\'?\)$', dep)
@@ -125,13 +257,13 @@ def dep2list(dep):
 
 
 def dep2ind(dep):
-    return int(re.search('(?:.+)?-(\d+)\'?', dep).group(1))
+    return int(dep2dict(dep)['ind'])
 
 def dep2word(dep):
-    return re.search('(.+)?-(?:\d+)\'?', dep).group(1)
+    return dep2dict(dep)['word']
 
 def dep2dict(dep):
-    m = re.search('(?P<word>.+)?-(?P<ind>\d+)', dep)
+    m = re.search('(?P<word>[^-]+)?-?(?P<ind>\d+)?', dep)
     return m.groupdict()
 
 # filter dependencies according to words
@@ -210,4 +342,7 @@ def get_features(sentence):
 
 if __name__ == '__main__':
     sentence = 'hello my friend, how are you?'
-    print(sentence2dependencies(sentence))
+#     print(sentence2dependencies(sentence))
+    
+    dep = 'hello-1'
+    print(dep2word(dep))

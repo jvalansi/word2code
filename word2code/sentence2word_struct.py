@@ -9,7 +9,7 @@ import nltk
 import os
 from dependency_parser import dep2word, dep2ind, Node, sentence2dependencies
 # import problem2sentence
-from utils import is_func, check_solution, clean_name
+from utils import is_func, check_solution, clean_name, get_codeline_type
 import sentence2word
 from CRF_struct import get_features
 from CRF_struct import CrfStruct
@@ -72,7 +72,7 @@ class Sentence2WordStruct(CrfStruct):
         for translation, codeline in zip(translations, code):
             codewords = nltk.word_tokenize(codeline)
             transwords = nltk.word_tokenize(translation)
-            label = sentence2word.get_type(codewords)
+            label = get_codeline_type(codewords)
             if not label:
                 continue
             transcodedict = dict(zip(transwords,codewords))

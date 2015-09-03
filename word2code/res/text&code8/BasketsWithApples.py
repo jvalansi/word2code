@@ -21,7 +21,7 @@ class BasketsWithApples:
         # Return the number of input_array remaining after the procedure described above is performed.
         #### possibilities = subsets(apples)
         possibilities = subsets(input_array)
-        #### def reduce(possibility): return max(possibility)
+        #### def reduce(possibility): return max(input_array)
         def reduce(possibility): return max(possibility)
         #### def valid(possibility): return possibility
         def valid(possibility): return possibility
