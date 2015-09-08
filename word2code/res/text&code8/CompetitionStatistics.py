@@ -19,7 +19,7 @@ class CompetitionStatistics:
         #### def valid(competitions): return all(map(positive ,competitions))
         def valid(possibility): return all(map(is_positive, possibility))
         #### def reduce(possibility): return maximum(possibility)
-        def reduce(possibilities): return max(possibilities)
+        def reduce(possibility): return max(possibility)
         #### return reduce(map(mapping, filter(valid, possibilities)))
         return reduce(map(mapping, filter(valid, possibilities)))
         # Note that 0 is not a positive number.

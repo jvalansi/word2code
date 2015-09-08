@@ -10,7 +10,7 @@ import os
 import problem_parser
 import logger
 from dependency_parser import Node, filter_dep, clean_dependencies,\
-    sentence2dependencies, dep2word
+    sentence2dependencies, dep2word, clean_duplicates
 import astor
 import ast
 from utils import clean_codeline, get_codeline_type, is_func, get_transdict
@@ -43,34 +43,49 @@ def get_root(deps, rootword):
     root = Node(rootwords[0])
     return root
 
-def get_sent_tree(sentence, transdict, words, rootname):
+def get_all_sent_trees(sentence, transdict):
+    trees = []
+    for transword in transdict.keys():
+        root = get_sent_tree(sentence, transdict, transword)
+        trees.append(root)
+    return trees
+
+def get_sent_tree(sentence, transdict, rootname):
     deps = sentence2dependencies(sentence)[0] #TODO: fix
     root = get_root(deps, rootname)
     if not root:
-        return
+        root = Node('possibility')
+        return root
     root.deps2tree(deps)
     root.clean_ind()
+    words = transdict.keys()
     root.filter_words(words)
     root.clear_ntypes()
     root.translate(transdict)
     root.rearrange()
     root.fix_type()
+    root.clean_duplicates()
+    logger.logging.debug(root)
     return root
 
-def get_code_tree(code, words):
+def get_code_tree(code, words=None):
     try:
         parse = ast.parse(code.strip())
+        logger.logging.debug(astor.dump(parse))
     except Exception:
-        logger.logging.warning('could\'nt parse')
+        logger.logging.debug('could\'nt parse')
         return
     if not parse.body:
         return
     if not hasattr(parse.body[0], 'value'):
-        logger.logging.warning('no value node')
+        logger.logging.debug('no value node')
         return
     root = Node()
     root.ast2tree(parse.body[0].value)
-    root.filter_words(words)
+    logger.logging.debug(root)
+    if words != None:
+        root.filter_words(words)
+    logger.logging.debug(root)
     return root
 
 missing_words = []
@@ -82,30 +97,34 @@ def check_sentence(sentence, translations, code, n):
     for translation,codeline in zip(translations, code):
         logger.logging.debug(codeline)
         codeline_type = get_codeline_type(codeline)
-        if codeline_type == 'return':
+        if codeline_type in ['', 'return']:
             continue
         codeline = clean_codeline(codeline)
         translation = clean_codeline(translation)
         transdict = get_transdict(translation, codeline)
+        codedict = get_transdict(codeline, translation)
         transwords = transdict.keys()
-        words = [word for word in transwords if word in sentwords]
-        missing_in_translation = [word for word in transwords if word not in sentwords] 
-        missing_words.extend(missing_in_translation)
-        words = transwords
-        code_tree = get_code_tree(translation, words)
-        if not code_tree:
+        codewords = [transdict[word] for word in transwords if word in sentwords]
+        logger.logging.debug(codewords)
+        code_tree = get_code_tree(codeline, codewords)
+        if not code_tree or not code_tree.name:
+            logger.logging.debug(sentence)
             continue
-        rootword = code_tree.name
-        code_tree.translate(transdict)
-        sent_tree = get_sent_tree(sentence, transdict, words, rootword)
-        if not sent_tree:
-            continue
-        diff = code_tree.compare(sent_tree)
-        if len(diff) > n: 
+        rootname = codedict[code_tree.name]
+#         code_tree.translate(transdict)
+        sent_trees = get_all_sent_trees(sentence, transdict)
+        results = []
+        for sent_tree in sent_trees:
+            diff = code_tree.compare(sent_tree)
+            results.append(len(diff))
+        if results and min(results) > n:
+            sent_tree = sent_trees[results.index(min(results))]
             logger.logging.info(sentence)
             logger.logging.info(code_tree)
             logger.logging.info(sent_tree)
+            diff = code_tree.compare(sent_tree)
             logger.logging.info(diff)
+            missing_words.extend([word for dep in diff for word in dep[-2:]])
             return False
     return True
 
@@ -134,30 +153,32 @@ def check_problem(path, fname, n=0):
         return True
     return False
 
-def check_problems(path, n=0):
+def check_problems(path, n=0, success=True):
     correct = []
+    fail = []
     total = 0
     for fname in sorted(os.listdir(path)):
         if not fname.endswith('.py'):
             continue
-        print(fname)
+        logger.logging.info(fname)
         result = check_problem(path, fname, n)
         if result:
             correct.append(fname)
+        else:
+            fail.append(fname)
         total += 1
     print(total)
-    print(len(correct))
-    print(float(len(correct))/total)
-    return correct
+    results = correct if success else fail
+    print(len(results))
+    print(float(len(results))/total)
+    return results
+        
 
 def main():
     problems_path = 'res/text&code8'
-    print(check_problems(problems_path))
+#     print(check_problems(problems_path, success=False))
     fname = 'AlienAndPassword.py'
-#     fname = 'BasketsWithApples.py'
-    fname = 'BlockTower.py'
-#     fname = 'TextStatistics.py'
-#     print(check_problem(problems_path, fname))
+    print(check_problem(problems_path, fname))
     print(Counter(missing_words))
 
     

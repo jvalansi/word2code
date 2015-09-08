@@ -11,8 +11,8 @@ class TriFibonacci:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: ((A[(i - 1)] + A[(i - 2)]) + A[(i - 3)])
-            reduce = (lambda possibility: ((A[(possibility - 1)] + A[(possibility - 2)]) + A[(possibility - 3)]))
+            #### reduce = lambda possibility: ((input_array[(i - 1)] + input_array[(i - 2)]) + input_array[(i - 3)])
+            reduce = (lambda possibility: ((input_array[(possibility - 1)] + input_array[(possibility - 2)]) + input_array[(possibility - 3)]))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # You are given a int[] input_array which contains exactly one element that is equal to -1, you must replace this element with a positive number in a way that the sequence becomes a TriFibonacci sequence.

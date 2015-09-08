@@ -21,8 +21,8 @@ class GreatFairyWar:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: (dps[i] * sum(hp[i:]))
-            reduce = (lambda possibility: (input_array2[possibility] * sum(input_array1[possibility:])))
+            #### reduce = lambda possibility: mul(dps[i], sum(hp[i:]))
+            reduce = (lambda possibility: mul(input_array2[possibility], sum(input_array1[possibility:])))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # We assume that your number of hit points is sufficiently large to avoid defeat when fighting the fairies.

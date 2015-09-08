@@ -14,7 +14,8 @@ from problem_utils import *
 import resource
 import subprocess
 import threading
-from code_parser import clean_codeline
+import doctest
+# from code_parser import clean_codeline
 
 
 N = 2
@@ -184,10 +185,40 @@ class WordCount:
         self.tuple2file(diff, 'diff')
 
 
+def clean_codeline(codeline):
+    '''
+    >>> codeline = "reduce = (lambda possibility: ((indexOf(types, input_array[possibility[0]][possibility[1]]) + possibility[0]) + possibility[1]))"
+    >>> print(clean_codeline(codeline))
+    ((indexOf(types, input_array[possibility[0]][possibility[1]]) + possibility[0]) + possibility[1])
+    
+    >>> translation = "reduce = lambda possibility: (len(possibility) * excess(possibility))"
+    >>> print(clean_codeline(translation))
+    (len(possibility) * excess(possibility))
+    
+    
+    >>> codeline = "def reduce(possibility): return len(set(possibility))"
+    >>> print(clean_codeline(codeline))
+    len(set(possibility))
+    
+    >>> codeline = "possibilities = sorted(input_array, key=itemgetter(input_int))"
+    >>> print(clean_codeline(codeline))
+    sorted(input_array, key=itemgetter(input_int))
+
+    >>> codeline = "reduce = lambda possibility: (dps[i] * sum(hp[i:]))"
+    >>> print(clean_codeline(codeline))
+    (dps[i] * sum(hp[i:]))
+    
+    :param codeline:
+    '''
+    codeline = re.sub('^[^\(\:]+(\(lambda)?[^\:]+\:(?P<codeline>.+)(?(1)\))\s*', '\g<codeline>', codeline)
+    codeline = re.sub('^[^=]+\=', '', codeline)
+    codeline = re.sub('^.*return\s', '', codeline)
+    codeline = codeline.strip()
+    return codeline
+
+
 def get_transdict(translation, codeline):
-    codeline = clean_codeline(codeline)
     codewords = nltk.word_tokenize(codeline)
-    translation = clean_codeline(translation)
     transwords = nltk.word_tokenize(translation)
     transdict = dict(zip(transwords,codewords))
     return transdict
@@ -226,4 +257,7 @@ if __name__ == '__main__':
 #     problem_path = 'res/text&code6/solutions_struct/AverageAverage.py' 
 #     problem_path = 'res/text&code6/solutions_struct/ArrayHash.py' 
 #     problem_path = 'test.py'
-    check_solution(problem_path)
+#     check_solution(problem_path)
+    doctest.testmod()
+    
+    

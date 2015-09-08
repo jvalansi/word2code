@@ -12,7 +12,7 @@ class Multiples:
         
         # You are to create a class Multiples with a method number, which takes three ints: input_int0, input_int1, and input_int2.
         # Given a range of integers from input_int0 to input_int1 (inclusive), determine how many numbers within that range are evenly divisible by input_int2.
-        #### possibilities = range(min, inclusive(max))
+        #### possibilities = range(input_int0, inclusive(input_int1))
         possibilities = range(input_int0, inclusive(input_int1))
         #### def valid(possibility): return divisible(factor, possibility)
         def valid(possibility): return is_divisor(input_int2, possibility)

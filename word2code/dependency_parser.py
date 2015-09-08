@@ -10,7 +10,7 @@ from stanford_corenlp import raw_parse_sents, tokenize_sentences
 import astor
 from utils import *
 import logger
-
+import doctest
 
 class Node:
     def __init__(self, name = '', parent = None, children = None, ntype = None):
@@ -33,19 +33,20 @@ class Node:
             node = node.parent
         return False
     
-    def deps2tree_(self, deps):
-        
-        for dep in deps:
-            if not dep[-2] == self.name:
-                continue
-            if self.is_loop(dep[-1]):
-                continue
-            node = Node(dep[-1],self)
-            if len(dep) > 2:
-                node.ntype = dep[0]
-            self.children.append(node)
-            node.deps2tree_(deps)
-        return self
+#     def deps2tree_(self, deps):
+#         
+#         for dep in deps:
+#             if not dep[-2] == self.name:
+#                 continue
+#             if self.is_loop(dep[-1]):
+#                 continue
+#             node = Node(dep[-1],self)
+#             if len(dep) > 2:
+#                 node.ntype = dep[0]
+#             self.children.append(node)
+#             node.deps2tree_(deps)
+#         return self
+
 
     def deps2tree(self, deps):
         deps_ = copy.copy(deps)
@@ -62,7 +63,6 @@ class Node:
             self.children.append(node)
             deps_.remove(dep)
             node.deps2tree(deps_)
-        return self
 
     def tree2deps(self):
         deps = []
@@ -167,24 +167,43 @@ class Node:
         return nodes
         
     def safe_remove(self):
-        if self.parent:
+        if not self.parent:
+            if self.children:
+                node = self.children[0]
+                self.swap(node)
+                node.safe_remove()
+            else:
+                node = Node('')
+                self.swap(node)
+        else:
             self.parent.children.remove(self)
-        for child in self.children:
-            child.parent = self.parent
-            if self.parent:
+            for child in self.children:
+                child.parent = self.parent
                 self.parent.children.append(child)
         
     def filter_words(self, words):
         '''
         reduce tree to consist of only the given words
+
+        >>> deps = [[None, 'csubsets', 'input_array']]
+        >>> root = Node('csubsets')
+        >>> root.deps2tree(deps)
+        >>> root.filter_words(['input_array'])
+        >>> print(root)
+        input_array
         
+        >>> root = Node('csubsets')
+        >>> root.filter_words([])
+        >>> print(root)
+        <BLANKLINE>
+
         :param words:
         '''
         children = copy.copy(self.children)
         for child in children:
             child.filter_words(words)
         if self.name not in words:
-                self.safe_remove()
+            self.safe_remove()
 
     def translate(self,transdict):
         if self.name in transdict:
@@ -204,16 +223,29 @@ class Node:
             child.clean_ind()
 
     def swap(self, node):
-        self.name, node.name = node.name, self.name 
+        self.name, node.name = node.name, self.name
+        self.ntype, node.ntype = node.ntype, self.ntype  
 
     def rearrange(self):
-        if not self.children and is_func(self.name):
-            node = Node("possibility")
-            self.insert_child(node)
         for child in self.children:
             if not is_func(self.name) and is_func(child.name):
                 self.swap(child)
             child.rearrange()
+        if not self.children and is_func(self.name):
+            node = Node("possibility")
+            self.insert_child(node)
+        try:
+            eval(str(self))
+        except TypeError as e:
+            logger.logging.debug('TypeError')
+            logger.logging.debug(e)
+            node = Node("possibility")
+            self.insert_child(node)
+            return
+        except (NameError, SyntaxError, ValueError) as e:
+            logger.logging.debug('eval Error')
+            logger.logging.debug(e)
+            return
             
     def compare(self, tree):
         deps1 = self.tree2deps()
@@ -229,14 +261,10 @@ class Node:
         try:
 #             print(map(str, self.children))
             children_types = [type(eval(str(child))).__name__ for child in self.children]
-        except TypeError:
-            logger.logging.warning('type error')
-            return
-        except NameError:
-            logger.logging.warning('name error')
-            return
-        except SyntaxError:
-            logger.logging.warning('SyntaxError')
+        except (TypeError, NameError, SyntaxError, ValueError) as e:
+            logger.logging.debug('eval Error')
+            logger.logging.debug(e)
+            logger.logging.debug(e.args)
             return
         if 'int' in children_types:
 #             children = copy.copy(self.children)
@@ -248,6 +276,23 @@ class Node:
                     node.parent = self
                     node.children.append(child)
                     child.parent = node
+        
+    def clean_duplicates(self, nodes=[]):
+        for child in self.children:
+            child.clean_duplicates(nodes)
+        if self.name in nodes:
+            self.safe_remove()
+        else:
+            nodes.append(self.name)
+
+
+def clean_duplicates(tree):
+    deps = tree.tree2deps()
+    deps = map(tuple, deps)
+    deps = list(set(deps))
+    deps = map(list, deps)
+    new_tree = Node(tree.name)
+    return new_tree.deps2tree(deps)
 
 def dep2list(dep):
     m = re.match('^(.+)\((.+\-\d+)\'?, (.+\-\d+)\'?\)$', dep)
@@ -315,9 +360,27 @@ def clean_dependencies(dependencies):
     return clean_deps
 
 
+dependencies_dict = {}
+dependencies_path = os.path.join('res', 'dependencies') 
+
+def load_dependencies_dict():
+    if not os.path.exists(dependencies_path):
+        return
+    with open(dependencies_path) as f:
+        dependencies_dict.update(json.load(f))
+
+def dump_dependencies_dict():
+    with open(dependencies_path, 'w') as f:
+        json.dump(dependencies_dict, f)
+
 def sentence2dependencies(sentence):
+    load_dependencies_dict()    
+    if sentence in dependencies_dict:
+        return dependencies_dict[sentence]
     dependencies = raw_parse_sents([sentence])
     dependencies = [[dep2list(dep) for dep in sentence_dependencies.split('\n')] for sentence_dependencies in dependencies.split('\n\n')]
+    dependencies_dict[sentence] = dependencies
+    dump_dependencies_dict()
     return (dependencies)
 
 def get_features(sentence):
@@ -340,9 +403,14 @@ def get_features(sentence):
         features[int(m['ind'])-1] = dep[0] 
     return features
 
-if __name__ == '__main__':
+def main():
     sentence = 'hello my friend, how are you?'
 #     print(sentence2dependencies(sentence))
     
     dep = 'hello-1'
     print(dep2word(dep))
+    
+    doctest.testmod()
+
+if __name__ == '__main__':
+    main()

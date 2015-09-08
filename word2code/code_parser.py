@@ -12,6 +12,7 @@ import copy
 from ast import NodeTransformer, copy_location
 from _ast import Name, Load
 import doctest
+import logger
 # from problem2code import check_solution
 # from problem2sentence import types
 
@@ -502,13 +503,26 @@ def is_empty(problem_parse):
 
 def clean_codeline(codeline):
     '''
-    >>> codeline = "reduce = (lambda possibility: eq(len(diff(input_array, possibility)), 1))"
+    >>> codeline = "reduce = (lambda possibility: ((indexOf(types, input_array[possibility[0]][possibility[1]]) + possibility[0]) + possibility[1]))"
     >>> print(clean_codeline(codeline))
-    eq(len(diff(input_array, possibility)), 1)
+    ((indexOf(types, input_array[possibility[0]][possibility[1]]) + possibility[0]) + possibility[1])
+    
+    >>> translation = "reduce = lambda possibility: (len(possibility) * excess(possibility))"
+    >>> print(clean_codeline(translation))
+    (len(possibility) * excess(possibility))
+    
     
     >>> codeline = "def reduce(possibility): return len(set(possibility))"
     >>> print(clean_codeline(codeline))
     len(set(possibility))
+    
+    >>> codeline = "possibilities = sorted(input_array, key=itemgetter(input_int))"
+    >>> print(clean_codeline(codeline))
+    sorted(input_array, key=itemgetter(input_int))
+
+    >>> codeline = "reduce = lambda possibility: (dps[i] * sum(hp[i:]))"
+    >>> print(clean_codeline(codeline))
+    (dps[i] * sum(hp[i:]))
     
     :param codeline:
     '''
@@ -516,9 +530,14 @@ def clean_codeline(codeline):
     codeline = codeline.strip()
     try:
         code_parse = ast.parse(codeline)
-    except SyntaxError:
+    except SyntaxError as e:
+        logger.logging.debug(e)
+        logger.logging.debug(e.args)
+        logger.logging.debug(e.text)        
         return ''
     if not code_parse.body:
+        logger.logging.debug('no body')
+        logger.logging.debug(astor.dump(code_parse))
         return ''
     code_parse = code_parse.body[0] #TODO: maybe needs to be more generic
     if type(code_parse).__name__ == 'Assign':
@@ -530,7 +549,7 @@ def clean_codeline(codeline):
     if type(code_parse).__name__ == 'Return':
         code_parse = code_parse.value
     codeline = astor.to_source(code_parse)
-    codeline = re.sub('^.+return\s', '', codeline)
+#     codeline = re.sub('^.+return\s', '', codeline)
 #     codeline = re.sub('\sfor\s',', ', codeline)
 #     codeline = re.sub('\sin\s',', ', codeline)
 #     codeline = re.sub('\sif\s',', ', codeline)

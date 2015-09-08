@@ -33,8 +33,8 @@ class PalindromizationDiv2:
         # In the previous example Arthur would have to pay 8 dollars.
         # Of course Arthur would like to palindromize input_int spending the least amount of money.
         # Given input_int return the minimum amount of money Arthur needs.
-        #### reduce = lambda possibility: minimum(list(possibility))
-        reduce = (lambda possibility: min(list(possibility)))
+        #### reduce = lambda possibility: minimum(possibility)
+        reduce = (lambda possibility: min(possibility))
         #### mapping = lambda integer: money(X, integer)
         mapping = (lambda integer: cost(X, integer))
         #### possibilities = integers

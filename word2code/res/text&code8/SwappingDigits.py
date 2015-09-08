@@ -15,22 +15,24 @@ class SwappingDigits:
         # The String input_array will not have any leading zeros.
         # You are allowed to swap one pair of digits in the given number.
         # In other words, you may choose a pair of distinct indices i and j, and swap the characters input_array [i] and input_array [j].
-        #### integers = [list2str(swap(list(num), (i, j))) for (i, j) in choose(indices(N), pair)]
-        possibilities = [list2str(swap(list(num), (i, j))) for (i, j) in combinations_with_replacement(range(N), 2)]
+        #### possibilities = choose(indices(N), pair)
+        possibilities = combinations_with_replacement(range(N), 2)
+        #### integers = (lambda possibility: list2str(swap(list(num), possibility))
+        mapping0 = (lambda possibility: list2str(swap(list(num), possibility)))
         # Note that you may also leave the original number unchanged.
         # The new String must again describe a valid positive integer, i.e., it must not have any leading zeros.
         def valid0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: (not leading(s, zeros))
-            reduce = (lambda possibility: (not startswith(possibility, 0)))
+            #### reduce = lambda possibility: (not(leading(s, zeros)))
+            reduce = (lambda possibility: (not_(startswith(possibility, 0))))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Find and return the String that represents the smallest possible integer that can be obtained.
         #### def reduce(possibility): return smallest(possibility)
         def reduce(possibility): return min(possibility)
         #### return reduce(filter(possible, integers))
-        return reduce(filter(valid0, possibilities))
+        return reduce(filter(valid0, map(mapping0, possibilities)))
 
 def example0():
 	cls = SwappingDigits()

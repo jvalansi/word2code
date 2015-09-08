@@ -36,7 +36,7 @@ class ChangingString:
         def valid0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: exactly(len(change(A, characters)), K)
+            #### reduce = lambda possibility: exactly(len(change(input_array1, possibility)), input_int)
             reduce = (lambda possibility: eq(len(diff(input_array1, possibility)), input_int))
             #### return(reduce(possibilities))
             return reduce(possibilities)

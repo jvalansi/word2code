@@ -24,8 +24,8 @@ class GogoXBallsAndBinsEasy:
         # When rearranging the balls, Gogo always moves them one ball at a time.
         # In other words, in each move Gogo takes a single ball from one bin and places it into another bin.
         def mapping0(possibility):
-            #### def reduce(possibility): return (sum(possibility) / 2)
-            def reduce(possibility): return (sum(possibility) / 2)
+            #### def reduce(possibility): return div(sum(possibility), 2)
+            def reduce(possibility): return div(sum(possibility), 2)
             #### def mapping(i): return abs(sub(possibility[i], input_array[i]))
             def mapping(i): return abs(sub(possibility[i], input_array[i]))
             #### possibilities = range(N)

@@ -16,7 +16,7 @@ class LotteryTicket:
         def reduce0(possibility):
             #### possibilities = subset(banknotes)
             possibilities = subsets(possibility)
-            #### def mapping(possibility): return exact(sum(subset), price)
+            #### def mapping(possibility): return exact(sum(subset), input_int)
             def mapping(possibility): return eq(sum(possibility), input_int)
             #### def reduce(possibility): return any(possibility)
             def reduce(possibility): return any(possibility)

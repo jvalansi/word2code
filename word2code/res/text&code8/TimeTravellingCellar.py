@@ -17,20 +17,19 @@ class TimeTravellingCellar:
         def advancing_time(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: gain(0, profit[possibility])
-            reduce = (lambda possibility: add(0, profit[possibility]))
+            #### reduce = lambda possibility: gain(0, input_array0[possibility])
+            reduce = (lambda possibility: add(0, input_array0[possibility]))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Turning back time in cellar i will lose him input_array1 [i] in input_array0.
         def turning_back_time(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: lose(0, decay[possibility])
-            reduce = (lambda possibility: sub(0, decay[possibility]))
+            #### reduce = lambda i: lose(0, input_array1[i])
+            reduce = (lambda possibility: sub(0, input_array1[possibility]))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Return the maximum input_array0 that Gogo can gain by advancing time in one cellar and turning time back in another cellar.
-        # print([input_array0(one_cellar,another_cellar) for one_cellar, another_cellar in pairs(range(N))])
         #### def reduce(possibility): return maximum(possibility)
         def reduce(possibility): return max(possibility)
         #### def mapping((one_cellar, another_cellar)): return sum([advancing_time(one_cellar), turning_back_time(another_cellar)])

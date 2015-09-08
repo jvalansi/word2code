@@ -19,7 +19,7 @@ class CorruptedMessage:
         # For example, "aaaaa" and "xxxxxxxxx" are valid messages.
         # Unfortunately, on its way to you the message became corrupted: exactly input_int letters of the original message were changed to some other letters.
         def valid0(possibility):
-            #### def reduce(possibility): return exactly(k, len(changed(message, possibility)))
+            #### def reduce(possibility): return exactly(input_int, len(changed(original, possibility)))
             def reduce(possibility): return eq(input_int, len(diff(input_array, possibility)))
             #### return reduce(possibility)
             return reduce(possibility)

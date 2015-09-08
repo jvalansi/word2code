@@ -19,28 +19,12 @@ def partitions(myList):
                 yield copy_partition
             yield partial_partition + [(myList[-1],)]   
 
-def cpartitions(myList, n=None):
-    print(myList)
-    if not myList:
-        yield []
-    else:
-        if n==1:
-            yield [tuple(myList)]
-        elif n==None:
-            for partial_partition in cpartitions(myList[:-1]):
-                if partial_partition:
-                    copy_partition = partial_partition[:]
-                    copy_partition[-1] += (myList[-1],)
-                    yield copy_partition
-                yield partial_partition + [(myList[-1],)]
-        else:
-            for partial_partition in cpartitions(myList[:-1], n-1):
-                yield partial_partition + [(myList[-1],)]
-            for partial_partition in cpartitions(myList[:-1], n):
-                if partial_partition:
-                    copy_partition = partial_partition[:]
-                    copy_partition[-1] += (myList[-1],)
-                    yield copy_partition
+def cpartitions(S, n):
+    N = len(S)
+    idxs = combinations(range(1,N), n-1)
+#     print(list(idxs))
+    for idx in idxs:
+        yield [S[id[0]:id[1]] for id in cpairs([0]+list(idx)+[N])]
             
 
 def cpairs(S):
@@ -67,6 +51,13 @@ def csubsets(S,m = None):
     if m == None:
         return chain(S[i:i+m] for m in range(N+1) for i in range(N+1-m))
     return (S[i:i+m] for i in range(N+1-m))
+
+def all_combinations(S, m):
+    return chain(*map((lambda x: combinations(S, x)), range(m)))
+
+def all_combinations_with_replacement(S, m):
+    return chain(*map((lambda x: combinations_with_replacement(S, x)), range(m)))
+
 
 def argmin(S):
     S = list(S)

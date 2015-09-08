@@ -16,10 +16,10 @@ class DecipherabilityEasy:
         # Can this be the string created from your string input_array0 ?
         # You are given the Strings input_array0 and input_array1 .
         # Return "Possible" (quotes for clarity) if input_array1 can be obtained from input_array0 by erasing exactly one character.
-        #### possibilities = ["Possible", "Impossible"]
-        possibilities = ['Possible', 'Impossible']
-        #### reduce = lambda possibility: if_(obtained(subsets(s, erasing(N0, one)), tuple(t)), possibility)
-        reduce = (lambda possibility: if_(contains(subsets(s, sub(N0, 1)), tuple(t)), possibility))
+        #### possibilities = subsets(s, erasing(N0, one))
+        possibilities = subsets(s, sub(N0, 1))
+        #### reduce = lambda possibility: if_(obtained(possibility, tuple(t)), ['Possible', 'Impossible'])
+        reduce = (lambda possibility: if_(contains(possibility, tuple(t)), ['Possible', 'Impossible']))
         #### return reduce(possibilities)
         return reduce(possibilities)
         # Otherwise, return "Impossible".

@@ -14,8 +14,8 @@ class WinterAndMandarins:
         # For each i, the i-th element of input_array represents the number of mandarins in the i-th bag.
         # You are also given an int input_int .
         # You want to choose exactly input_int input_array and distribute them among you and your friends.
-        #### chosen = choose(bags, K)
-        possibilities = subsets(bags, K)
+        #### chosen = choose(input_array, input_int)
+        possibilities = subsets(input_array, input_int)
         # To be as fair as possible, you want to minimize the difference between the chosen bag with most mandarins and the chosen bag with fewest mandarins.
         def mapping0(possibility):
             #### possibilities = possibility

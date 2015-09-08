@@ -8,8 +8,8 @@ class SumOfPower:
         
         # You are given a int[] input_array .
         # At any moment, you may choose a nonempty contiguous subsequence of input_array .
-        #### possibilities = subsequence(array)
-        possibilities = csubsets(array)
+        #### possibilities = subsequence(input_array)
+        possibilities = csubsets(input_array)
         # Whenever you do so, you will gain power equal to the sum of all elements in the chosen subsequence.
         def mapping0(possibility):
             #### possibilities = possibility

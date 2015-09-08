@@ -44,6 +44,8 @@ class Sentence2Word(Crf):
             label = get_codeline_type(codeline)
             if not label:
                 continue
+            translation = clean_codeline(translation)
+            codeline = clean_codeline(codeline)
             transcodedict = get_transdict(translation, codeline)
             transwords = transcodedict.keys() 
             if not transcodedict:

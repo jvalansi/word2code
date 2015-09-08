@@ -25,7 +25,7 @@ class GoodCompanyDivTwo:
         # Each employee of the company has their own department.
         # The department of employee x is formed by employee x and all the employees such that x is their boss.
         def mapping0(possibility):
-            #### def valid(possibility0): return is(x, boss[employees])
+            #### def valid(possibility0): return formed(x, boss[possibility0])
             def valid(possibility0): return eq(possibility, input_array1[possibility0])
             #### def reduce(possibility0): return and([x], possibility0)
             def reduce(possibility0): return add([possibility], possibility0)

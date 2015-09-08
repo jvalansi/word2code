@@ -1,4 +1,4 @@
-from operator import *
+from problem_utils import *
 
 
 class FoxAndGame:
@@ -16,7 +16,7 @@ class FoxAndGame:
             #### possibilities = possibility
             possibilities = possibility
             #### reduce = lambda possibility: (0 if be(i, '---') else (1 if be(i, 'o--') else (2 if be(i, 'oo-') else (3 if be(i, 'ooo') else None))))
-            reduce = (lambda possibility: (0 if is_(possibility, '---') else (1 if is_(possibility, 'o--') else (2 if is_(possibility, 'oo-') else (3 if is_(possibility, 'ooo') else None)))))
+            reduce = (lambda possibility: if_(is_(possibility, '---'), [0, if_(is_(possibility, 'o--'), [1, if_(is_(possibility, 'oo-'), [2, if_(is_(possibility, 'ooo'), [3, None])])])]))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Return the total number of stars Ciel has at the moment.

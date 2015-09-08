@@ -13,8 +13,8 @@ class BasketsWithApples:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: (len(possibility) * excess(possibility))
-            reduce = (lambda possibility: (len(possibility) * min(possibility)))
+            #### reduce = lambda possibility: *(len(possibility), excess(possibility))
+            reduce = (lambda possibility: mul(len(possibility), min(possibility)))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # You will be given a int[] input_array where the i-th element of input_array is the number of input_array in the i-th basket.

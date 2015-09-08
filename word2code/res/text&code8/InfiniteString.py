@@ -12,8 +12,8 @@ class InfiniteString:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: copies(possibility, inf)[:inf]
-            reduce = (lambda possibility: mul(possibility, inf)[:inf])
+            #### reduce = lambda possibility: getitem(copies(possibility, infinitely), slice(0,inf))
+            reduce = (lambda possibility: getitem(mul(possibility, inf), slice(0,inf)))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Note that the string f(input_array0) still has a beginning.
@@ -23,8 +23,8 @@ class InfiniteString:
         # You are given Strings input_array0 and input_array1 .
         # Check whether f( input_array0 ) equals f( input_array1 ).
         # If the two infinite strings are equal, return "Equal".
-        #### possibilities = [s, t]
-        possibilities = [input_array0, input_array1]
+        #### possibilities = list([s, t])
+        possibilities = list([input_array0, input_array1])
         #### reduce = lambda possibility: if(equal(* possibility), ["Equal", "Not equal"])
         reduce = (lambda possibility: if_(eq(* possibility), ['Equal', 'Not equal']))
         #### return reduce(map(mapping0, possibilities))

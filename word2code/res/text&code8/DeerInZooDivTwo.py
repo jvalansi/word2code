@@ -18,7 +18,7 @@ class DeerInZooDivTwo:
         def valid0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: exactly(sum(antlers), lost((2 * N), K))
+            #### reduce = lambda possibility: exactly(sum(antlers), lost((2 * N), input_int2))
             reduce = (lambda possibility: eq(sum(possibility), sub((2 * input_int1), input_int2)))
             #### return(reduce(possibilities))
             return reduce(possibilities)

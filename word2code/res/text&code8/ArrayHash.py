@@ -17,8 +17,8 @@ class ArrayHash:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: ((position(alphabet, input[Element[i]][Position[j]]) + Element[i]) + Position[j])
-            reduce = (lambda possibility: ((indexOf(types, input_array[possibility[0]][possibility[1]]) + possibility[0]) + possibility[1]))
+            #### reduce = (lambda possibility: +(+(position(alphabet, input[Element[i]][Position[j]]), Element[i]), Position[j]))
+            reduce = (lambda possibility: add(add(indexOf(types, input_array[possibility[0]][possibility[1]]), possibility[0]), possibility[1]))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # All positions are 0-based.

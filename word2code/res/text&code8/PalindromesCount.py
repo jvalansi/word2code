@@ -24,8 +24,8 @@ class PalindromesCount:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: insert(A, possibility, B)
-            reduce = (lambda possibility: insert(A, possibility, B))
+            #### reduce = lambda possibility: insert(input_array0, possibility, input_array1)
+            reduce = (lambda possibility: insert(input_array0, possibility, input_array1))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # You agreed to help her and even tell how many different variants of such insertions exist.

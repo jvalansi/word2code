@@ -16,30 +16,25 @@ class RaiseThisBarn:
         # This string describes the desired layout of the barn: the character 'c' represents a section with a cow, and the character '.'
         # represents an empty section.
         # After she raises the barn, Applejack will build a wall that will divide the barn into two separate parts: one containing the first k sections and the other containing the last N-k sections, for some integer k. Each part must contain at least one section.
-        def parts(possibility):
-            #### possibilities = possibility
-            possibilities = possibility
-            #### reduce = lambda possibility: (str[:k], str[k:])
-            reduce = (lambda possibility: (str[:possibility], str[possibility:]))
-            #### return(reduce(possibilities))
-            return reduce(possibilities)
+        #### possibilities = parts(input_array, two)
+        possibilities = cpartitions(input_array, 2)
         # (I.e., k must be between 1 and N-1, inclusive.)
-        #### k = range(1,inclusive(N-1))
-        possibilities = range(1, inclusive((N - 1)))
         # Additionally, Applejack wants both parts to contain exactly the same number of cows.
         def valid0(possibility):
             #### reduce = lambda possibility: same(*list(possibility))
             reduce = (lambda possibility: eq(*list(possibility)))
             #### mapping = lambda part: contain(part, cows)
-            mapping = (lambda part: countOf(part, types['cows']))
-            #### possibilities = parts(k)
-            possibilities = parts(possibility)
+            mapping = (lambda possibility: countOf(possibility, types['cows']))
+            #### possibilities = possibility
+            possibilities = possibility
             #### return(reduce(map(mapping, possibilities)))
             return reduce(map(mapping, possibilities))
         # Return the number of possible positions for the wall.
         # In other words, return the number of choices for the integer k such that all the conditions above are satisfied.
-        #### return number(filter(valid0, k))
-        return len(filter(valid0, possibilities))
+        #### reduce = (lambda possibility: number(possibility))
+        reduce = (lambda possibility: len(possibility))
+        #### return reduce(filter(valid0, possibilities))
+        return reduce(filter(valid0, possibilities))
 
 def example0():
 	cls = RaiseThisBarn()

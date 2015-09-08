@@ -12,19 +12,19 @@ class TextStatistics:
         # One nice statistic is the average word length in the input_array.
         # A word is a maximal continuous sequence of letters ('a'-'z', 'A'-'Z').
         # Words can be separated by spaces, digits, and punctuation marks.
-        #### words = separated((('[' + escape(((spaces + digits) + punctuation))) + ']'), text)
-        possibilities = split((('[' + escape(((whitespace + digits) + punctuation))) + ']'), text)
+        #### words = separated((('[' + escape(((spaces + digits) + punctuation))) + ']'), input_array)
+        possibilities = split((('[' + escape(((whitespace + digits) + punctuation))) + ']'), input_array)
         # The average word length is the sum of all the words' lengths divided by the total number of words.
         # For example, in the input_array "This is div2 easy problem.
         # ", there are 5 words: "This", "is", "div", "easy", and "problem".
         # The sum of the word lengths is 4+2+3+4+7=20, so the average word length is 20/5=4.
         # Given a String input_array , return the average word length in it.
-        #### def reduce(possibility): return average(list(possibility))
-        def reduce(possibility): return average(list(possibility))
+        #### def reduce(possibility): return average(possibility)
+        def reduce(possibility): return average(possibility)
         #### def mapping(word): return length(word)
-        def mapping(word): return len(word)
+        def mapping(possibility): return len(possibility)
         #### def valid(word): return word
-        def valid(word): return word
+        def valid(possibility): return possibility
         #### return(reduce(map(mapping, filter(valid, possibilities))))
         return reduce(map(mapping, filter(valid, possibilities)))
         # If there are no words in the input_array, return 0.0.

@@ -20,8 +20,8 @@ class TheBrickTowerEasyDivTwo:
         # A brick can be placed either on the ground, or on a brick of a different color.
         # (I.e., you are not allowed to put two bricks of the same color immediately on one another.)
         def valid0(possibility):
-            #### def reduce(possibility): return (tower and no(list(possibility)))
-            def reduce(possibility0): return (possibility and not_(list(possibility0)))
+            #### def reduce(possibility): return and(tower, no(list(possibility)))
+            def reduce(possibility0): return and_(possibility, not_(list(possibility0)))
             #### def mapping(bricks): return bricks
             def mapping(bricks): return bricks
             #### possibilities = two(tower)

@@ -14,13 +14,13 @@ class EggCartons:
         def valid0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: exactly(sum(eggs), n)
+            #### reduce = lambda possibility: exactly(sum(possibility), input_int)
             reduce = (lambda possibility: eq(sum(possibility), input_int))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Return the minimal number of egg cartons he must buy.
-        #### possibilities = subsets(types*input_int)
-        possibilities = chain(*map((lambda x: combinations_with_replacement(types, x)), range(input_int)))
+        #### possibilities = all_combinations_with_replacement(types, input_int)
+        possibilities = all_combinations_with_replacement(types, input_int)
         #### def mapping(possibility): return number(possibility)
         def mapping(possibility): return len(possibility)
         #### def reduce(possibility): return minimal(possibility)

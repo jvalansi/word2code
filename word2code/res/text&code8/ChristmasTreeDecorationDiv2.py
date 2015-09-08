@@ -20,13 +20,8 @@ class ChristmasTreeDecorationDiv2:
         # (Different integers represent different colors.)
         # You are also given a description of the ribbons: two int[]s input_array1 and input_array2 with N-1 elements each.
         # For each i, there is a ribbon that connects the stars with numbers input_array1[i] and input_array2[i].
-        def mapping0(possibility):
-            #### possibilities = possibility
-            possibilities = possibility
-            #### reduce = lambda possibility: (x[i], y[i])
-            reduce = (lambda possibility: (input_array1[possibility], input_array2[possibility]))
-            #### return(reduce(possibilities))
-            return reduce(possibilities)
+        #### possibilities = connects(input_array1,input_array2)
+        possibilities = zip(input_array1,input_array2)
         # According to Alice, a ribbon that connects two stars with different colors is beautiful, while a ribbon that connects two same-colored stars is not.
         def valid0(possibility):
             #### possibilities = possibility
@@ -36,12 +31,10 @@ class ChristmasTreeDecorationDiv2:
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Compute and return the number of beautiful ribbons in Alice's tree.
-        #### possibilities = range(N)
-        possibilities = range(N)
         #### def reduce(possibility): return number(possibility)
         def reduce(possibility): return len(possibility)
         #### return reduce(filter(valid0, map(beautiful, ribbons)))
-        return reduce(filter(valid0, map(mapping0, possibilities)))
+        return reduce(filter(valid0, possibilities))
 
 def example0():
     col = [1,2,3,3]
