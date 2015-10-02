@@ -20,13 +20,13 @@ class CucumberMarket:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: (not greater(total(cucumbers), budget))
+            #### reduce = (lambda possibility: not(greater(total(cucumbers), input_int1)))
             reduce = (lambda possibility: not_(gt(sum(possibility), input_int1)))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # You are given the int[] input_array, the int input_int1 and the int input_int2.
         # Your method must return "YES" (quotes for clarity) if Cucumber Boy can buy any set of input_int2 unique cucumbers, and "NO" if there is some set of input_int2 cucumbers that is too expensive for him.
-        #### possibilities = set(cucumbers, k)
+        #### possibilities = set(cucumbers, input_int2)
         possibilities = subsets(input_array, input_int2)
         #### def reduce(possibility): return if(any(possibility), ['YES', 'NO'])
         def reduce(possibility): return if_(all(possibility), ['YES', 'NO'])

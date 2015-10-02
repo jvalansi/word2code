@@ -11,8 +11,8 @@ class SquareDigitNumbers:
         def valid0(possibility):
             #### def reduce(possibility): return only(possibility)
             def reduce(possibility): return all(possibility)
-            #### def mapping(digit): return contains(('0', '1', '4', '9'), digit)
-            def mapping(digit): return contains(('0', '1', '4', '9'), digit)
+            #### def mapping(digit): return contain(('0', '1', '4', '9'), digit)
+            def mapping(possibility): return contains(('0', '1', '4', '9'), possibility)
             #### possibilities = str(number)
             possibilities = str(possibility)
             #### return(reduce(map(mapping, possibilities)))

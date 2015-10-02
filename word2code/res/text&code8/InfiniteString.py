@@ -25,7 +25,7 @@ class InfiniteString:
         # If the two infinite strings are equal, return "Equal".
         #### possibilities = list([s, t])
         possibilities = list([input_array0, input_array1])
-        #### reduce = lambda possibility: if(equal(* possibility), ["Equal", "Not equal"])
+        #### reduce = lambda possibility: If(equal(* possibility), ["Equal", "Not equal"])
         reduce = (lambda possibility: if_(eq(* possibility), ['Equal', 'Not equal']))
         #### return reduce(map(mapping0, possibilities))
         return reduce(map(mapping0, possibilities))

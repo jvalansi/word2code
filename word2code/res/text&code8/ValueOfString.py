@@ -20,7 +20,7 @@ class ValueOfString:
         def mapping1(possibility):
             #### def reduce(possibility): return number(possibility)
             def reduce(possibility): return sum(possibility)
-            #### def mapping(letter): return less_than_or_equal(letter, s[possibility])
+            #### def mapping(letter): return less(letter, s[possibility])
             def mapping(letter): return le(letter, s[possibility])
             #### possibilities = s
             possibilities = s

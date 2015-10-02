@@ -72,7 +72,7 @@ class Sentence2WordStruct(CrfStruct):
         for translation, codeline in zip(translations, code):
             codewords = nltk.word_tokenize(codeline)
             transwords = nltk.word_tokenize(translation)
-            label = get_codeline_type(codewords)
+            label = get_codeline_type(codeline)
             if not label:
                 continue
             transcodedict = dict(zip(transwords,codewords))
@@ -140,14 +140,11 @@ class Sentence2WordStruct(CrfStruct):
 
 def main():
     s2ws = Sentence2WordStruct()
-    problem_dir = os.path.join('res', 'text&code8') 
+    problem_dir = os.path.join('res', 'text&code8', 'solutions', 'AverageAverage', 'Good') 
 #     problem_dir = os.path.join('res', 'small') 
     indir = problem_dir
     train_dir = os.path.join(problem_dir, 'word_train_struct')
-    fname = 'GogoXBallsAndBinsEasy.py'
-    fname = 'PalindromesCount.py'
-#     struct_problem(fname, indir, outdir)
-#     s2ws.build_train(indir, train_dir, True)
+    s2ws.build_train(indir, train_dir, True)
     
     test_indir = indir
 #     test_indir = os.path.join('res', 'problems_test')
@@ -165,10 +162,15 @@ def main():
     labels.remove('O')
     s2w = Sentence2Word()
 #     print(s2w.calc_score(outdir, n, labels=labels))
-    result1 = s2w.calc_score(outdir, n)
+#     result1 = s2w.calc_score(outdir, n)
     online_dir = outdir+'_online'
-    result2 = s2w.calc_score(online_dir, n)
-    print(set(result2).difference(set(result1)))
+#     result2 = s2w.calc_score(online_dir, n)
+#     print(set(result2).difference(set(result1)))
+
+    fname = 'GogoXBallsAndBinsEasy.py'
+    fname = 'PalindromesCount.py'
+#     struct_problem(fname, indir, outdir)
+
 
 if __name__ == '__main__':
     main()

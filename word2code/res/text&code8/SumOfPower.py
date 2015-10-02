@@ -20,7 +20,7 @@ class SumOfPower:
             return reduce(possibilities)
         # You chose each possible contiguous subsequence exactly once, each time gaining some power.
         # Compute and return the total amount of power you gained.
-        #### def reduce(total): return sum(possibility)
+        #### def reduce(total): return total(possibility)
         def reduce(possibility): return sum(possibility)
         #### return reduce(map(power, possibilities))
         return reduce(map(mapping0, possibilities))

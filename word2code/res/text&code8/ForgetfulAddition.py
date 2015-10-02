@@ -25,7 +25,7 @@ class ForgetfulAddition:
         # Compute and return the smallest possible result after inserting the missing plus sign
         #### possibilities = range(N)
         possibilities = range(N)
-        #### def mapping(possibility): return result(list2str(inserting(expression, possibility, plus_sign)))
+        #### def mapping(possibility): return result(list2str(inserting(expression, possibility, plus)))
         def mapping(possibility): return eval(list2str(insert(input_array, possibility, '+')))
         #### def reduce(possibility): return smallest(possibility)
         def reduce(possibility): return min(possibility)

@@ -18,7 +18,7 @@ class UniqueDigits:
             #### return(reduce(map(mapping, possibilities)))
             return reduce(map(mapping, possibilities))
         # Return the total number of such integers.
-        #### possibilities = range(inf)
+        #### possibilities = integers(inf)
         possibilities = range(inf)
         #### def reduce(possibility): return number(possibility)
         def reduce(possibility): return len(possibility)

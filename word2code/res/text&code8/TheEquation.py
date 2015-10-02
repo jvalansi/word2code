@@ -14,7 +14,7 @@ class TheEquation:
         def reduce(possibility): return min(possibility)
         #### def mapping((a, b)): return sum((a, b))
         def mapping((a, b)): return sum((a, b))
-        #### possibilities = product(range(1, input_int2), repeat=2)
+        #### possibilities = product(integers(1, input_int2), repeat=2)
         possibilities = product(range(1, input_int2), repeat=2)
         #### def valid((a, b)): return divisor(input_int2, ((a * input_int0) + (b * input_int1)))
         def valid((a, b)): return is_divisor(input_int2, ((a * input_int0) + (b * input_int1)))

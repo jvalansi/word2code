@@ -17,7 +17,7 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem.lancaster import LancasterStemmer
 from nltk.stem import SnowballStemmer 
 from nltk.stem import WordNetLemmatizer
-from utils import is_func, check_solution, clean_word
+from utils import is_func, check_solution, clean_word, get_transdict
 
 wn_similarity = wn.wup_similarity
 # stemmer = SnowballStemmer('english')
@@ -183,11 +183,9 @@ def get_translation_dict(translations, code, stem=True):
     '''
     transdict = {}
     for translation,codeline in zip(translations,code):
-        codewords = nltk.word_tokenize(codeline)
-        transwords = nltk.word_tokenize(translation)
-        if stem:
-            transwords = [stemmer.lemmatize(word, 'v') for word in transwords]
-        transdict.update(dict(zip(transwords,codewords)))
+        transdict.update(get_transdict(translation, codeline))
+    if stem:
+        transdict = {stemmer.lemmatize(word, 'v'): codeword for word,codeword in transdict.items()}
     return transdict
 
 
@@ -229,7 +227,8 @@ def check_problem(path, fname, p):
                 logger.logging.info(clean_word(transword))
                 logger.logging.info(stemmer.lemmatize(transword, 'v'))
                 logger.logging.info(codeword_dict)
-                logger.logging.info(codeword_dict[codeword])
+                if codeword in codeword_dict:
+                    logger.logging.info(codeword_dict[codeword])
                 logger.logging.info(codeword)
                 try:
                     logger.logging.info(model.similarity(stemmer.lemmatize(transword, 'v'), codeword_dict[codeword]))
@@ -266,7 +265,7 @@ def check_words(path, p):
 def main():
     p_thresh = 1
     p = 1
-    problem_dir = 'res/text&code6'
+    problem_dir = 'res/text&code8'
 #     print(check_words(problem_dir, p_thresh))
 #     print(check_words(problem_dir, p))
     fname = 'AverageAverage.py'
@@ -281,12 +280,12 @@ def main():
 #     fname = 'MountainRanges.py'
 #     fname = 'Multiples.py'
     p = 4
-#     print(check_problem(problem_dir, fname, p))
+    print(check_problem(problem_dir, fname, p))
 
-    results = {}
-    for p in range(1,20):
-        results[p] = check_words(problem_dir, p)
-    print(', '.join(['{}: {}'.format(k, len(v)) for k, v in results.items()]))
+#     results = {}
+#     for p in range(1,20):
+#         results[p] = check_words(problem_dir, p)
+#     print(', '.join(['{}: {}'.format(k, len(v)) for k, v in results.items()]))
          
 #     problem_dir = 'res/text&code5'
 #     1: 19, 2: 20, 3: 22, 4: 23, 5: 23, 6: 23, 7: 23, 8: 23, 9: 24, 10: 24, 11: 24, 1

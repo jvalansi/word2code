@@ -15,7 +15,7 @@ import json
 import numpy as np
 from sklearn.metrics import accuracy_score
 from pystruct.learners.structured_perceptron import StructuredPerceptron
-from itertools import combinations, combinations_with_replacement
+from itertools import combinations, combinations_with_replacement, product
 from dependency_parser import dep2word, dep2ind, Node, sentence2dependencies
 # import problem2sentence
 import re
@@ -24,7 +24,7 @@ import ast
 from utils import is_func, check_solution, clean_name
 from learner_wrapper import LearnerWrapper
 import online_learning
-from online_learning import online_learn
+from online_learning import online_learn, online_update_from_examples
 from datetime import datetime
 
 
@@ -81,11 +81,10 @@ def get_features(path, build=False):
 class CrfStruct(LearnerWrapper):
     
     def get_nodes(self, dependencies):
-        root = Node('ROOT-0')
-        nodes = root.deps2tree(dependencies).get_nodes()
+        nodes = Node('ROOT-0').deps2tree(dependencies).get_nodes()
         return nodes
     
-    def label_problem(self, indir, fname, outdir, only_code=False):
+    def label_problem(self, indir, fname, outdir=None, only_code=False):
         with open(os.path.join(indir,fname),'r') as fp:
             problem = fp.read()
         parse = parse_problem(problem)
@@ -99,8 +98,9 @@ class CrfStruct(LearnerWrapper):
             struct_input = self.sentence2input(sentence_parse)
             problem_labels['inputs'].append(struct_input)
             problem_labels['outputs'].append(struct_output)
-        with open(os.path.join(outdir,clean_name(fname)+'.label'), 'w') as fp:
-            json.dump(problem_labels, fp, indent=4)
+        if outdir:
+            with open(os.path.join(outdir,clean_name(fname)+'.label'), 'w') as fp:
+                json.dump(problem_labels, fp, indent=4)
         return problem_labels
 
     
@@ -132,10 +132,12 @@ class CrfStruct(LearnerWrapper):
         Y_test = []
         if not test_dir:
             test_dir = train_dir
+            test_fnames = [fname]
+        else:
+            test_fnames = sorted(os.listdir(test_dir)) 
         train_fnames = sorted(os.listdir(train_dir))
         if fname in train_fnames:
             train_fnames.remove(fname)
-        test_fnames = [fname]            
         for fname_ in train_fnames:
             if not fname_.endswith('.label'):
                 continue
@@ -195,7 +197,8 @@ class CrfStruct(LearnerWrapper):
             Y.append(y)
         return Y
     
-    def test_file(self, train_dir, fname, features, learner, model, outdir, test_dir=None, overwrite=True, online=False, n=2, online_dir=None):
+    def test_file(self, train_dir, fname, features, learner, model, outdir, 
+                  test_dir=None, overwrite=True, online=False, n=2, online_dir=None, sol_dir=None):
         if online and online_dir:
             json_dir = outdir
             outdir = online_dir
@@ -212,7 +215,7 @@ class CrfStruct(LearnerWrapper):
             
             X_train.extend(X_test)
             Y_train.extend(probable_Y)
-
+            
         train_states = np.unique(np.hstack([y.ravel() for y in Y_train]))
         if len(train_states) != len(output_features):
             return
@@ -226,6 +229,36 @@ class CrfStruct(LearnerWrapper):
 # #             print(y)
 
         learner.fit(X_train, Y_train)
+        
+        if online and sol_dir:  
+            # get all Y_goods from good folder
+            # for each Y_good get most similar Y_bads
+            # for each pair of Y_good, Y_bad update learner
+            Y_goods = []
+            good_dir = os.path.join(sol_dir, 'Good')
+            self.build_train(good_dir, good_dir)
+            good_features = get_features(good_dir)
+            for sol_fname in os.listdir(good_dir):
+                if not sol_fname.endswith('.label'):
+                    continue
+                (X_good, Y_good) = self.get_data_from_file(good_dir, sol_fname, good_features)
+                Y_goods.append(Y_good)
+            Y_bads = []
+            bad_dir = os.path.join(sol_dir, 'Good')
+            self.build_train(bad_dir, bad_dir)
+            bad_features = get_features(bad_dir)
+            for sol_fname in os.listdir(bad_dir):
+                if not sol_fname.endswith('.label'):
+                    continue
+                (X_bad, Y_bad) = self.get_data_from_file(bad_dir, sol_fname, bad_features)
+                Y_bads.append(Y_bad)
+            pairs = {}
+            for (Y_good,Y_bad) in product(Y_goods,Y_bads):
+                if Y_good not in pairs or pairs[Y_good] > learner.model.loss(Y_good, Y_bad): #TODO: check >
+                    pairs[Y_good] = learner.model.loss(Y_good, Y_bad)
+            effective_lr = (learner.max_iter+learner.decay_t0)**learner.decay_exponent
+            for Y_good, Y_bad in pairs.items():
+                learner = online_update_from_examples(X_test, Y_good, Y_good, learner, 0, effective_lr)
         
         # Evaluate using confusion matrix.
         Y_pred = learner.predict(X_test)
@@ -242,7 +275,7 @@ class CrfStruct(LearnerWrapper):
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
 
     
-    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, n=2, online_dir=None):
+    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, online=False, n=2, online_dir=None, sol_dir=None):
         if os.path.exists(outdir) and overwrite:
             shutil.rmtree(outdir)
         if not os.path.exists(outdir):
@@ -266,13 +299,13 @@ class CrfStruct(LearnerWrapper):
                 continue
             print(datetime.now())
             print(fname)
-            self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite)
-            self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite, online=True, n=2, online_dir=online_dir)
+            self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite, online, n=2, online_dir=online_dir, sol_dir=sol_dir)
     
     
 
 if __name__ == '__main__':
     pass
 
-#TODO: use part of speech for node features
 #TODO: use ast as Y
+
+#TODO: use good vs. bad examples for learning 

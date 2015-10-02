@@ -30,11 +30,11 @@ class MinimalDifference:
         # If there are multiple possible values for X, return the smallest among them.
         # You are given three integers: input_int0, input_int1 and input_int2.
         # Return the integer X between input_int0 and input_int1, inclusive, such that the absolute difference between the digit sum of X and the digit sum of input_int2 is as small as possible. If there are multiple possible values for X, return the smallest among them.
-        #### possibilities = between(A, inclusive(B))
+        #### possibilities = between(input_int0, inclusive(input_int1))
         possibilities = range(input_int0, inclusive(input_int1))
-        #### def mapping(possibility): return absolute(difference(digit_sum(possibility), digit_sum(C)))
+        #### def mapping(possibility): return absolute(difference(digit_sum(possibility), digit_sum(input_int2)))
         def mapping(possibility): return abs(sub(mapping0(possibility), mapping0(input_int2)))
-        #### def valid(possibility): return is(mapping(possibility), as_small_as_possible(map(mapping, possibilities)))
+        #### def valid(possibility): return is(mapping(possibility), small(map(mapping, possibilities)))
         def valid(possibility): return is_(mapping(possibility), min(map(mapping, possibilities)))
         #### def reduce(possibility): return smallest(possibility)
         def reduce(possibility): return min(possibility)

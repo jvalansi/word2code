@@ -17,8 +17,8 @@ class SwappingDigits:
         # In other words, you may choose a pair of distinct indices i and j, and swap the characters input_array [i] and input_array [j].
         #### possibilities = choose(indices(N), pair)
         possibilities = combinations_with_replacement(range(N), 2)
-        #### integers = (lambda possibility: list2str(swap(list(num), possibility))
-        mapping0 = (lambda possibility: list2str(swap(list(num), possibility)))
+        #### integers = (lambda possibility: list2str(swap(list(input_array), possibility))
+        mapping0 = (lambda possibility: list2str(swap(list(input_array), possibility)))
         # Note that you may also leave the original number unchanged.
         # The new String must again describe a valid positive integer, i.e., it must not have any leading zeros.
         def valid0(possibility):

@@ -12,7 +12,7 @@ class LCMRange:
         
         # The least common multiple of a group of integers is the smallest number that can be evenly divided by all the integers in the group.
         def reduce0(possibility):
-            #### possibilities = range(1,inf)
+            #### possibilities = number(1,inf)
             possibilities = range(1, inf)
             #### def valid(possibility0): return all(evenly_divided(possibility1, number) for possibility1 in possibility)
             def valid(possibility0): return all((is_divisor(possibility1, possibility0) for possibility1 in possibility))

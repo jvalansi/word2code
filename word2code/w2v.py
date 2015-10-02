@@ -53,7 +53,7 @@ class W2V:
             fname = 'text8.bin'
             fname = 'brown.bin'
             fname = 'news.bin'
-            fname = 'news_pos.bin'
+#             fname = 'news_pos.bin'
         fpath = os.path.join('res', fname)
         if not os.path.exists(fpath):
             self.create_model(clean_name(fname))
@@ -186,8 +186,8 @@ def main():
 #     name = 'text8'
 #     name = 'brown'
 #     name = 'GoogleNews-vectors-negative300'
-    name = 'news_pos'
-    w2v = W2V()
+    name = 'news_pos.bin'
+    w2v = W2V(name)
 #     w2v.create_model(name)
     print(len(w2v.model.vocab))
 #     print(w2v.model.vocab.items()[:10])
@@ -195,9 +195,9 @@ def main():
 
 #     print(len(model.vocab.keys()))    
 
-    eval1 = w2v.evaluate_model('news_pos.bin')
-#     eval2 = w2v.evaluate_model('news.bin')
-    print(eval1)
+#     eval1 = w2v.evaluate_model('news_pos.bin')
+    eval2 = w2v.evaluate_model('news.bin')
+#     print(eval1)
 #     print(eval2)
 
     

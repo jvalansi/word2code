@@ -21,8 +21,8 @@ class DifferentStrings:
         # Choose a character c and add it to the end of input_array1.
         # Apply the operations in such a way that input_array1 and input_array2 have the same length and the difference between them is as small as possible.
         # Return this minimum possible difference.
-        #### def mapping(possibility): return len(difference(list(possibility), list(input_array1)))
-        def mapping(possibility): return len(diff(list(possibility), list(input_array1)))
+        #### def mapping(possibility): return len(difference(possibility, input_array1))
+        def mapping(possibility): return len(diff(possibility, input_array1))
         #### possibilities = csubsets(input_array2, N)
         possibilities = csubsets(input_array2, N)
         #### def reduce(possibility): return minimum(possibility)

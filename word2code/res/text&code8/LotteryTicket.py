@@ -25,7 +25,7 @@ class LotteryTicket:
         # Return "POSSIBLE" if it is possible or "IMPOSSIBLE" if it is not (all quotes for clarity).
         #### possibilities = input_array
         possibilities = input_array
-        #### reduce = lambda possibility: if_(possibility, ['POSSIBLE', 'IMPOSSIBLE'])
+        #### reduce = lambda possibility: if(possibility, ['POSSIBLE', 'IMPOSSIBLE'])
         reduce = (lambda possibility: if_(possibility, ['POSSIBLE', 'IMPOSSIBLE']))
         #### return reduce(possible(possibilities))
         return reduce(reduce0(possibilities))

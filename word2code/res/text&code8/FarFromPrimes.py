@@ -11,8 +11,8 @@ class FarFromPrimes:
         # The first prime numbers are 2, 3, 5, 7, 11, 13, 17, ...
         # The number N is considered far from primes if there are no prime numbers between N-10 and N+10, inclusive, i.e., all numbers N-10, N-9,  ..., N-1, N, N+1, ..., N+9, N+10 are not prime.
         def valid0(possibility):
-            #### possibilities = between(N-10, inclusive(N+10))
-            possibilities = range((possibility - 10), inclusive((possibility + 10)))
+            #### possibilities = numbers(N-10, inclusive(N+10))
+            possibilities = range(possibility-10, inclusive(possibility+10))
             #### def valid(possibility): return prime(possibility)
             def valid(possibility): return is_prime(possibility)
             #### def reduce(possibility): return no(possibility)
@@ -21,7 +21,7 @@ class FarFromPrimes:
             return reduce(filter(valid, possibilities))
         # You are given an int input_int1 and an int input_int2.
         # Return the number of far from primes numbers between input_int1 and input_int2, inclusive.
-        #### possibilities = between(A, inclusive(B))
+        #### possibilities = numbers(input_int1, inclusive(input_int2))
         possibilities = range(input_int1, inclusive(input_int2))
         #### def reduce(possibility): return number(possibility)
         def reduce(possibility): return len(possibility)

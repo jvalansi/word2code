@@ -11,18 +11,49 @@ import astor
 from utils import *
 import logger
 import doctest
+import ast
 
 class Node:
-    def __init__(self, name = '', parent = None, children = None, ntype = None):
+    def __init__(self, name='', parent=None, children=None, ntype=None, code=None):
         self.name = name
         self.parent = parent
         self.ntype = ntype
         if not children:
             self.children = []
+        if code:
+            self.code2tree(code)
     
-    def insert_child(self, node):
-        self.children.append(node)
+    def insert_child(self, node, ind=-1):
+        if ind==-1:
+            self.children.append(node)
+        else:
+            self.children.insert(ind, node)            
         node.parent = self
+
+    def move_child(self, child, target):
+        self.children.remove(child)
+        target.insert_child(child)
+
+    def remove_child(self, child):
+        self.children.remove(child)
+        for child_ in child.children:
+            child_.parent = self
+            self.children.append(child_)
+        
+    def safe_remove(self):
+        if not self.parent:
+            if self.children:
+                node = self.children[0]
+                self.swap(node)
+                node.safe_remove()
+            else:
+                node = Node('')
+                self.swap(node)
+        else:
+            self.parent.children.remove(self)
+            for child in self.children:
+                child.parent = self.parent
+                self.parent.children.append(child)
 
     
     def is_loop(self, name):
@@ -63,6 +94,7 @@ class Node:
             self.children.append(node)
             deps_.remove(dep)
             node.deps2tree(deps_)
+        return self
 
     def tree2deps(self):
         deps = []
@@ -70,21 +102,6 @@ class Node:
             deps.append([child.ntype, self.name, child.name])
             deps.extend(child.tree2deps())
         return deps
-
-    def split_args(self, args):
-        level = 0
-        s = 0
-        args_ = []
-        for i,c in enumerate(args):
-            if c == '(' or c == '[':
-                level += 1
-            if c == ')' or c == ']':
-                level -= 1
-            if level == 0 and c in [',',' ']:
-                args_.append(args[s:i])
-                s = i+1
-        args_.append(args[s:])
-        return args_                
     
     def ast2tree(self, parse):
         if hasattr(parse, 'func'):
@@ -113,7 +130,7 @@ class Node:
         return self
         
     
-    def code2tree(self, code):
+    def code2tree_(self, code):
     #     return(min([mapping(possibility, input_array) for possibility in possibilities]))
     #     ROOT, return
     #     return, min
@@ -144,10 +161,23 @@ class Node:
         args = m.group('args')
         if not args:
             return
-        args = func_node.split_args(args)
+        args = split_args(args)
         for arg in args:
-            func_node.code2tree(arg)
+            func_node.code2tree_(arg)
         
+    def code2tree(self, code):
+        try:
+            parse = ast.parse(code.strip())
+        except SyntaxError as e:
+            logger.logging.debug(e)
+            return
+        if not parse.body:
+            return
+        if not hasattr(parse.body[0], 'value'):
+            logger.logging.debug('no value node')
+            return
+        self.ast2tree(parse.body[0].value)
+
     def __str__(self):
         s = ''
         if self.ntype:
@@ -165,21 +195,6 @@ class Node:
         for child in self.children:
             nodes.extend(child.get_nodes())
         return nodes
-        
-    def safe_remove(self):
-        if not self.parent:
-            if self.children:
-                node = self.children[0]
-                self.swap(node)
-                node.safe_remove()
-            else:
-                node = Node('')
-                self.swap(node)
-        else:
-            self.parent.children.remove(self)
-            for child in self.children:
-                child.parent = self.parent
-                self.parent.children.append(child)
         
     def filter_words(self, words):
         '''
@@ -254,45 +269,133 @@ class Node:
 
     def fix_type(self):
         '''
-        make sure all children have the same type, otherwise, cast
+        if a func is a child of a non-func - swap
+
+        >>> root = Node(code = 'len(set(possibility))')
+        >>> root.fix_type()
+        >>> print(root)
+        len(set(possibility))
+
+        >>> root = Node(code = 'len(possibility(set))')
+        >>> root.fix_type()
+        >>> print(root)
+        len(set(possibility))
+        
+        if a func is a comparison, the children must be of same type
+        >>> root = Node(code = 'eq(1, diff(possibility, input_array))')
+        >>> root.fix_type()
+        >>> print(root)
+        eq(1, len(diff(possibility, input_array)))
+                
+        >> if the number of arguments is too small, add possibility argument
+        >>> root = Node(code = 'sub(max(possibility), min)')
+        >>> root.fix_type()
+        >>> print(root)
+        sub(max(possibility), min(possibility))
+
+        >>> root = Node(code = 'indexOf(min(possibility))')
+        >>> root.fix_type()
+        >>> print(root)
+        indexOf(possibility, min(possibility))
+        
+        >>> root = Node(code = 'not_(startswith(0))')
+        >>> root.fix_type()
+        >>> print(root)
+        not_(startswith(possibility, 0))
+
+        if a var is a child of another var, it should move up to the parent
+        >>> root = Node(code = 'subsets(input_array(input_int2))')
+        >>> root.fix_type()
+        >>> print(root)
+        subsets(input_array, input_int2)
+
         '''
         for child in self.children:
             child.fix_type()
-        try:
-#             print(map(str, self.children))
-            children_types = [type(eval(str(child))).__name__ for child in self.children]
-        except (TypeError, NameError, SyntaxError, ValueError) as e:
-            logger.logging.debug('eval Error')
-            logger.logging.debug(e)
-            logger.logging.debug(e.args)
-            return
-        if 'int' in children_types:
-#             children = copy.copy(self.children)
-            for child, child_type in zip(self.children, children_types):
-                if child_type == 'list':
-                    node = Node('len')
-                    self.children.remove(child)
-                    self.children.append(node)
-                    node.parent = self
-                    node.children.append(child)
-                    child.parent = node
+        if self.parent and not is_func(self.parent.name) and is_func(self.name):
+            self.swap(self.parent)
+        children_types = get_types(self.children)
+        if is_comparison(self.name) and len(children_types) == 2 and ne(* children_types):
+            self = cast_to_similar(self)
+        self.children = insert_possibility(self)
+        if not is_func(self.name) and self.children and not is_func(self.children[0].name):
+            self.move_child(self.children[0], self.parent)
         
-    def clean_duplicates(self, nodes=[]):
+    def mark_duplicates(self, nodes=None):
+        if nodes == None:
+            nodes = [self.name]
         for child in self.children:
-            child.clean_duplicates(nodes)
-        if self.name in nodes:
-            self.safe_remove()
-        else:
-            nodes.append(self.name)
+            if child.name in nodes:
+                child.name = '#DUPLICATE'
+            else:
+                nodes.append(child.name)
+            nodes = child.mark_duplicates(nodes)
+        return nodes
 
+    def eval_node(self):
+        try:
+            eval(str(self))
+        except (TypeError,NameError, SyntaxError, ValueError) as e:
+            return e
+        return None
+
+def insert_possibility(node):
+    if is_func(node.name) and not node.children:
+        new_node = Node('possibility')
+        return [new_node]
+    if not node.eval_node():
+        return node.children
+    for i in range(len(node.children)+1):
+        tmp_node = copy.deepcopy(node)
+        new_node = Node('possibility')
+        tmp_node.insert_child(new_node, i)
+        if tmp_node.eval_node():
+            continue
+        else:
+            return tmp_node.children
+    return node.children
+    
+
+def cast_to_similar(parent):
+    node_types = get_types(parent.children)
+    if 'int' in node_types:
+        for child in parent.children:
+            if hasattr(eval(str(child)), '__getitem__'):
+                new_node = Node('len')
+                parent.insert_child(new_node)
+                parent.move_child(child, new_node)
+    return parent
+
+                
 
 def clean_duplicates(tree):
-    deps = tree.tree2deps()
-    deps = map(tuple, deps)
-    deps = list(set(deps))
-    deps = map(list, deps)
-    new_tree = Node(tree.name)
-    return new_tree.deps2tree(deps)
+    '''
+    clean duplicated nodes
+
+    >>> root = Node()
+    >>> root.code2tree('len(set(possibility))')
+    >>> root = clean_duplicates(root)
+    >>> print(root)
+    len(set(possibility))
+            
+    >>> root = Node()
+    >>> root.code2tree('len(len(possibility))')
+    >>> root = clean_duplicates(root)
+    >>> print(root)
+    len(possibility)
+
+    >>> root = Node()
+    >>> root.code2tree('zip(zip(input_array1, zip, input_array1), zip, input_array1)')
+    >>> root = clean_duplicates(root)
+    >>> print(root)
+    zip(input_array1)
+    
+    :param tree:
+    '''
+    words = tree.get_nodes()
+    tree.mark_duplicates()
+    tree.filter_words(words)
+    return tree
 
 def dep2list(dep):
     m = re.match('^(.+)\((.+\-\d+)\'?, (.+\-\d+)\'?\)$', dep)
@@ -308,9 +411,22 @@ def dep2word(dep):
     return dep2dict(dep)['word']
 
 def dep2dict(dep):
-    m = re.search('(?P<word>[^-]+)?-?(?P<ind>\d+)?', dep)
-    return m.groupdict()
-
+    '''
+    transform a dependency syntax to word
+    >>> print(dep2dict('well-known-4'))
+    {'ind': 4, 'word': 'well-known'}
+    
+    :param dep:
+    '''
+    dep_split = dep.split('-')
+    try:
+        d = {}
+        d['ind'] = int(dep_split[-1])
+        d['word'] = '-'.join(dep_split[:-1])
+        return d
+    except ValueError:
+        return {'word': dep, 'ind':None}
+        
 # filter dependencies according to words
 #     unimportant words should be contracted to their parents
 def filter_dep(dependencies, words):
@@ -402,6 +518,25 @@ def get_features(sentence):
         m = dep2dict(dep[-1])
         features[int(m['ind'])-1] = dep[0] 
     return features
+
+
+def split_args(args):
+    level = 0
+    s = 0
+    args_ = []
+    for i,c in enumerate(args):
+        if c == '(' or c == '[':
+            level += 1
+        if c == ')' or c == ']':
+            level -= 1
+        if level == 0 and c in [',',' ']:
+            args_.append(args[s:i])
+            s = i+1
+    args_.append(args[s:])
+    return args_                
+
+def translate_code(type_codeline, codedict):
+    return str(Node(code=type_codeline).translate(codedict))
 
 def main():
     sentence = 'hello my friend, how are you?'

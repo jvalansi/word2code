@@ -11,46 +11,12 @@ import json
 import ast
 import logger
 from itertools import combinations, combinations_with_replacement
-from utils import check_solution, clean_word, clean_name
+from utils import check_solution, clean_word, clean_name, get_sentence_type,\
+    sentence_types
 from stanford_corenlp import tokenize_sentences
 from CRF import Crf
 from dependency_parser import get_features
 
-
-types = ['return', 'mapping', 'valid', 'reduce', 'possibilities']
-# types = ['return', 'mapping', 'valid', 'reduce', 'possibilities', 'types']
-# types = ['I']
-
-def get_type(sentence, translations, code, method):
-    '''
-    get the sentence type according to the code and method
-    
-    :param sentence:
-    :param translations:
-    :param code:
-    :param method:
-    '''
-    if not code:
-        return 'O'
-    if method[0]:
-        codewords = nltk.word_tokenize(method[0])
-        sentence_type = clean_word(codewords[1])
-        if sentence_type in types:
-            return sentence_type
-    if len(code) == 1:
-        codewords = nltk.word_tokenize(code[0])
-        sentence_type = clean_word(codewords[0])
-        if sentence_type in types:
-            return sentence_type
-        if sentence_type == 'def' and clean_word(codewords[1]) in types:
-            return clean_word(codewords[1])
-    else:
-        codewords = nltk.word_tokenize(code[-1])
-        if not method[0] and codewords[0] == 'return':
-            return 'return'
-#     print(method)
-#     print(code)
-    return 'O'
 
 def get_min_mask(sentwords,relevantwords):
     '''
@@ -92,7 +58,7 @@ class Problem2Sentence(Crf):
         pos = zip(*nltk.pos_tag(sentwords))[1]
         N = len(sentwords)
         features = get_features(sentence)
-        symbol = get_type(sentence, translations, code, method)
+        symbol = get_sentence_type(sentence, translations, code, method)
 #         symbol = symbol if symbol == 'O' else 'I'
         labels = ['O'] * N
         relevantwords = set()
@@ -109,7 +75,7 @@ class Problem2Sentence(Crf):
     #         labels[index] = 'B'+symbol
         return zip(sentwords,pos,features, labels)
             
-    def get_probable_sentence_label(self, sentences_json, sentence, n, labels=types):
+    def get_probable_sentence_label(self, sentences_json, sentence, n, labels=sentence_types):
         '''
         get the most probable sentence type for the given sentence
         
@@ -164,7 +130,7 @@ class Problem2Sentence(Crf):
                     expected_sents.append(i)
         return expected_sents
     
-    def get_expected_sentence_label(self, sentence, labels=types):
+    def get_expected_sentence_label(self, sentence, labels=sentence_types):
         '''
         get the actual type for the given sentence
         
@@ -186,7 +152,7 @@ class Problem2Sentence(Crf):
     #         check if n most probable sentences contain all important sentences
         if not labels:
 #             labels = ['I']
-            labels = types
+            labels = sentence_types
         with open(os.path.join(json_dir,fname),'r') as inputjson:
             problem_json = json.load(inputjson)
         results = []
@@ -213,32 +179,22 @@ def main():
     train_dir = os.path.join(indir, 'sentence_train')
     p2s.build_train(indir, train_dir)
 
-    test_indir = os.path.join('res', 'problems_test1')
-    test_dir = os.path.join(test_indir, 'sentence_test')
-#     p2s.build_train(test_indir, test_dir, only_code=False)
+#     test_indir = os.path.join('res', 'problems_test1')
+#     test_dir = os.path.join(test_indir, 'sentence_test')
+#     p2s.build_train(test_indir, test_dir)
 
     outdir = os.path.join(indir, 'sentence_json')
     p2s.test(train_dir, outdir)
 
-    test_outdir = os.path.join(test_indir, 'sentence_json')
+#     test_outdir = os.path.join(test_indir, 'sentence_json')
 #     p2s.test(train_dir, test_outdir, test_dir)
 
     n = 1
     print(p2s.calc_score(outdir, n, indir))
 
-    fname = 'AverageAverage.label'
-    fname = 'ChocolateBar.label'
-    fname = 'CompetitionStatistics.label'
-#     fname = 'ChristmasTreeDecorationDiv2.label'
-#     fname = 'Elections.label'
-#     fname = 'FarFromPrimes.label'
-#     fname = 'LittleElephantAndBallsAgain.label'
-    fname = 'ChocolateBar.py'
-    fname = 'MeasuringTemperature.py'
-    fname = 'SwappingDigits.py'
-#     fname = 'TheEquation.py'
-    p2s.label_problem(indir, fname, train_dir)
-    p2s.test_file(train_dir, clean_name(fname)+'.label', outdir)
+    fname = 'AlienAndPassword.py'
+#     p2s.label_problem(indir, fname, train_dir)
+#     p2s.test_file(train_dir, clean_name(fname)+'.label', outdir)
 #     print(check_problem(outdir, fname, n))
 
 

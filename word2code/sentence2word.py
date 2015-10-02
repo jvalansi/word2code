@@ -118,10 +118,10 @@ class Sentence2Word(Crf):
         expected_words = self.get_expected_label_words(sentence, word_type)
         result = set(expected_words).issubset(set(probable_words))
     #     result = all([not important for (sentprob,important,word) in sentprobs[n:]])
-#         if not result:
-        logger.logging.info(word_type)
-        logger.logging.info(set(probable_words))
-        logger.logging.info(set(expected_words))
+        if not result:
+            logger.logging.info(word_type)
+            logger.logging.info(set(probable_words))
+            logger.logging.info(set(expected_words))
         return result
     
     def check_problem(self, json_dir,fname,n, labels=None):
@@ -171,16 +171,16 @@ def main():
 #     s2w.test(train_dir, test_output_dir, test_dir)
 
     check_dir = output_dir
-    m = 2
-    print(s2w.calc_score(check_dir, m, indir))
-#     scores = {}
-#     for m in range(1,20):
-#         scores[m] = len(calc_score(check_dir, m, indir))
-#     print(scores)
-#     import matplotlib.pyplot as plt
-#     plt.plot(scores.values())
-#     plt.ylabel('some numbers')
-#     plt.show()
+#     m = 2
+#     print(s2w.calc_score(check_dir, m, indir))
+    scores = {}
+    for m in range(1,20):
+        scores[m] = len(s2w.calc_score(check_dir, m, indir))
+    print(scores)
+    import matplotlib.pyplot as plt
+    plt.plot(scores.values())
+    plt.ylabel('some numbers')
+    plt.show()
     
     fname = 'MountainRanges.label'
 #     fname = 'BlockTower.label'

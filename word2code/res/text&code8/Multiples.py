@@ -14,7 +14,7 @@ class Multiples:
         # Given a range of integers from input_int0 to input_int1 (inclusive), determine how many numbers within that range are evenly divisible by input_int2.
         #### possibilities = range(input_int0, inclusive(input_int1))
         possibilities = range(input_int0, inclusive(input_int1))
-        #### def valid(possibility): return divisible(factor, possibility)
+        #### def valid(possibility): return divisible(input_int2, possibility)
         def valid(possibility): return is_divisor(input_int2, possibility)
         #### def reduce(possibility): return how_many(possibility)
         def reduce(possibility): return len(possibility)

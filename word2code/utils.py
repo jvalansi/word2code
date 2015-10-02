@@ -11,10 +11,11 @@ import nltk
 import collections
 import re
 from problem_utils import *
-import resource
 import subprocess
 import threading
 import doctest
+import logger
+import string
 # from code_parser import clean_codeline
 
 
@@ -24,10 +25,10 @@ input_array0 = range(N)
 input_array1 = range(N)
 input_array2 = range(N)
 types = range(N)
-input_int = N
-input_int0 = N
-input_int1 = N
-input_int2 = N
+input_int = 0
+input_int0 = 0
+input_int1 = 0
+input_int2 = 0
 possibilities = list(subsets(input_array))
 possibility = range(N)
 possibility0 = range(N)
@@ -134,6 +135,16 @@ def is_func(codeword):
         isfunc = False
     return isfunc
 
+def is_comparison(codeword):
+    return codeword in [ 'lt', 'le', 'eq', 'ne', 'ge', 'gt']
+
+def get_types(codes):
+    try:
+        return [type(eval(str(code))).__name__ for code in codes]
+    except  (SyntaxError, TypeError, NameError) as e: #TODO: fix NameError in code
+        logger.logging.debug(e)
+        return []
+
 class WordCount:
     def get_data(self,data_dir,suffix):
         data = []
@@ -216,11 +227,20 @@ def clean_codeline(codeline):
     codeline = codeline.strip()
     return codeline
 
+def add_codeline_prefix(possible_codeline, word_type):
+    if word_type == 'possibilities':
+        possible_codeline = word_type + ' = ' + possible_codeline
+    else:
+        possible_codeline = word_type +' = lambda possibility: ' + possible_codeline
+    return possible_codeline
 
 def get_transdict(translation, codeline):
     codewords = nltk.word_tokenize(codeline)
     transwords = nltk.word_tokenize(translation)
     transdict = dict(zip(transwords,codewords))
+    for k,v in transdict.items():
+        if k in string.punctuation:
+            del transdict[k]
     return transdict
 
 codeline_types = ['mapping', 'valid', 'reduce', 'possibilities', 'return']
@@ -243,6 +263,41 @@ def get_codeline_type(codeline):
     print(word_type)
     return ''
 
+
+sentence_types = ['return', 'mapping', 'valid', 'reduce', 'possibilities']
+# types = ['return', 'mapping', 'valid', 'reduce', 'possibilities', 'types']
+# types = ['I']
+
+def get_sentence_type(sentence, translations, code, method):
+    '''
+    get the sentence type according to the code and method
+    
+    :param sentence:
+    :param translations:
+    :param code:
+    :param method:
+    '''
+    if not code:
+        return 'O'
+    if method[0]:
+        codewords = nltk.word_tokenize(method[0])
+        sentence_type = clean_word(codewords[1])
+        if sentence_type in sentence_types:
+            return sentence_type
+    if len(code) == 1:
+        codewords = nltk.word_tokenize(code[0])
+        sentence_type = clean_word(codewords[0])
+        if sentence_type in sentence_types:
+            return sentence_type
+        if sentence_type == 'def' and clean_word(codewords[1]) in sentence_types:
+            return clean_word(codewords[1])
+    else:
+        codewords = nltk.word_tokenize(code[-1])
+        if not method[0] and codewords[0] == 'return':
+            return 'return'
+#     print(method)
+#     print(code)
+    return 'O'
 
 if __name__ == '__main__':
 #     main_data_dir = 'res/brute_force_easy/'

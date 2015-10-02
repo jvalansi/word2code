@@ -15,11 +15,12 @@ class TheSwapsDivTwo:
         # (The two swapped elements may have the same value.)
         # Return the number of different sequences Brus can obtain after he makes the swap.
         #### possibilities = possibility
-        reduce = (lambda possibility: len(set(possibility)))
-        #### reduce = lambda possibility: number(different(sequences))
-        mapping = (lambda p: tuple(swap(sequence, p)))
-        #### return(reduce(possibilities))
         possibilities = possibilities
+        #### reduce = lambda possibility: number(different(sequences))
+        reduce = (lambda possibility: len(set(possibility)))
+        #### mapping = (lambda possibility: tuple(swap(input_array, possibility)))
+        mapping = (lambda possibility: tuple(swap(input_array, possibility)))
+        #### return(reduce(possibilities))
         return reduce(map(mapping, possibilities))
 
 def example0():

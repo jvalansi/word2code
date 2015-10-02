@@ -4,14 +4,14 @@ from problem_utils import *
 class PalindromizationDiv2:
     def getMinimumCost(self, X):
         input_int = X
-        integers = range(100000)
+        inf = 100000
         
         
         # Little Arthur loves numbers, especially palindromic ones.
         # A palindromic string is a string that reads the same both forwards and backwards.
-        def palindromic(possibility):
-            #### possibilities = possibility
-            possibilities = possibility
+        def valid(possibility):
+            #### possibilities = str(possibility)
+            possibilities = str(possibility)
             #### reduce = lambda possibility: same(possibility, list2str(backwards(possibility)))
             reduce = (lambda possibility: eq(possibility, list2str(reversed(possibility))))
             #### return(reduce(possibilities))
@@ -23,11 +23,11 @@ class PalindromizationDiv2:
         # For example, one possible way to palindromize number 25 is adding 8 resulting in number 33, which is palindromic.
         # Unfortunately Arthur cannot palindromize numbers for free.
         # The cost of palindromization in dollars is equal to the value added or subtracted.
-        def cost(possibility, y):
+        def mapping(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: abs(subtracted(possibility, y))
-            reduce = (lambda possibility: abs(sub(possibility, y)))
+            #### reduce = lambda possibility: abs(subtracted(input_int, possibility))
+            reduce = (lambda possibility: abs(sub(input_int, possibility)))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # In the previous example Arthur would have to pay 8 dollars.
@@ -35,12 +35,8 @@ class PalindromizationDiv2:
         # Given input_int return the minimum amount of money Arthur needs.
         #### reduce = lambda possibility: minimum(possibility)
         reduce = (lambda possibility: min(possibility))
-        #### mapping = lambda integer: money(X, integer)
-        mapping = (lambda integer: cost(X, integer))
-        #### possibilities = integers
-        possibilities = integers
-        #### valid = lambda integer: palindromic(str(integer))
-        valid = (lambda integer: palindromic(str(integer)))
+        #### possibilities = integers(inf)
+        possibilities = range(inf)
         #### return(reduce(map(mapping, filter(valid, possibilities))))
         return reduce(map(mapping, filter(valid, possibilities)))
 

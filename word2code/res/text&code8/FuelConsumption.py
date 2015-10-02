@@ -16,7 +16,7 @@ class FuelConsumption:
         # The ith element of input_array2 is the amount of input_int (in milliliters) the car will consume in 1 hour, if your speed is equal to the ith element of input_array1.
         # In addition, you will be given an int input_int specifying the total amount of input_int in milliliters.
         # Your method should return a double, equal to the maximum distance that the car can travel (in kilometers) with the given amount of input_int, and travelling at a constant velocity equal to one of the elements of input_array1.
-        #### def mapping(possibility): return div(mul(velocity[possibility], float(fuel)), input_array2[possibility])
+        #### def mapping(possibility): return div(mul(input_array1[possibility], float(input_int)), input_array2[possibility])
         def mapping(possibility): return div(mul(input_array1[possibility], float(input_int)), input_array2[possibility])
         #### possibilities = range(N)
         possibilities = range(N)

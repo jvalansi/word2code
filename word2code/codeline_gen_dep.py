@@ -13,9 +13,11 @@ from dependency_parser import Node, filter_dep, clean_dependencies,\
     sentence2dependencies, dep2word, clean_duplicates
 import astor
 import ast
-from utils import clean_codeline, get_codeline_type, is_func, get_transdict
+from utils import clean_codeline, get_codeline_type, is_func, get_transdict,\
+    get_sentence_type, add_codeline_prefix
 from collections import Counter
 import collections
+from stanford_corenlp import tokenize_sentences
             
 #     problem:
 #         codeline: eq(len(diff(input_array, possibility)), 1)
@@ -43,57 +45,71 @@ def get_root(deps, rootword):
     root = Node(rootwords[0])
     return root
 
-def get_all_sent_trees(sentence, transdict):
+def get_possible_codelines(sentence, transdict, sentence_type=None, codeline_type=None):
+    trees = get_all_sent_trees(sentence, transdict, sentence_type, codeline_type) 
+    codelines = map(str, trees)
+    return codelines
+
+def get_all_sent_trees(sentence, transdict, sentence_type=None, codeline_type=None):
     trees = []
-    for transword in transdict.keys():
+    for transword,codeword in transdict.items():
+        if not is_func(codeword):
+            continue
         root = get_sent_tree(sentence, transdict, transword)
         trees.append(root)
+    if codeline_type == 'possibilities':
+        if sentence_type == 'return': 
+            trees.append(Node(code='subsets(input_array)'))
+            trees.append(Node(code='csubsets(input_array)'))
+            trees.append(Node(code='transformations(input_array)'))
+            trees.append(Node(code='range(inf)'))
+        else:
+            trees.append(Node(code='pairs(possibility)'))
+            trees.append(Node(code='cpairs(possibility)'))
+        trees.append(Node(code='range(N)'))
     return trees
 
 def get_sent_tree(sentence, transdict, rootname):
     deps = sentence2dependencies(sentence)[0] #TODO: fix
+    logger.logging.debug(rootname)
     root = get_root(deps, rootname)
     if not root:
+        logger.logging.debug('no root')
         root = Node('possibility')
         return root
     root.deps2tree(deps)
+    logger.logging.debug(root)
     root.clean_ind()
     words = transdict.keys()
     root.filter_words(words)
+    logger.logging.debug(root)
     root.clear_ntypes()
     root.translate(transdict)
-    root.rearrange()
+    logger.logging.debug(root)
+#     root.rearrange()
+    root = clean_duplicates(root)
     root.fix_type()
-    root.clean_duplicates()
     logger.logging.debug(root)
     return root
 
 def get_code_tree(code, words=None):
-    try:
-        parse = ast.parse(code.strip())
-        logger.logging.debug(astor.dump(parse))
-    except Exception:
-        logger.logging.debug('could\'nt parse')
-        return
-    if not parse.body:
-        return
-    if not hasattr(parse.body[0], 'value'):
-        logger.logging.debug('no value node')
-        return
     root = Node()
-    root.ast2tree(parse.body[0].value)
-    logger.logging.debug(root)
+    root.code2tree(code)
     if words != None:
         root.filter_words(words)
-    logger.logging.debug(root)
     return root
 
 missing_words = []
 
-def check_sentence(sentence, translations, code, n):
+def check_sentence(sentence_parse, n):
     diffs = []
-    sentence = sentence.strip()
-    sentwords = nltk.word_tokenize(sentence)
+    sentence = sentence_parse['sentence'].strip()
+    translations = sentence_parse['translations']
+    code = sentence_parse['code']
+    method = sentence_parse['method']
+    sentence_type = get_sentence_type(sentence, translations, code, method)
+    sentwords = sentwords = tokenize_sentences(sentence)[0]
+    results = []
     for translation,codeline in zip(translations, code):
         logger.logging.debug(codeline)
         codeline_type = get_codeline_type(codeline)
@@ -104,29 +120,30 @@ def check_sentence(sentence, translations, code, n):
         transdict = get_transdict(translation, codeline)
         codedict = get_transdict(codeline, translation)
         transwords = transdict.keys()
-        codewords = [transdict[word] for word in transwords if word in sentwords]
+        codewords = codedict.keys()
+#         codewords = [codeword for codeword in codewords if codedict[codeword] in sentwords]
         logger.logging.debug(codewords)
         code_tree = get_code_tree(codeline, codewords)
         if not code_tree or not code_tree.name:
             logger.logging.debug(sentence)
             continue
-        rootname = codedict[code_tree.name]
-#         code_tree.translate(transdict)
-        sent_trees = get_all_sent_trees(sentence, transdict)
-        results = []
+        sent_trees = get_all_sent_trees(sentence, transdict, sentence_type, codeline_type)
+        codeline_results = []
         for sent_tree in sent_trees:
             diff = code_tree.compare(sent_tree)
-            results.append(len(diff))
-        if results and min(results) > n:
-            sent_tree = sent_trees[results.index(min(results))]
+            codeline_results.append(len(diff))
+        if codeline_results and min(codeline_results) > n:
+            sent_tree = sent_trees[codeline_results.index(min(codeline_results))]
             logger.logging.info(sentence)
             logger.logging.info(code_tree)
             logger.logging.info(sent_tree)
             diff = code_tree.compare(sent_tree)
             logger.logging.info(diff)
             missing_words.extend([word for dep in diff for word in dep[-2:]])
-            return False
-    return True
+            results.append(False)
+        else:
+            results.append(True)
+    return all(results)
 
 #     using dependencies to take only most probable translations from codewords to code tree
 def likely_possible_trees(sentence,translations,code,k):
@@ -144,11 +161,10 @@ def check_problem(path, fname, n=0):
     correct_sentences = []
     for sentence_parse in parse['sentences']: 
         sentence = sentence_parse['sentence']
-        translations = sentence_parse['translations']
         code = sentence_parse['code']
         if not sentence or not code:
             continue
-        correct_sentences.append(check_sentence(sentence, translations, code, n))
+        correct_sentences.append(check_sentence(sentence_parse, n))
     if bool(correct_sentences) and all(correct_sentences):
         return True
     return False
@@ -175,10 +191,11 @@ def check_problems(path, n=0, success=True):
         
 
 def main():
+#     logger.console.setLevel(logger.logging.DEBUG)
     problems_path = 'res/text&code8'
-#     print(check_problems(problems_path, success=False))
-    fname = 'AlienAndPassword.py'
-    print(check_problem(problems_path, fname))
+    print(check_problems(problems_path, 1, success=False))
+    fname = 'FoxAndGomoku.py'
+#     print(check_problem(problems_path, fname))
     print(Counter(missing_words))
 
     

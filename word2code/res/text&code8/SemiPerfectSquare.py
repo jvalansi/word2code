@@ -26,8 +26,8 @@ class SemiPerfectSquare:
         # Return "Yes" (quotes for clarity) if input_int is a semi-square number.
         #### possibilities = N
         possibilities = input_int
-        #### reduce = lambda possibility: if_(possibility, ["Yes", "No"])
-        reduce = (lambda possibility: if_(possibility, ['Yes', 'No']))
+        #### reduce = lambda possibility: if(possibility, ["Yes", "No"])
+        reduce = (lambda possibility: if_(possibility, ["Yes", "No"]))
         #### return reduce(semi_square(possibilities))
         return reduce(reduce0(possibilities))
         # Otherwise, return "No".

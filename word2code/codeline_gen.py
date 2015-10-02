@@ -15,7 +15,8 @@ import nltk
 from problem_utils import *
 import itertools
 import operator
-from utils import is_func
+from utils import is_func, add_codeline_prefix
+import numpy
 
 
 
@@ -209,6 +210,7 @@ def get_possible_codelines(codewords):
     :param codewords:
     :param word_type:
     '''
+    if 'possibility' not in codewords: codewords.append('possibility')
     funcs = [word for word in codewords if is_func(word) and word != 'return']
     variables = [word for word in codewords if not is_func(word)]
     array_vars = [var for var in variables if isinstance(var, basestring)]

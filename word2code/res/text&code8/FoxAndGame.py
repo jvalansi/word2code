@@ -15,14 +15,14 @@ class FoxAndGame:
         def mapping0(possibility):
             #### possibilities = possibility
             possibilities = possibility
-            #### reduce = lambda possibility: (0 if be(i, '---') else (1 if be(i, 'o--') else (2 if be(i, 'oo-') else (3 if be(i, 'ooo') else None))))
+            #### reduce = lambda possibility: if(be(possibility, '---'), [0, if(be(possibility, 'o--'), [1, if(be(possibility, 'oo-'), [2, if(be(possibility, 'ooo'), [3, None])])])]))
             reduce = (lambda possibility: if_(is_(possibility, '---'), [0, if_(is_(possibility, 'o--'), [1, if_(is_(possibility, 'oo-'), [2, if_(is_(possibility, 'ooo'), [3, None])])])]))
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # Return the total number of stars Ciel has at the moment.
         #### possibilities = input_array
         possibilities = input_array
-        #### def reduce(possibility): return sum(possibility)
+        #### def reduce(possibility): return total(possibility)
         def reduce(possibility): return sum(possibility)
         #### return reduce(map(number, possibilities))
         return reduce(map(mapping0, possibilities))

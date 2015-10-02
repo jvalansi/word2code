@@ -13,6 +13,7 @@ import problem2sentence
 import string
 from CRF_struct import CrfStruct, get_features
 from problem2sentence import Problem2Sentence, get_min_mask
+from utils import get_sentence_type
 
 
 class Problem2Sentence_Struct(CrfStruct):
@@ -66,7 +67,7 @@ class Problem2Sentence_Struct(CrfStruct):
         dependencies = sentence2dependencies(sentence)[0]
         nodes = self.get_nodes(dependencies)
         sentwords = map(dep2word, nodes)
-        symbol = problem2sentence.get_type(sentence, translations, code, method)
+        symbol = get_sentence_type(sentence, translations, code, method)
         N = len(nodes)
         output = ['O']*N
         relevantwords = set()
@@ -121,21 +122,18 @@ class Problem2Sentence_Struct(CrfStruct):
 
 def main():
     p2ss = Problem2Sentence_Struct()
-    problem_dir = os.path.join('res', 'text&code7') 
+    problem_dir = os.path.join('res', 'text&code8') 
 #     problem_dir = os.path.join('res', 'small') 
     indir = problem_dir
     train_dir = os.path.join(problem_dir, 'sentence_train_struct')
-    fname = 'GogoXBallsAndBinsEasy.py'
-    fname = 'PalindromesCount.py'
-#     struct_problem(fname, indir, outdir)
-    p2ss.build_train(indir, train_dir)
+#     p2ss.build_train(indir, train_dir)
     
     test_indir = os.path.join('res', 'problems_test')
     test_dir = os.path.join(test_indir,'sentence_test_struct')
 #     build_train(test_indir, test_dir, False)
 
     outdir = os.path.join(problem_dir, 'sentence_json_struct')
-    p2ss.test(train_dir, outdir, build=True)
+    p2ss.test(train_dir, outdir, build_features=True)
 
     test_output_dir = os.path.join(test_indir, 'sentence_json_struct')
 #     CRF_struct.test(train_dir, test_output_dir, test_dir=test_dir)
@@ -145,6 +143,10 @@ def main():
     labels.remove('O')
     p2s = Problem2Sentence()
     print(p2s.calc_score(outdir, n))
+
+    fname = 'GogoXBallsAndBinsEasy.py'
+    fname = 'PalindromesCount.py'
+#     struct_problem(fname, indir, outdir)
 
 if __name__ == '__main__':
     main()

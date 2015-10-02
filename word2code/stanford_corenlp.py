@@ -53,10 +53,10 @@ def raw_parse_sents(sentences, verbose=False, output_format=' typedDependencies'
     :rtype: list(Tree)
     """
 #     parser = stanford.StanfordParser('stanford-parser-full-2015-04-20/stanford-parser.jar', 
-    parser = stanford.StanfordParser('stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar', 
-                                     'stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1-models.jar')
-#     parser = stanford.StanfordParser('stanford-parser-full-2015-04-20/stanford-parser.jar', 
-#                                      'stanford-parser-full-2015-04-20/stanford-parser-3.5.2-models.jar')
+#     parser = stanford.StanfordParser('stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar', 
+#                                      'stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1-models.jar')
+    parser = stanford.StanfordParser('stanford-parser-full-2015-04-20/stanford-parser.jar', 
+                                     'stanford-parser-full-2015-04-20/stanford-parser-3.5.2-models.jar')
     cmd = [
         'edu.stanford.nlp.parser.lexparser.LexicalizedParser',
         '-model', parser.model_path,
