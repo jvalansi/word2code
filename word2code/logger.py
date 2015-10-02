@@ -4,12 +4,17 @@ Created on Apr 25, 2015
 @author: jordan
 '''
 import logging
+import os
 
 # set up logging to file - see previous section for more details
+log_fname = 'res/logger.log'
+if not os.path.exists(log_fname):
+    with open(log_fname, 'w') as f:
+        pass
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M',
-                    filename='res/logger.log',
+                    filename=log_fname,
                     filemode='w')
 # define a Handler which writes INFO messages or higher to the sys.stderr
 console = logging.StreamHandler()
