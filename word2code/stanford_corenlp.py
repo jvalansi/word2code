@@ -5,7 +5,6 @@ Created on Mar 8, 2015
 '''
 import json
 # from jsonrpc import ServerProxy, JsonRpc20, TransportTcpIp
-import jsonrpclib
 from pprint import pprint
 
 import os
@@ -18,6 +17,7 @@ import nltk
 
 class StanfordNLP:
     def __init__(self, port_number=8080):
+        import jsonrpclib
         self.server = jsonrpclib.Server("http://localhost:%d" % port_number)
 
     def parse(self, text):
