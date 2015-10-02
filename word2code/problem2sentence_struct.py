@@ -126,7 +126,7 @@ def main():
 #     problem_dir = os.path.join('res', 'small') 
     indir = problem_dir
     train_dir = os.path.join(problem_dir, 'sentence_train_struct')
-#     p2ss.build_train(indir, train_dir)
+    p2ss.build_train(indir, train_dir)
     
     test_indir = os.path.join('res', 'problems_test')
     test_dir = os.path.join(test_indir,'sentence_test_struct')
