@@ -487,7 +487,7 @@ def load_dependencies_dict():
 
 def dump_dependencies_dict():
     with open(dependencies_path, 'w') as f:
-        json.dump(dependencies_dict, f)
+        json.dump(dependencies_dict, f, indent=4)
 
 def sentence2dependencies(sentence):
     load_dependencies_dict()    
