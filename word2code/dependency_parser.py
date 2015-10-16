@@ -95,6 +95,7 @@ class Node:
             self.children.append(node)
             deps_.remove(dep)
             node.deps2tree(deps_)
+        return self
 
     def tree2deps(self):
         deps = []
@@ -208,8 +209,7 @@ class Node:
         reduce tree to consist of only the given words
 
         >>> deps = [[None, 'csubsets', 'input_array']]
-        >>> root = Node('csubsets')
-        >>> root.deps2tree(deps)
+        >>> root = Node('csubsets').deps2tree(deps)
         >>> root.filter_words(['input_array'])
         >>> print(root)
         input_array

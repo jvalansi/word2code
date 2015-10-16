@@ -25,7 +25,7 @@ class InterestingNumber:
             return reduce(map(mapping, possibilities))
         # You are given a String x that contains the digits of a positive integer.
         # Return "Interesting" if that integer is interesting, otherwise return "Not interesting".
-        #### possibilities = ["Interesting", "Not interesting"]
+        #### possibilities = input_array
         possibilities = input_array
         #### reduce = lambda possibility: if(interesting(integer), ['Interesting', 'Not interesting'])
         reduce = (lambda possibility: if_(valid0(possibility), ['Interesting', 'Not interesting']))
