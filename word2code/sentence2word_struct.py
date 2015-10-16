@@ -141,6 +141,7 @@ class Sentence2WordStruct(CrfStruct):
 def main():
     s2ws = Sentence2WordStruct()
     problem_dir = os.path.join('res', 'text&code8', 'solutions', 'AverageAverage', 'Good') 
+    problem_dir = os.path.join('res', 'text&code8') 
 #     problem_dir = os.path.join('res', 'small') 
     indir = problem_dir
     train_dir = os.path.join(problem_dir, 'word_train_struct')
