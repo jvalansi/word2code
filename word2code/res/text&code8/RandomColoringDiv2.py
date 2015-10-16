@@ -13,6 +13,7 @@ class RandomColoringDiv2:
         input_int7 = d2
         
         
+        
         # Little Arthur has a new frisbee and he would like to color it.
         # A frisbee has the shape of a disc.
         # Arthur will color the disc using two colors: one for the top side, one for the bottom side.

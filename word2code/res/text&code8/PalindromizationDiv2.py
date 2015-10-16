@@ -7,6 +7,7 @@ class PalindromizationDiv2:
         inf = 100000
         
         
+        
         # Little Arthur loves numbers, especially palindromic ones.
         # A palindromic string is a string that reads the same both forwards and backwards.
         def valid(possibility):

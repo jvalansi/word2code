@@ -12,6 +12,7 @@ class ChangingString:
         types = lowercase
         
         
+        
         # You are given two Strings input_array1 and input_array2 that have the same length and contain only types letters ('a'-'z').
         # The distance between two letters is defined as the absolute value of their difference.
         def mapping1(possibility):
@@ -49,13 +50,49 @@ class ChangingString:
         return reduce(map(mapping0, filter(valid0, possibilities)))
 
 def example0():
-    A = "ab"
-    B = "ba"
-    K = 2
-    cs = ChangingString()
-    result = cs.distance(A, B, K)
-    returns = 0
-    return result == returns
-    
+	cls = ChangingString()
+	input0 = "ab"
+	input1 = "ba"
+	input2 = 2
+	returns = 0
+	result = cls.distance(input0, input1, input2)
+	return result == returns
+
+def example1():
+	cls = ChangingString()
+	input0 = "aa"
+	input1 = "aa"
+	input2 = 2
+	returns = 2
+	result = cls.distance(input0, input1, input2)
+	return result == returns
+
+def example2():
+	cls = ChangingString()
+	input0 = "aaa"
+	input1 = "baz"
+	input2 = 1
+	returns = 1
+	result = cls.distance(input0, input1, input2)
+	return result == returns
+
+def example3():
+	cls = ChangingString()
+	input0 = "fdfdfdfdfdsfabasd"
+	input1 = "jhlakfjdklsakdjfk"
+	input2 = 8
+	returns = 24
+	result = cls.distance(input0, input1, input2)
+	return result == returns
+
+def example4():
+	cls = ChangingString()
+	input0 = "aa"
+	input1 = "bb"
+	input2 = 2
+	returns = 0
+	result = cls.distance(input0, input1, input2)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

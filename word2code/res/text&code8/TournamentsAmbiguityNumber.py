@@ -7,6 +7,7 @@ class TournamentsAmbiguityNumber:
         N = len(table)
         
         
+        
         # In a chess tournament, each pair of distinct players played a single match against each other.
         # Each match resulted in one of three outcomes: the first player won, the second player won, or there was a draw.
         # The ambiguity number of the tournament is defined as the number of distinct triples of players (a, b, c) such that player a defeated b, player b defeated player c, and player c defeated player a.

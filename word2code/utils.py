@@ -93,7 +93,7 @@ def check_solution_(problem_path):#TODO: make it portable
         pass
     return False
 
-def check_solution(problem_path, soln=1):
+def check_solution(problem_path, soln=3):
 #     resource.setrlimit(resource.RLIMIT_DATA, (M, 100*M))   
     try:
         if os.path.exists(problem_path+'c'):

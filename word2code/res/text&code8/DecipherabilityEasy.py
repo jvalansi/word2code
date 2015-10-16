@@ -10,6 +10,7 @@ class DecipherabilityEasy:
         N0 = len(s)
         
         
+        
         # You had a non-empty string input_array0 but you lost it.
         # Cat Snuke found the string and removed one character from the string.
         # Later, Snuke gave you the string input_array1 .

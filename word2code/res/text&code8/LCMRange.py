@@ -10,6 +10,7 @@ class LCMRange:
         
         
         
+        
         # The least common multiple of a group of integers is the smallest number that can be evenly divided by all the integers in the group.
         def reduce0(possibility):
             #### possibilities = number(1,inf)
@@ -32,6 +33,8 @@ def example0():
     result = lcmr.lcm(first, last)
     returns = 60
     return result == returns
+
+
     
 if __name__ == '__main__':
     print(example0())

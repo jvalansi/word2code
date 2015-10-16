@@ -7,6 +7,7 @@ class ChocolateBar:
         input_array = letters
         
         
+        
         # You just bought a very delicious chocolate bar from a local store.
         # This chocolate bar consists of N squares, numbered 0 through N-1.
         # All the squares are arranged in a single row.
@@ -36,11 +37,39 @@ class ChocolateBar:
         return reduce(map(mapping, filter(valid0, possibilities)))
 
 def example0():
-    letters = "dengklek"
-    returns = 6
-    cb = ChocolateBar()
-    result = cb.maxLength(letters)
-    return returns == result
-        
+	cls = ChocolateBar()
+	input0 = "srm"
+	returns = 3
+	result = cls.maxLength(input0)
+	return result == returns
+
+def example1():
+	cls = ChocolateBar()
+	input0 = "dengklek"
+	returns = 6
+	result = cls.maxLength(input0)
+	return result == returns
+
+def example2():
+	cls = ChocolateBar()
+	input0 = "haha"
+	returns = 2
+	result = cls.maxLength(input0)
+	return result == returns
+
+def example3():
+	cls = ChocolateBar()
+	input0 = "www"
+	returns = 1
+	result = cls.maxLength(input0)
+	return result == returns
+
+def example4():
+	cls = ChocolateBar()
+	input0 = "thisisansrmbeforetopcoderopenfinals"
+	returns = 9
+	result = cls.maxLength(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

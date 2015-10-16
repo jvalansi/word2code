@@ -8,6 +8,7 @@ class EggCartons:
         types = [6,8]
         
         
+        
         # There are two types of egg cartons.
         # One type contains 6 eggs and the other type contains 8 eggs.
         # John wants to buy exactly input_int eggs.
@@ -31,11 +32,32 @@ class EggCartons:
         # if possible else -1
 
 def example0():
-    n = 24
-    ec = EggCartons()
-    result = ec.minCartons(n)
-    returns = 3
-    return result == returns
-    
+	cls = EggCartons()
+	input0 = 20
+	returns = 3
+	result = cls.minCartons(input0)
+	return result == returns
+
+def example1():
+	cls = EggCartons()
+	input0 = 24
+	returns = 3
+	result = cls.minCartons(input0)
+	return result == returns
+
+def example2():
+	cls = EggCartons()
+	input0 = 15
+	returns = -1
+	result = cls.minCartons(input0)
+	return result == returns
+
+def example3():
+	cls = EggCartons()
+	input0 = 4
+	returns = -1
+	result = cls.minCartons(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

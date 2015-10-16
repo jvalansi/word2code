@@ -7,6 +7,7 @@ class UniqueDigits:
         inf = 10000
         
         
+        
         # Given an int input_int find all positive integers less than input_int whose digits are all different.
         def valid0(possibility):
             #### def reduce(possibility): return (positive(integer) and less_than(integer, n) and all(possibility))

@@ -7,6 +7,7 @@ class SquareDigitNumbers:
         inf = 10000
         
         
+        
         # You enjoy working with numbers that contain only square digits (namely, 0, 1, 4 and 9).
         def valid0(possibility):
             #### def reduce(possibility): return only(possibility)

@@ -10,6 +10,7 @@ class PalindromesCount:
         N0 = len(A)
         
         
+        
         # input_array0 palindrome is a string that is the same whether it is read from left to right or from right to left.
         def valid0(possibility):
             #### possibilities = possibility

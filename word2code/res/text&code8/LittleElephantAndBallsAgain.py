@@ -8,6 +8,7 @@ class LittleElephantAndBallsAgain:
         N = len(input_array)
         
         
+        
         # Little Elephant from the Zoo of Lviv likes balls.
         # He has some balls arranged in a row.
         # Each of those balls has one of three possible colors: red, green, or blue.
@@ -41,11 +42,39 @@ class LittleElephantAndBallsAgain:
         return reduce(map(mapping0, filter(valid0, possibilities)))
 
 def example0():
-    S = "RRGGBB"
-    leaba = LittleElephantAndBallsAgain()
-    result = leaba.getNumber(S) 
-    returns = 4
-    return result == returns
-    
+	cls = LittleElephantAndBallsAgain()
+	input0 = "RRGGBB"
+	returns = 4
+	result = cls.getNumber(input0)
+	return result == returns
+
+def example1():
+	cls = LittleElephantAndBallsAgain()
+	input0 = "R"
+	returns = 0
+	result = cls.getNumber(input0)
+	return result == returns
+
+def example2():
+	cls = LittleElephantAndBallsAgain()
+	input0 = "RGBRGB"
+	returns = 5
+	result = cls.getNumber(input0)
+	return result == returns
+
+def example3():
+	cls = LittleElephantAndBallsAgain()
+	input0 = "RGGGBB"
+	returns = 3
+	result = cls.getNumber(input0)
+	return result == returns
+
+def example4():
+	cls = LittleElephantAndBallsAgain()
+	input0 = "RGBRBRGRGRBBBGRBRBRGBGBBBGRGBBBBRGBGRRGGRRRGRBBBBR"
+	returns = 46
+	result = cls.getNumber(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

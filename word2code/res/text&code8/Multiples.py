@@ -10,6 +10,7 @@ class Multiples:
         
         
         
+        
         # You are to create a class Multiples with a method number, which takes three ints: input_int0, input_int1, and input_int2.
         # Given a range of integers from input_int0 to input_int1 (inclusive), determine how many numbers within that range are evenly divisible by input_int2.
         #### possibilities = range(input_int0, inclusive(input_int1))
@@ -29,6 +30,8 @@ def example0():
     result = m.number(min, max, factor)
     returns = 3
     return result == returns
+
+
     
 if __name__ == '__main__':
     print(example0())

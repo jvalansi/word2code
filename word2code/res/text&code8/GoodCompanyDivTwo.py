@@ -9,6 +9,7 @@ class GoodCompanyDivTwo:
         N = len(input_array1)
         
         
+        
         # Shiny has a company.
         # There are N employees in her company.
         # The employees are numbered 0 through N-1 in order in which they joined the company.
@@ -52,12 +53,52 @@ class GoodCompanyDivTwo:
         return reduce(filter(valid0, map(mapping0, possibilities)))
 
 def example0():
-    superior = [-1, 0] 
-    workType = [1, 2]
-    gcdt = GoodCompanyDivTwo()
-    result = gcdt.countGood(superior, workType)
-    returns = 2
-    return result == returns
-    
+	cls = GoodCompanyDivTwo()
+	input0 = [-1, 0]
+	input1 = [1, 2]
+	returns = 2
+	result = cls.countGood(input0, input1)
+	return result == returns
+
+def example1():
+	cls = GoodCompanyDivTwo()
+	input0 = [-1, 0]
+	input1 = [1, 1]
+	returns = 1
+	result = cls.countGood(input0, input1)
+	return result == returns
+
+def example2():
+	cls = GoodCompanyDivTwo()
+	input0 = [-1, 0, 1, 1]
+	input1 = [1, 4, 3, 2]
+	returns = 4
+	result = cls.countGood(input0, input1)
+	return result == returns
+
+def example3():
+	cls = GoodCompanyDivTwo()
+	input0 = [-1, 0, 1, 0, 0]
+	input1 = [3, 3, 5, 2, 2]
+	returns = 4
+	result = cls.countGood(input0, input1)
+	return result == returns
+
+def example4():
+	cls = GoodCompanyDivTwo()
+	input0 = [-1, 0, 1, 1, 1, 0, 2, 5]
+	input1 = [1, 1, 2, 3, 4, 5, 3, 3]
+	returns = 7
+	result = cls.countGood(input0, input1)
+	return result == returns
+
+def example5():
+	cls = GoodCompanyDivTwo()
+	input0 = [-1, 0, 0, 1, 1, 3, 0, 2, 0, 5, 2, 5, 5, 6, 1, 2, 11, 12, 10, 4, 7, 16, 10, 9, 12, 18, 15, 23, 20, 7, 4]
+	input1 = [4, 6, 4, 7, 7, 1, 2, 8, 1, 7, 2, 4, 2, 9, 11, 1, 10, 11, 4, 6, 11, 7, 2, 8, 9, 9, 10, 10, 9, 8, 8]
+	returns = 27
+	result = cls.countGood(input0, input1)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

@@ -9,6 +9,7 @@ class ValueOfString:
         N = len(s)
         
         
+        
         # You are given a String input_array consisting of lower case letters.
         # We assign the letters 'a' to 'z' values of 1 to 26, respectively.
         # We will denote the value assigned to the letter X by val[X].

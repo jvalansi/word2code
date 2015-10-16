@@ -7,6 +7,7 @@ class CandidatesSelectionEasy:
         input_int = x
         
         
+        
         # Fox Ciel wants to hire a new maid.
         # There are n candidates for the position.
         # There are m different skills a maid should have, such as cooking, cleaning, or discreetness.
@@ -26,12 +27,52 @@ class CandidatesSelectionEasy:
         return map(mapping, possibilities)
 
 def example0():
-    score = [[0,1],[2,0]]
-    x = 1
-    cse = CandidatesSelectionEasy()
-    result = cse.sort(score, x) 
-    returns = [1, 0]
-    return result == returns
-    
+	cls = CandidatesSelectionEasy()
+	input0 = ["ACB", "BAC", "CBA"]
+	input1 = 1
+	returns = [1, 2, 0 ]
+	result = cls.sort(input0, input1)
+	return result == returns
+
+def example1():
+	cls = CandidatesSelectionEasy()
+	input0 = ["A", "C", "B", "C", "A"]
+	input1 = 0
+	returns = [0, 4, 2, 1, 3 ]
+	result = cls.sort(input0, input1)
+	return result == returns
+
+def example2():
+	cls = CandidatesSelectionEasy()
+	input0 = ["LAX","BUR","ONT","LGB","SAN","SNA","SFO","OAK","SJC"]
+	input1 = 2
+	returns = [5, 3, 8, 7, 4, 6, 1, 2, 0 ]
+	result = cls.sort(input0, input1)
+	return result == returns
+
+def example3():
+	cls = CandidatesSelectionEasy()
+	input0 = ["BBCBABAC","BCBACABA","CCCBAACB","CACABABB","AABBBBCC"]
+	input1 = 6
+	returns = [0, 1, 3, 2, 4 ]
+	result = cls.sort(input0, input1)
+	return result == returns
+
+def example4():
+	cls = CandidatesSelectionEasy()
+	input0 = ["XXYWZWWYXZ","YZZZYWYZYW","ZYZZWZYYWW","ZWZWZWZXYW","ZYXWZXWYXY","YXXXZWXWXW","XWWYZWXYXY","XYYXYWYXWY","ZZYXZYZXYY","WXZXWYZWYY"]
+	input1 = 3
+	returns = [0, 3, 4, 5, 7, 8, 9, 6, 1, 2 ]
+	result = cls.sort(input0, input1)
+	return result == returns
+
+def example5():
+	cls = CandidatesSelectionEasy()
+	input0 = ["X"]
+	input1 = 0
+	returns = [0 ]
+	result = cls.sort(input0, input1)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

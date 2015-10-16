@@ -9,6 +9,7 @@ class SwappingDigits:
         N = len(num)
         
         
+        
         # Given is a String input_array .
         # This String contains the digits of a (possibly large) positive integer.
         # For example, input_array ="1147" represents the integer 1147.

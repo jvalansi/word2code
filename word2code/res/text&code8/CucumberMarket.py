@@ -9,6 +9,7 @@ class CucumberMarket:
         input_int2 = k
         
         
+        
         # Cucumber Boy is young and loves cucumbers.
         # Therefore, Cucumber Boy will go to the cucumber market to buy some cucumbers.
         # Different cucumbers may have different costs.
@@ -34,13 +35,49 @@ class CucumberMarket:
         return reduce(map(mapping0, possibilities))
 
 def example0():
-    price = [1000,1,10,100]
-    budget = 1110
-    k = 3
-    cm = CucumberMarket()
-    result = cm.check(price, budget, k)
-    returns = "YES"
-    return result == returns
-    
+	cls = CucumberMarket()
+	input0 = [1000,1,10,100]
+	input1 = 1110
+	input2 = 3
+	returns = "YES"
+	result = cls.check(input0, input1, input2)
+	return result == returns
+
+def example1():
+	cls = CucumberMarket()
+	input0 = [1000,1,10,100]
+	input1 = 1109
+	input2 = 3
+	returns = "NO"
+	result = cls.check(input0, input1, input2)
+	return result == returns
+
+def example2():
+	cls = CucumberMarket()
+	input0 = [33,4]
+	input1 = 33
+	input2 = 1
+	returns = "YES"
+	result = cls.check(input0, input1, input2)
+	return result == returns
+
+def example3():
+	cls = CucumberMarket()
+	input0 = [1,1,1,1,1,1]
+	input1 = 2
+	input2 = 4
+	returns = "NO"
+	result = cls.check(input0, input1, input2)
+	return result == returns
+
+def example4():
+	cls = CucumberMarket()
+	input0 = [1000,1000,1000,1000,1000,1000,1000,1000,1000]
+	input1 = 10000
+	input2 = 9
+	returns = "YES"
+	result = cls.check(input0, input1, input2)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

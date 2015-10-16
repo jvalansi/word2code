@@ -10,6 +10,7 @@ class AlienAndPassword:
         
         
         
+        
         # Alien Fred wants to destroy the Earth, but he forgot the password that activates the planet destroyer.
         # You are given a String S.
         # Fred remembers that the correct password can be obtained from S by erasing exactly one character.

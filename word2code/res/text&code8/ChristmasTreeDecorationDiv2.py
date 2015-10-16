@@ -9,6 +9,7 @@ class ChristmasTreeDecorationDiv2:
         N = len(input_array1)
         
         
+        
         # Christmas is just around the corner, and Alice just decorated her Christmas tree.
         # There are N stars and N-1 ribbons on the tree.
         # Each ribbon connects two of the stars in such a way that all stars and ribbons hold together.
@@ -37,13 +38,49 @@ class ChristmasTreeDecorationDiv2:
         return reduce(filter(valid0, possibilities))
 
 def example0():
-    col = [1,2,3,3]
-    x = [1,2,3]
-    y = [2,3,4]
-    ctd = ChristmasTreeDecorationDiv2()
-    result = ctd.solve(col, x, y)
-    returns = 2
-    return result == returns
-    
+	cls = ChristmasTreeDecorationDiv2()
+	input0 = [1,2,3,3]
+	input1 = [1,2,3]
+	input2 = [2,3,4]
+	returns = 2
+	result = cls.solve(input0, input1, input2)
+	return result == returns
+
+def example1():
+	cls = ChristmasTreeDecorationDiv2()
+	input0 = [1,3,5]
+	input1 = [1,3]
+	input2 = [2,2]
+	returns = 2
+	result = cls.solve(input0, input1, input2)
+	return result == returns
+
+def example2():
+	cls = ChristmasTreeDecorationDiv2()
+	input0 = [1,1,3,3]
+	input1 = [1,3,2]
+	input2 = [2,1,4]
+	returns = 2
+	result = cls.solve(input0, input1, input2)
+	return result == returns
+
+def example3():
+	cls = ChristmasTreeDecorationDiv2()
+	input0 = [5,5,5,5]
+	input1 = [1,2,3]
+	input2 = [2,3,4]
+	returns = 0
+	result = cls.solve(input0, input1, input2)
+	return result == returns
+
+def example4():
+	cls = ChristmasTreeDecorationDiv2()
+	input0 = [9,1,1]
+	input1 = [3,2]
+	input2 = [2,1]
+	returns = 1
+	result = cls.solve(input0, input1, input2)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

@@ -11,6 +11,7 @@ class ArrayHash:
         types = uppercase
         
         
+        
         # You will be given a String[] input.
         # The value of each character in input is computed as follows:
         # Value = (Alphabet Position) + (Element of input) + (Position in Element)
@@ -43,11 +44,39 @@ class ArrayHash:
         # The final hash would be 2+2+2+4+5+6 = 21.
 
 def example0():
-    input = ["CBA", "DDD"]
-    ah = ArrayHash()
-    result = ah.getHash(input)
-    returns = 21
-    return returns == result
+	cls = ArrayHash()
+	input0 = ["CBA", "DDD"]
+	returns = 21
+	result = cls.getHash(input0)
+	return result == returns
+
+def example1():
+	cls = ArrayHash()
+	input0 = ["Z"]
+	returns = 25
+	result = cls.getHash(input0)
+	return result == returns
+
+def example2():
+	cls = ArrayHash()
+	input0 = ["A", "B", "C", "D", "E", "F"]
+	returns = 30
+	result = cls.getHash(input0)
+	return result == returns
+
+def example3():
+	cls = ArrayHash()
+	input0 = ["ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
+	returns = 4290
+	result = cls.getHash(input0)
+	return result == returns
+
+def example4():
+	cls = ArrayHash()
+	input0 = ["ZZZZZZZZZZ"]
+	returns = 295
+	result = cls.getHash(input0)
+	return result == returns
 
 if __name__ == '__main__':
     print(example0())

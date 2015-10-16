@@ -9,6 +9,7 @@ class RaiseThisBarn:
         types = {'cows': 'c'}
         
         
+        
         # The pony Applejack is going to raise a new barn.
         # The barn will consist of N sections in a row.
         # Some of the sections will be empty, others will contain a single cow each.

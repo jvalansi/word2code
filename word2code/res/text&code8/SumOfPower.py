@@ -6,6 +6,7 @@ class SumOfPower:
         input_array = array
         
         
+        
         # You are given a int[] input_array .
         # At any moment, you may choose a nonempty contiguous subsequence of input_array .
         #### possibilities = subsequence(input_array)

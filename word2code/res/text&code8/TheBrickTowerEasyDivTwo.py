@@ -12,6 +12,7 @@ class TheBrickTowerEasyDivTwo:
         blue = [blueHeight]*blueCount
         
         
+        
         # John and Brus are building towers using toy bricks.
         # They have two types of bricks: red and blue ones.
         # The number of red bricks they have is input_int0 and each of them has a height of input_int1 .

@@ -7,6 +7,7 @@ class FibonacciDiv2:
         possibilities = range(N)
         
         
+        
         # The Fibonacci sequence is defined as follows:
         # F[0] = 0
         #### F[0] = 0
@@ -33,11 +34,39 @@ class FibonacciDiv2:
         return reduce(map(mapping, possibilities))
 
 def example0():
-	N = 	10
-	fd2 = FibonacciDiv2()
-	result = fd2.find(N)
-	returns = 2
+	cls = FibonacciDiv2()
+	input0 = 1
+	returns = 0
+	result = cls.find(input0)
 	return result == returns
-    
+
+def example1():
+	cls = FibonacciDiv2()
+	input0 = 13
+	returns = 0
+	result = cls.find(input0)
+	return result == returns
+
+def example2():
+	cls = FibonacciDiv2()
+	input0 = 15
+	returns = 2
+	result = cls.find(input0)
+	return result == returns
+
+def example3():
+	cls = FibonacciDiv2()
+	input0 = 19
+	returns = 2
+	result = cls.find(input0)
+	return result == returns
+
+def example4():
+	cls = FibonacciDiv2()
+	input0 = 1000000
+	returns = 167960
+	result = cls.find(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

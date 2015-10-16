@@ -8,6 +8,7 @@ class BlockTower:
         
         
         
+        
         # Josh loves playing with blocks.
         # Currently, he has N blocks, labeled 0 through N-1.
         # The heights of all blocks are positive integers.
@@ -55,11 +56,53 @@ class BlockTower:
         return reduce(map(mapping0, filter(valid1, filter(valid0, possibilities))))
 
 def example0():
-	blockHeights = [4,7]
-	bt = BlockTower()
-	result = bt.getTallest(blockHeights)
+	cls = BlockTower()
+	input0 = [4,7]
 	returns = 11
+	result = cls.getTallest(input0)
 	return result == returns
-    
+
+def example1():
+	cls = BlockTower()
+	input0 = [7,4]
+	returns = 7
+	result = cls.getTallest(input0)
+	return result == returns
+
+def example2():
+	cls = BlockTower()
+	input0 = [7]
+	returns = 7
+	result = cls.getTallest(input0)
+	return result == returns
+
+def example3():
+	cls = BlockTower()
+	input0 = [4]
+	returns = 4
+	result = cls.getTallest(input0)
+	return result == returns
+
+def example4():
+	cls = BlockTower()
+	input0 = [48,1,50,1,50,1,48]
+	returns = 196
+	result = cls.getTallest(input0)
+	return result == returns
+
+def example5():
+	cls = BlockTower()
+	input0 = [49,2,49,2,49]
+	returns = 147
+	result = cls.getTallest(input0)
+	return result == returns
+
+def example6():
+	cls = BlockTower()
+	input0 = [44,3,44,3,44,47,2,47,2,47,2]
+	returns = 273
+	result = cls.getTallest(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

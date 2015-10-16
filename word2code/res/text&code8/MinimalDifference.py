@@ -10,6 +10,7 @@ class MinimalDifference:
         
         
         
+        
         # The digit sum of an integer is the sum of its digits in decimal notation.
         def mapping0(possibility):
             #### possibilities = str(possibility)
@@ -42,13 +43,49 @@ class MinimalDifference:
         return reduce(filter(valid, possibilities))
 
 def example0():
-    A = 11
-    B = 20
-    C = 20
-    md = MinimalDifference()
-    result = md.findNumber(A, B, C)
-    returns = 11
-    return result == returns
-    
+	cls = MinimalDifference()
+	input0 = 1
+	input1 = 9
+	input2 = 10
+	returns = 1
+	result = cls.findNumber(input0, input1, input2)
+	return result == returns
+
+def example1():
+	cls = MinimalDifference()
+	input0 = 11
+	input1 = 20
+	input2 = 20
+	returns = 11
+	result = cls.findNumber(input0, input1, input2)
+	return result == returns
+
+def example2():
+	cls = MinimalDifference()
+	input0 = 1
+	input1 = 1
+	input2 = 999
+	returns = 1
+	result = cls.findNumber(input0, input1, input2)
+	return result == returns
+
+def example3():
+	cls = MinimalDifference()
+	input0 = 100
+	input1 = 1000
+	input2 = 99
+	returns = 189
+	result = cls.findNumber(input0, input1, input2)
+	return result == returns
+
+def example4():
+	cls = MinimalDifference()
+	input0 = 1987
+	input1 = 9123
+	input2 = 1
+	returns = 2000
+	result = cls.findNumber(input0, input1, input2)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

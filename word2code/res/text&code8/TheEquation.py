@@ -8,6 +8,7 @@ class TheEquation:
         input_int2 = P
         
         
+        
         # You are given three positive integers, input_int0 , input_int1 and input_int2 .
         # Return the least sum of two positive integers a and b such that input_int2 is a divisor of a* input_int0 +b* input_int1 .
         #### def reduce(possibility): return least(possibility)

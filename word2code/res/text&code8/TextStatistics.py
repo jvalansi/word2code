@@ -8,6 +8,7 @@ class TextStatistics:
         input_array = text
         
         
+        
         # Most modern input_array editors are able to give some statistics about the input_array they are editing.
         # One nice statistic is the average word length in the input_array.
         # A word is a maximal continuous sequence of letters ('a'-'z', 'A'-'Z').

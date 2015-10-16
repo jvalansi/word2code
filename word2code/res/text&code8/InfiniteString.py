@@ -8,6 +8,7 @@ class InfiniteString:
         inf = 1000
         
         
+        
         # Given a string input_array0, let f(input_array0) denote the infinite string obtained by concatenating infinitely many copies of input_array0. For example, if input_array0 = "abc" then f(input_array0) = "abcabcabcabc...".
         def mapping0(possibility):
             #### possibilities = possibility

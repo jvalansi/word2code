@@ -8,6 +8,7 @@ class ForgetfulAddition:
         N = len(expression)
         
         
+        
         # Alice had two positive integers, a and b.
         # She typed the expression "a+b" into her computer, but the '+' key malfunctioned.
         # For example, instead of "128+9" the computer's screen now shows "1289".
@@ -33,11 +34,39 @@ class ForgetfulAddition:
         return reduce(map(mapping, possibilities))
 
 def example0():
-    expression = '22'
-    fa = ForgetfulAddition()
-    result = fa.minNumber(expression)
-    returns = 4
-    return result == returns
-    
+	cls = ForgetfulAddition()
+	input0 = "22"
+	returns = 4
+	result = cls.minNumber(input0)
+	return result == returns
+
+def example1():
+	cls = ForgetfulAddition()
+	input0 = "123"
+	returns = 15
+	result = cls.minNumber(input0)
+	return result == returns
+
+def example2():
+	cls = ForgetfulAddition()
+	input0 = "1289"
+	returns = 101
+	result = cls.minNumber(input0)
+	return result == returns
+
+def example3():
+	cls = ForgetfulAddition()
+	input0 = "31415926"
+	returns = 9067
+	result = cls.minNumber(input0)
+	return result == returns
+
+def example4():
+	cls = ForgetfulAddition()
+	input0 = "98765"
+	returns = 863
+	result = cls.minNumber(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

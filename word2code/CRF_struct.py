@@ -285,7 +285,9 @@ class CrfStruct(LearnerWrapper):
         print(crf.inference_method)
     #     learner = OneSlackSSVM(crf, inference_cache=50, C=.1, tol=.1, max_iter=100,
     #                         n_jobs=1)
-        learner = StructuredPerceptron(crf, batch=True, n_jobs=3)
+        n_jobs = 3
+        n_jobs = 1
+        learner = StructuredPerceptron(crf, batch=True, n_jobs=n_jobs)
 #         learner = StructuredPerceptron(crf)
         for fname in sorted(os.listdir(train_dir)):
             if not fname.endswith('.label'):

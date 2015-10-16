@@ -7,6 +7,7 @@ class WinterAndMandarins:
         input_int = K
         
         
+        
         # It's winter time!
         # Time to eat a lot of mandarins with your friends.
         # You have several input_array with mandarins.

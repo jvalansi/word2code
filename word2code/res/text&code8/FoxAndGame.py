@@ -7,6 +7,7 @@ class FoxAndGame:
         N = len(input_array)
         
         
+        
         # Fox Ciel is playing the popular game 'Cut the Rope' on her smartphone.
         # The game has multiple stages, and for each stage the player can gain between 0 and 3 stars, inclusive.
         # You are given a String[] input_array containing Fox Ciel's current results:
@@ -28,11 +29,53 @@ class FoxAndGame:
         return reduce(map(mapping0, possibilities))
 
 def example0():
-    result = ['ooo','ooo']
-    fag = FoxAndGame()
-    result = fag.countStars(result)
-    returns = 6
-    return result == returns
-    
+	cls = FoxAndGame()
+	input0 = ["ooo", "ooo"]
+	returns = 6
+	result = cls.countStars(input0)
+	return result == returns
+
+def example1():
+	cls = FoxAndGame()
+	input0 = ["ooo", "oo-", "o--"]
+	returns = 6
+	result = cls.countStars(input0)
+	return result == returns
+
+def example2():
+	cls = FoxAndGame()
+	input0 = ["ooo", "---", "oo-", "---", "o--"]
+	returns = 6
+	result = cls.countStars(input0)
+	return result == returns
+
+def example3():
+	cls = FoxAndGame()
+	input0 = ["o--", "o--", "o--", "ooo", "---"]
+	returns = 6
+	result = cls.countStars(input0)
+	return result == returns
+
+def example4():
+	cls = FoxAndGame()
+	input0 = ["---", "o--", "oo-", "ooo", "ooo", "oo-", "o--", "---"]
+	returns = 12
+	result = cls.countStars(input0)
+	return result == returns
+
+def example5():
+	cls = FoxAndGame()
+	input0 = ["---", "---", "---", "---", "---", "---"]
+	returns = 0
+	result = cls.countStars(input0)
+	return result == returns
+
+def example6():
+	cls = FoxAndGame()
+	input0 = ["oo-"]
+	returns = 2
+	result = cls.countStars(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

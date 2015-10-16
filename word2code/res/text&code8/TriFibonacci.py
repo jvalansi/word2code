@@ -6,6 +6,7 @@ class TriFibonacci:
         input_array = A
         
         
+        
         # input_array TriFibonacci sequence begins by defining the first three elements input_array[0], input_array[1] and input_array[2].
         # The remaining elements are calculated using the following recurrence: input_array[i] = input_array[i-1] + input_array[i-2] + input_array[i-3]
         def mapping0(possibility):

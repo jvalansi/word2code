@@ -282,6 +282,7 @@ def check_solutions(problem_parse, possible_types, possible_solutions, tries, in
     :param fname:
     '''
     print('check_solutions')
+    result = False
     fpath = os.path.join(solutions_dir, clean_name(fname))
     if not os.path.exists(fpath):
         os.mkdir(fpath)
@@ -318,9 +319,11 @@ def check_solutions(problem_parse, possible_types, possible_solutions, tries, in
             f.write(compose_problem(preprocessed_parse))
         if check_solution(sol_fname):
             print(True)
+            result = True
         else:
             shutil.move(sol_fname, bad_fpath)
     print(False)
+    return result
 
 def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir):
     '''
@@ -526,18 +529,18 @@ def main():
     sentence_dir = os.path.join(problem_dir, 'sentence_json')
     n = 1
     word_dir = os.path.join(problem_dir, 'word_json')
-    word_dir = os.path.join(problem_dir, 'word_test_json')
+#     word_dir = os.path.join(problem_dir, 'word_test_json')
 #     word_dir = os.path.join(problem_dir, 'word_json_struct')
 #     word_dir = os.path.join(problem_dir, 'word_json_test_struct')
     m = 3
 
     intersections_path = os.path.join(problem_dir, 'intesections')
     N = M = P = 4
-#     check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path)
+    check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path)
     
     tries = 10000
     solutions_dir = os.path.join(problem_dir, 'solutions')
-    print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+#     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
 # ['AverageAverage.py', 'ChocolateBar.py', 'MarbleDecoration.py', 'SumOfPower.py']
 
 

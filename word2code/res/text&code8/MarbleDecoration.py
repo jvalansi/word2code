@@ -37,13 +37,58 @@ class MarbleDecoration:
         return reduce(map(mapping, filter(valid0, filter(valid0, possibilities))))
 
 def example0():
-    R = 3
-    G = 0
-    B = 0
-    md = MarbleDecoration()
-    result = md.maxLength(R, G, B)
-    returns = 1
-    return result == returns
-    
+	cls = MarbleDecoration()
+	input0 = 0
+	input1 = 0
+	input2 = 0
+	returns = 0
+	result = cls.maxLength(input0, input1, input2)
+	return result == returns
+
+def example1():
+	cls = MarbleDecoration()
+	input0 = 3
+	input1 = 0
+	input2 = 0
+	returns = 1
+	result = cls.maxLength(input0, input1, input2)
+	return result == returns
+
+def example2():
+	cls = MarbleDecoration()
+	input0 = 5
+	input1 = 1
+	input2 = 2
+	returns = 5
+	result = cls.maxLength(input0, input1, input2)
+	return result == returns
+
+def example3():
+	cls = MarbleDecoration()
+	input0 = 7
+	input1 = 7
+	input2 = 4
+	returns = 14
+	result = cls.maxLength(input0, input1, input2)
+	return result == returns
+
+def example4():
+	cls = MarbleDecoration()
+	input0 = 2
+	input1 = 3
+	input2 = 5
+	returns = 7
+	result = cls.maxLength(input0, input1, input2)
+	return result == returns
+
+def example5():
+	cls = MarbleDecoration()
+	input0 = 13
+	input1 = 13
+	input2 = 13
+	returns = 26
+	result = cls.maxLength(input0, input1, input2)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

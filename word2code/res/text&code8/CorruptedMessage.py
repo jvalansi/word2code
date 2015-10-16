@@ -10,6 +10,7 @@ class CorruptedMessage:
         '''  Your friend just sent you a message.'''
         
         
+        
         # The message consisted of one or more copies of the same lowercase letter.
         def mapping0(possibility):
             #### def reduce(possibility): return copies(possibility, N)

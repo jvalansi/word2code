@@ -9,6 +9,7 @@ class AmoebaDivTwo:
         types = ['A', 'M']
         
         
+        
         # Little Romeo likes cosmic amoebas a lot.
         # Recently he received one as a gift from his mother.
         # He decided to place his amoeba on a rectangular input_array.
@@ -38,12 +39,52 @@ class AmoebaDivTwo:
         # Two ways are considered different if and only if there is a input_array cell that is covered in one but not the other.
 
 def example0():
-    table = ['MA']
-    K = 2
-    adt = AmoebaDivTwo()
-    returns = 0
-    result = adt.count(table, K)
-    return returns == result
+	cls = AmoebaDivTwo()
+	input0 = ["MA"]
+	input1 = 2
+	returns = 0
+	result = cls.count(input0, input1)
+	return result == returns
+
+def example1():
+	cls = AmoebaDivTwo()
+	input0 = ["AAA", "AMA", "AAA"]
+	input1 = 3
+	returns = 4
+	result = cls.count(input0, input1)
+	return result == returns
+
+def example2():
+	cls = AmoebaDivTwo()
+	input0 = ["AA", "AA", "AA"]
+	input1 = 2
+	returns = 7
+	result = cls.count(input0, input1)
+	return result == returns
+
+def example3():
+	cls = AmoebaDivTwo()
+	input0 = ["MMM", "MMM", "MMM"]
+	input1 = 1
+	returns = 0
+	result = cls.count(input0, input1)
+	return result == returns
+
+def example4():
+	cls = AmoebaDivTwo()
+	input0 = ["AAM", "MAM", "AAA"]
+	input1 = 1
+	returns = 6
+	result = cls.count(input0, input1)
+	return result == returns
+
+def example5():
+	cls = AmoebaDivTwo()
+	input0 = ["AAA", "AAM", "AAA"]
+	input1 = 2
+	returns = 9
+	result = cls.count(input0, input1)
+	return result == returns
 
 if __name__ == '__main__':
     print(example0())

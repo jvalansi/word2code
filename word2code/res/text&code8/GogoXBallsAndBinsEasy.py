@@ -7,6 +7,7 @@ class GogoXBallsAndBinsEasy:
         N = len(input_array)
         
         
+        
         # Like all other software engineers, Gogo likes to play with bins and balls.
         # He has N bins, numbered 0 through N-1.
         # Yesterday, Gogo distributed all his balls into the bins, placing S[0] balls into bin 0, S[1] balls into bin 1, and so on.
@@ -50,11 +51,32 @@ class GogoXBallsAndBinsEasy:
         return reduce(map(mapping0, possibilities))
 
 def example0():
-	T = [0, 2, 5]
-	gxbabe = GogoXBallsAndBinsEasy()
-	result = gxbabe.solve(T)
+	cls = GogoXBallsAndBinsEasy()
+	input0 = [0, 2, 5]
 	returns = 5
+	result = cls.solve(input0)
 	return result == returns
-    
+
+def example1():
+	cls = GogoXBallsAndBinsEasy()
+	input0 = [5, 6, 7, 8]
+	returns = 4
+	result = cls.solve(input0)
+	return result == returns
+
+def example2():
+	cls = GogoXBallsAndBinsEasy()
+	input0 = [0, 1, 2, 10]
+	returns = 11
+	result = cls.solve(input0)
+	return result == returns
+
+def example3():
+	cls = GogoXBallsAndBinsEasy()
+	input0 = [1, 2, 3, 4, 5, 6, 7, 8]
+	returns = 16
+	result = cls.solve(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

@@ -8,6 +8,7 @@ class FoxAndGomoku:
         types = ['o','.']
         
         
+        
         # Fox Ciel is going to play Gomoku with her friend Fox Jiro.
         # Ciel plays better, so before they start she allowed Jiro to put some of his pieces on the input_array.
         # You are given a String[] input_array that represents a square input_array.
@@ -34,11 +35,67 @@ class FoxAndGomoku:
         return reduce(filter(valid0, possibilities))
 
 def example0():
-    board = ".ooooo"
-    fag = FoxAndGomoku()
-    result = fag.win(board)
-    returns = "not found"
-    return result == returns
-    
+	cls = FoxAndGomoku()
+	input0 = ["....o.", "...o..", "..o...", ".o....", "o.....", "......"]
+	returns = "found"
+	result = cls.win(input0)
+	return result == returns
+
+def example1():
+	cls = FoxAndGomoku()
+	input0 = ["oooo.", ".oooo", "oooo.", ".oooo", "....."]
+	returns = "not found"
+	result = cls.win(input0)
+	return result == returns
+
+def example2():
+	cls = FoxAndGomoku()
+	input0 = ["oooo.", ".oooo", "oooo.", ".oooo", "....o"]
+	returns = "found"
+	result = cls.win(input0)
+	return result == returns
+
+def example3():
+	cls = FoxAndGomoku()
+	input0 = ["o.....", ".o....", "..o...", "...o..", "....o.", "......"]
+	returns = "found"
+	result = cls.win(input0)
+	return result == returns
+
+def example4():
+	cls = FoxAndGomoku()
+	input0 = ["o....", "o.o..", "o.o.o", "o.o..", "o...."]
+	returns = "found"
+	result = cls.win(input0)
+	return result == returns
+
+def example5():
+	cls = FoxAndGomoku()
+	input0 = ["..........", "..........", "..oooooo..", "..o.......", "..o.......", "..oooooo..", ".......o..", ".......o..", "..oooooo..", ".........."]
+	returns = "found"
+	result = cls.win(input0)
+	return result == returns
+
+def example6():
+	cls = FoxAndGomoku()
+	input0 = ["..........", "..........", "..oooo.o..", "..o.......", "..o.......", "..o.oooo..", ".......o..", ".......o..", "..oooo.o..", ".........."]
+	returns = "not found"
+	result = cls.win(input0)
+	return result == returns
+
+def example7():
+	cls = FoxAndGomoku()
+	input0 = ["ooooo", "ooooo", "ooooo", "ooooo", "ooooo"]
+	returns = "found"
+	result = cls.win(input0)
+	return result == returns
+
+def example8():
+	cls = FoxAndGomoku()
+	input0 = [".....", ".....", ".....", ".....", "....."]
+	returns = "not found"
+	result = cls.win(input0)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

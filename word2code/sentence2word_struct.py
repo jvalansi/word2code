@@ -152,16 +152,16 @@ def main():
 #     s2ws.build_train(test_indir, test_dir, False)
 
     outdir = os.path.join(problem_dir, 'word_json_struct')
-#     s2ws.test(train_dir, outdir, build_features=True, overwrite=True)
+    s2ws.test(train_dir, outdir, build_features=True, overwrite=True)
     
     test_output_dir = os.path.join(test_indir, 'word_json_test_struct')
 #     s2ws.test(train_dir, test_output_dir, test_dir=test_dir, overwrite=False)
 
-    n = 2
+    n = 3
     labels = get_features(train_dir)[2]
     labels.remove('O')
     s2w = Sentence2Word()
-#     print(s2w.calc_score(outdir, n, labels=labels))
+    print(s2w.calc_score(outdir, n, labels=labels))
 #     result1 = s2w.calc_score(outdir, n)
     online_dir = outdir+'_online'
 #     result2 = s2w.calc_score(online_dir, n)

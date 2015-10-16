@@ -7,6 +7,7 @@ class SemiPerfectSquare:
         inf = 1000
         
         
+        
         # Magical Girl Iris loves perfect squares.
         # A positive integer n is a perfect square if and only if there is a positive integer b >= 1 such that b*b = n. For example, 1 (=1*1), 16 (=4*4), and 169 (=13*13) are perfect squares, while 2, 54, and 48 are not.
         # Iris also likes semi-squares.

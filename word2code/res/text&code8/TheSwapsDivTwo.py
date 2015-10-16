@@ -8,6 +8,7 @@ class TheSwapsDivTwo:
         N = len(sequence)
         
         
+        
         # John has a input_array of integers.
         # Brus is going to choose two different positions in John's input_array and swap the elements at those positions.
         #### possibilities = choose(positions(N), two)

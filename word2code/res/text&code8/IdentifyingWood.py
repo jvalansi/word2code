@@ -9,6 +9,7 @@ class IdentifyingWood:
         
         
         
+        
         # We call a pair of Strings (input_array0, input_array1) "wood" if input_array1 is contained in input_array0 as a subsequence.
         def reduce0(possibility):
             #### possibilities = possibility
@@ -27,12 +28,44 @@ class IdentifyingWood:
         return reduce(reduce0(possibilities))
 
 def example0():
-    s = "absdefgh"
-    t = "asdf"
-    iw = IdentifyingWood()
-    result = iw.check(s, t)
-    returns = "Nope."
-    return result == returns
-    
+	cls = IdentifyingWood()
+	input0 = "absdefgh"
+	input1 = "asdf"
+	returns = "Yep, it's wood."
+	result = cls.check(input0, input1)
+	return result == returns
+
+def example1():
+	cls = IdentifyingWood()
+	input0 = "oxoxoxox"
+	input1 = "ooxxoo"
+	returns = "Nope."
+	result = cls.check(input0, input1)
+	return result == returns
+
+def example2():
+	cls = IdentifyingWood()
+	input0 = "oxoxoxox"
+	input1 = "xxx"
+	returns = "Yep, it's wood."
+	result = cls.check(input0, input1)
+	return result == returns
+
+def example3():
+	cls = IdentifyingWood()
+	input0 = "qwerty"
+	input1 = "qwerty"
+	returns = "Yep, it's wood."
+	result = cls.check(input0, input1)
+	return result == returns
+
+def example4():
+	cls = IdentifyingWood()
+	input0 = "string"
+	input1 = "longstring"
+	returns = "Nope."
+	result = cls.check(input0, input1)
+	return result == returns
+
 if __name__ == '__main__':
     print(example0())

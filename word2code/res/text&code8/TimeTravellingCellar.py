@@ -9,6 +9,7 @@ class TimeTravellingCellar:
         
         
         
+        
         # Gogo owns N wine cellars, numbered 0 through N-1.
         # He possesses a time machine and will use it to advance time in one of the cellars, maturing all the wine inside.
         # However, as a side effect, he must also choose one other cellar and turn back time there, making the wine inside younger.
