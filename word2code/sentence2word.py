@@ -173,14 +173,6 @@ def main():
     check_dir = output_dir
 #     m = 2
 #     print(s2w.calc_score(check_dir, m, indir))
-    scores = {}
-    for m in range(1,20):
-        scores[m] = len(s2w.calc_score(check_dir, m, indir))
-    print(scores)
-    import matplotlib.pyplot as plt
-    plt.plot(scores.values())
-    plt.ylabel('some numbers')
-    plt.show()
     
     fname = 'MountainRanges.label'
 #     fname = 'BlockTower.label'

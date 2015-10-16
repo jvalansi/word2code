@@ -21,7 +21,7 @@ import numpy
 import shutil
 import copy
 from utils import check_solution, clean_name, codeline_types, get_codeline_type,\
-    add_codeline_prefix, clean_codeline
+    add_codeline_prefix, clean_codeline, draw, show, check_solution_path
 import problem_parser
 from sentence2word import Sentence2Word
 from problem2sentence import Problem2Sentence
@@ -35,11 +35,11 @@ golden_sentence = True #46% for False
 golden_method = True #85% for False
 golden_code = False #87% for False 
 
-golden_possibilities_codeline = False #10%
-golden_codeline = True #50%
+golden_possibilities_codeline = True #10%
+golden_codeline = False #50%
 golden_return_codeline = True #66% for False
 
-golden_words = True #10%
+golden_words = False #10%
 golden_codewords = True #10%
 
 #     phrase to code:
@@ -89,19 +89,24 @@ golden_codewords = True #10%
 #     ####    valid = lambda amoeba:     every(contain(cell, antimatter[0]) for cell of table if covered(cell, amoeba))
 #             valid = lambda possibility: all(contains(element, types[0]) for element in input_array if contains(element, possibility))
 
+def get_default_codeline(word_type):
+    type_codelines = set()
+    if word_type == 'possibilities':
+        type_codelines.add((0.5, 'pass'))
+    elif word_type == 'valid':
+        type_codelines.add((1.0, word_type +' = lambda possibility: True'))
+#                 type_codelines.add((1.0, word_type +' = lambda possibility: possibility'))
+    else:
+        type_codelines.add((1.0, word_type +' = lambda possibility: possibility'))
+    return type_codelines
+
 def get_expected_codeline(code, word_type):
         type_codelines = set()
         for codeline in code:
             if get_codeline_type(codeline) == word_type:
                 type_codelines.add((1.0, codeline))
         if not type_codelines:
-            if word_type == 'possibilities':
-                type_codelines.add((0.5, 'pass'))
-            elif word_type == 'valid':
-                type_codelines.add((1.0, word_type +' = lambda possibility: True'))
-#                 type_codelines.add((1.0, word_type +' = lambda possibility: possibility'))
-            else:
-                type_codelines.add((1.0, word_type +' = lambda possibility: possibility'))
+            type_codelines = get_default_codeline(word_type)
         return type_codelines
 
 
@@ -119,7 +124,7 @@ def get_possibilities_codeline(sentence_parse, possible_types):
     return possibilities_codelines
 
 
-def get_type_codelines(word_type, type_codewords, type_words, sentence, sentence_type):
+def get_type_codelines(word_type, type_codewords, var_codewords, transdict, sentence, sentence_type):
     '''
     get all possible codelines according to word type and codewords
     
@@ -127,21 +132,33 @@ def get_type_codelines(word_type, type_codewords, type_words, sentence, sentence
     :param type_codewords:
     '''
     type_codelines = set()
-    for codeword_product in product(*type_codewords):
+    all_codewords = type_codewords + var_codewords
+    for codeword_product in product(*all_codewords):
         if not codeword_product:
             continue
-        for codeword_combination in combinations(codeword_product, min(len(codeword_product),2)):
+        funcwords = codeword_product[:len(type_codewords)]
+        if not funcwords:
+            continue
+        varwords = codeword_product[len(type_codewords):]
+        if varwords:
+            probs, varwords = zip(*varwords)
+        for funcwords_combination in combinations(funcwords, min(len(funcwords),2)):
 #         codeword_combination = codeword_product
-            probs, codewords = zip(*codeword_combination)
+            probs, codewords = zip(*funcwords_combination)
             p = numpy.prod(probs)
 #             possible_codelines = get_possible_codelines(codewords)
-            codewords = list(codewords)
-            transdict = dict(zip(type_words, codewords))
-            possible_codelines = get_possible_codelines(sentence, transdict, sentence_type, word_type)
+            codewords = list(codewords) + list(varwords)
+            possible_codelines = []
+            subtransdict = {k:v for k,v in transdict.items() if v in codewords and v != "input_array"}
+            possible_codelines = get_possible_codelines(sentence, subtransdict, sentence_type, word_type)
+            subtransdict = {k:v for k,v in transdict.items() if v in codewords}
+            possible_codelines.extend(get_possible_codelines(sentence, subtransdict, sentence_type, word_type)) #TODO: fix duplicate
 #             possible_codelines = get_possible_codelines(codewords)
             possible_codelines = [add_codeline_prefix(codeline, word_type) for codeline in possible_codelines]
             possible_codelines = [(p, type_codeline) for type_codeline in possible_codelines]
             type_codelines.update(possible_codelines)
+    if not type_codelines:
+        type_codelines = get_default_codeline(word_type)
     type_codelines = sorted(type_codelines, reverse=True)[:100]
     return type_codelines
 
@@ -184,7 +201,10 @@ def get_combinations(possible_codes):
     product_code = [code for p, code in product_code]
     return product_code
 
-def generate_possible_code(sentence_json, m, translations_count, p, sentence_parse, sentence_types):
+def to_dict(words, codewords):
+    return {codeword: word for word,word_codewords in zip(words, codewords) for p,codeword in word_codewords}
+
+def generate_possible_code(sentence_json, M, translations_count, P, sentence_parse, sentence_types):
     '''
     generate all possible code for sentence 
     
@@ -197,7 +217,19 @@ def generate_possible_code(sentence_json, m, translations_count, p, sentence_par
     '''
     possible_codes = []
     possible_tranlations = []
+    if golden_words:
+        var_words = Sentence2Word().get_expected_label_words(sentence_json, 'var')
+    else:
+        var_words = Sentence2Word().get_probable_label_words(sentence_json, 'var', M)
+    if golden_codewords:
+        golden_transdict = get_translation_dict(sentence_parse['translations'], sentence_parse['code'], stem=False)
+        var_codewords = [[(1.0, golden_transdict[word])] for word in var_words if word in golden_transdict] #TODO: remove filter (should all be in dict)
+    else:
+        var_codewords = [word2codewords(word, translations_count, p=P) for word in var_words]
+    vartransdict = to_dict(var_words, var_codewords)
+    varcodedict = {v:k for v,k in vartransdict.items()}
     for word_type in codeline_types:
+        print(word_type)
 #         if word_type in ['possibilities', 'return']:
         if word_type in ['return']:
             continue
@@ -210,22 +242,24 @@ def generate_possible_code(sentence_json, m, translations_count, p, sentence_par
             if golden_words:
                 type_words = Sentence2Word().get_expected_label_words(sentence_json, word_type)
             else:
-                type_words = Sentence2Word().get_probable_label_words(sentence_json, word_type, m)
+                type_words = Sentence2Word().get_probable_label_words(sentence_json, word_type, M)
+#             print(type_words)
             if golden_codewords:
-                golden_transdict = get_translation_dict(sentence_parse['translations'], sentence_parse['code'], stem=False)
-                type_codewords = [[(1.0, golden_transdict[word])] for word in type_words]
+                type_codewords = [[(1.0, golden_transdict[word])] for word in type_words if word in golden_transdict] #TODO: remove filter (should all be in dict)
             else:
-                type_codewords = [word2codewords(word, translations_count, p=p) for word in type_words]
+                type_codewords = [word2codewords(word, translations_count, p=P) for word in type_words]
+#             print(type_codewords)
     #             if word_type != 'possibilities':
     #                 type_codewords = [[(prob,word) for prob,word in word_codewords if word not in possibilities_funcs] for word_codewords in type_codewords]
-            type_codelines = get_type_codelines(word_type, type_codewords, type_words, sentence_parse['sentence'], sentence_types[-1][1])
-    #         type_codelines = get_type_codelines(word_type, [])
-            codedict = {codeword: word for word,word_codewords in zip(type_words, type_codewords) for p,codeword in word_codewords}
-            clean_codelines = [(p,clean_codeline(type_codeline)) for p,type_codeline in type_codelines]
-            type_translations = [(p,translate_code(codeline, codedict)) for p,codeline in clean_codelines]
-            type_translations = [(p,add_codeline_prefix(translation, word_type)) for p,translation in type_translations]             
-#         if codeline.strip() not in type_codelines:
-#             print(False)
+            codedict = to_dict(type_words, type_codewords)
+            codedict.update(varcodedict)
+            transdict = {v:k for k,v in codedict.items()}
+            print(codedict)
+            type_codelines = get_type_codelines(word_type, type_codewords, var_codewords, transdict, sentence_parse['sentence'], sentence_types[-1][1])
+            print(type_codelines)
+            clean_codelines = [(prob,clean_codeline(type_codeline)) for prob,type_codeline in type_codelines]
+            type_translations = [(prob,translate_code(codeline, codedict)) for prob,codeline in clean_codelines]
+            type_translations = [(prob,add_codeline_prefix(translation, word_type)) for prob,translation in type_translations]             
         possible_tranlations.append(type_translations)
         possible_codes.append(type_codelines)
     if sentence_types[-1][1] != 'possibilities':
@@ -252,11 +286,13 @@ def check_solutions(problem_parse, possible_types, possible_solutions, tries, in
     if not os.path.exists(fpath):
         os.mkdir(fpath)
     good_fpath = os.path.join(fpath,'Good')
-    if not os.path.exists(good_fpath):
-        os.mkdir(good_fpath)
+    if os.path.exists(good_fpath):
+        shutil.rmtree(good_fpath)
+    os.mkdir(good_fpath)
     bad_fpath = os.path.join(fpath,'Bad')
-    if not os.path.exists(bad_fpath):
-        os.mkdir(bad_fpath)
+    if os.path.exists(bad_fpath):
+        shutil.rmtree(bad_fpath)
+    os.mkdir(bad_fpath)
 #     return_statement = build_return(possible_types)
     preprocessed_parse = copy.deepcopy(problem_parse)
     for possible_type in possible_types:
@@ -273,29 +309,18 @@ def check_solutions(problem_parse, possible_types, possible_solutions, tries, in
             print(j)
         if j > tries:
             return False
-#         new_parse = copy.deepcopy(preprocessed_parse)
-        success = False
         for i, (possible_code, possible_translation) in enumerate(possible_solution):
             sentence_idx, sentence_type = possible_types[i]
-#             code = preprocessed_parse['sentences'][sentence_idx]['code']
-#             code = tuple(codeline.strip() for codeline in code)
-#             if code == possible_code:
-#                 success = True
             preprocessed_parse['sentences'][sentence_idx]['code'] = possible_code
             preprocessed_parse['sentences'][sentence_idx]['translations'] = possible_translation
-#         if i > indexOf(possible_codes, code):
-#             return False
         sol_fname = os.path.join(good_fpath, str(j)+'.py')
         with open(sol_fname, 'w') as f:
             f.write(compose_problem(preprocessed_parse))
-        if check_solution(fpath):
-            return True
+        if check_solution(sol_fname):
+            print(True)
         else:
             shutil.move(sol_fname, bad_fpath)
-        if success:
-            return True
     print(False)
-    return False
 
 def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir):
     '''
@@ -368,7 +393,7 @@ def check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, so
 # def gen_code(possible_codelines):
 #     all_possible_code = product([type_codelines for codeline_type, type_codelines in possible_codelines.items()])
 
-def check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries, solutions_dir, fail_dir=None):
+def check_problems(problem_dir, sentence_dir, n, word_dir, m, p_thresh, tries, solutions_dir):
     '''
     check all the problem in the problem dir
     for each problem:
@@ -422,21 +447,28 @@ def check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P
         N0 = N-1
         M0 = M-1
         P0 = P-1
+
+    total = check_solution_path(problem_dir)
+    ylim = (0,len(total))
+
     sentence_score = {}
     for n in range(N0,N):
         sentence_score[n] = Problem2Sentence().calc_score(sentence_dir, n)
         sentence_score[n] = map(clean_name, sentence_score[n])
+    draw(sentence_score, "Sentence Extraction Score", ylim, "Number of predictions per label")
 
     word_score = {}
     for m in range(M0,M):
         word_score[m] = Sentence2Word().calc_score(word_dir, m)
-        word_score[m] = map(clean_name, word_score[m])
+        word_score[m] = map(clean_name, word_score[m])    
+    draw(word_score, "Word Extraction Score", ylim, "Number of predictions per label")
 
     codeword_score = {}
     for p in range(P0,P):
         p_thresh = p
         codeword_score[p] = word2codeword.check_words(problem_dir, p_thresh)
         codeword_score[p] = map(clean_name, codeword_score[p])
+    draw(codeword_score, "Codeword Translation Score", ylim, "Number of translations per word")
 
 #     codeline_score1 = codeline_gen.check_sentences(problem_dir)
 #     codeline_score1 = map(clean_name, codeline_score1)
@@ -445,6 +477,7 @@ def check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P
     for q in range(Q0, Q):
         codeline_score2[q] = codeline_gen_dep.check_problems(problem_dir, q)
         codeline_score2[q] = map(clean_name, codeline_score2[q])
+    draw(codeline_score2, "Codeline Building Score", ylim, "Number of wrong edges allowed")
 
 #     print('wo dep: '+ str(set(problem_score).intersection(set(word_score)).intersection(set(codeword_score)).intersection(codeline_score1)))
     summary = ""
@@ -483,7 +516,8 @@ def check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P
     if all_range:
         with open(os.path.join(intersections_path, 'summary'), 'w') as f:
             f.write(summary)
-
+    show()
+    
 def main():
 #     problem_dir = os.path.join('res', 'problems_test1')
     problem_dir = os.path.join('res', 'text&code8')
@@ -495,7 +529,7 @@ def main():
     word_dir = os.path.join(problem_dir, 'word_test_json')
 #     word_dir = os.path.join(problem_dir, 'word_json_struct')
 #     word_dir = os.path.join(problem_dir, 'word_json_test_struct')
-    m = 2
+    m = 3
 
     intersections_path = os.path.join(problem_dir, 'intesections')
     N = M = P = 4
@@ -503,17 +537,11 @@ def main():
     
     tries = 10000
     solutions_dir = os.path.join(problem_dir, 'solutions')
-    success1 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
-#     global golden_return_codeline
-#     golden_return_codeline = False
-#     solutions_dir = os.path.join(problem_dir, 'solutions_return')
-#     success2 = (check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
-    print(success1)
-#     print(success2)
-#     print(sorted(set(success2).difference(success1)))
+    print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+# ['AverageAverage.py', 'ChocolateBar.py', 'MarbleDecoration.py', 'SumOfPower.py']
 
 
-    fname = 'AverageAverage.py'
+    fname = 'CucumberMarket.py'
 #     print(check_problem(fname, problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
 #     fpath = os.path.join(solutions_dir, fname)
 #     print(check_solution(fpath))

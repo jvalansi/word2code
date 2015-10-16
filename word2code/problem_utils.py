@@ -65,14 +65,17 @@ def argmin(S):
     return S[S.index(min(S))]
 
 def average(S):
-    if not S:
+    if not S or not hasattr(S, '__iter__'):
         return 0
+    if hasattr(S[0], '__iter__'):
+        S = [x for s in S for x in s]
     return float(sum(S))/len(S)
 
 def diff(S1,S2):
     return list(compress(S1,map(ne,S1,S2)))
 
 def is_even(i):
+    print(i)
     return i%2==0
 
 def is_odd(i):
@@ -83,7 +86,9 @@ def is_prime(n):
         return False
     return all(n % i for i in range(3, int(math.sqrt(n)) + 1, 2))
   
-def is_divisor(x, y): #TODO: add translations 
+def is_divisor(x, y): #TODO: add translations
+    if x == 0:
+        return None 
     return (mod(y, x) == 0)
 
 def is_positive(n):
@@ -130,5 +135,7 @@ if __name__ == '__main__':
 #     print(list(csubsets(S1)))
 #     print(list(diff(S1, S2)))
     S = ['A','B','C']
-    print(list(cpartitions(S,2)))
+#     print(list(cpartitions(S,2)))
+
+    print(diff(['A','B','A'], ['A','A']))
     pass

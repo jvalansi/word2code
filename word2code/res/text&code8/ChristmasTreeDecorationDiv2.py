@@ -33,7 +33,7 @@ class ChristmasTreeDecorationDiv2:
         # Compute and return the number of beautiful ribbons in Alice's tree.
         #### def reduce(possibility): return number(possibility)
         def reduce(possibility): return len(possibility)
-        #### return reduce(filter(valid0, map(beautiful, ribbons)))
+        #### return reduce(filter(valid0, possibilities))
         return reduce(filter(valid0, possibilities))
 
 def example0():

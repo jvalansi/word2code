@@ -20,7 +20,7 @@ class ChocolateBar:
             #### possibilities = pairs(bar)
             possibilities = pairs(possibility)
             #### def valid(letters): return repeated(* letters)
-            def valid(possibility): return eq(*possibility)
+            def valid(possibility): return eq(* possibility)
             #### def reduce(possibility): return no(possibility)
             def reduce(possibility): return not_(possibility)
             #### return reduce(filter(valid, possibilities))

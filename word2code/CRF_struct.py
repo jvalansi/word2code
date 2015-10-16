@@ -197,17 +197,27 @@ class CrfStruct(LearnerWrapper):
             Y.append(y)
         return Y
     
+    def build_and_get_data(self, data_dir):
+        Xs = []
+        Ys = []
+        self.build_train(data_dir, data_dir)
+        data_features = get_features(data_dir)
+        for sol_fname in os.listdir(data_dir):
+            if not sol_fname.endswith('.label'):
+                continue
+            (X_data, Y_data) = self.get_data_from_file(data_dir, sol_fname, data_features)
+            Xs.append(X_data)
+            Ys.append(Y_data)
+        return (Xs, Ys)
+    
     def test_file(self, train_dir, fname, features, learner, model, outdir, 
-                  test_dir=None, overwrite=True, online=False, n=2, online_dir=None, sol_dir=None):
-        if online and online_dir:
-            json_dir = outdir
-            outdir = online_dir
+                  test_dir=None, overwrite=True, online=False, n=2, json_dir=None, sol_dir=None):
         fpath_out = os.path.join(outdir, clean_name(fname)+'.json')
         if not overwrite and os.path.exists(fpath_out):
             return
         X_train, Y_train, X_test, Y_test = self.get_data(train_dir, fname, features, test_dir)
         (node_features, edge_features, output_features) = features
-        if online:
+        if online and json_dir:
             #TODO: only if correct
             #    get the probable Y which solves the problem
             fpath_json = os.path.join(json_dir, clean_name(fname)+'.json')
@@ -234,24 +244,10 @@ class CrfStruct(LearnerWrapper):
             # get all Y_goods from good folder
             # for each Y_good get most similar Y_bads
             # for each pair of Y_good, Y_bad update learner
-            Y_goods = []
             good_dir = os.path.join(sol_dir, 'Good')
-            self.build_train(good_dir, good_dir)
-            good_features = get_features(good_dir)
-            for sol_fname in os.listdir(good_dir):
-                if not sol_fname.endswith('.label'):
-                    continue
-                (X_good, Y_good) = self.get_data_from_file(good_dir, sol_fname, good_features)
-                Y_goods.append(Y_good)
-            Y_bads = []
-            bad_dir = os.path.join(sol_dir, 'Good')
-            self.build_train(bad_dir, bad_dir)
-            bad_features = get_features(bad_dir)
-            for sol_fname in os.listdir(bad_dir):
-                if not sol_fname.endswith('.label'):
-                    continue
-                (X_bad, Y_bad) = self.get_data_from_file(bad_dir, sol_fname, bad_features)
-                Y_bads.append(Y_bad)
+            X_goods, Y_goods = self.build_and_get_data(good_dir)
+            bad_dir = os.path.join(sol_dir, 'Bad')
+            X_bads, Y_bads = self.build_and_get_data(bad_dir)
             pairs = {}
             for (Y_good,Y_bad) in product(Y_goods,Y_bads):
                 if Y_good not in pairs or pairs[Y_good] > learner.model.loss(Y_good, Y_bad): #TODO: check >
@@ -275,15 +271,12 @@ class CrfStruct(LearnerWrapper):
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
 
     
-    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, online=False, n=2, online_dir=None, sol_dir=None):
+    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, 
+             online=False, n=2, json_dir=None, sol_dir=None):
         if os.path.exists(outdir) and overwrite:
             shutil.rmtree(outdir)
         if not os.path.exists(outdir):
             os.mkdir(outdir)    
-        if not online_dir:
-            online_dir = outdir+'_online'
-        if not os.path.exists(online_dir):
-            os.mkdir(online_dir)
         features = get_features(train_dir, build_features)
         inference_method = 'ad3'
         inference_method = 'lp'
@@ -299,7 +292,8 @@ class CrfStruct(LearnerWrapper):
                 continue
             print(datetime.now())
             print(fname)
-            self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite, online, n=2, online_dir=online_dir, sol_dir=sol_dir)
+            self.test_file(train_dir, fname, features, learner, crf, outdir, test_dir, overwrite, 
+                           online=online, n=2, json_dir=json_dir, sol_dir=sol_dir)
     
     
 

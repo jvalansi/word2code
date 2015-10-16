@@ -325,7 +325,37 @@ def parse_problems(indir, outdir):
             print(fname)
     
 
-if __name__ == '__main__':
+def import_section(dir1, dir2, problem_name, section):
+        problem_path2 = os.path.join(dir2, problem_name) 
+        with open(problem_path2) as fp:
+            problem2 = fp.read()
+#             find matching problem1 in dir1
+        problem_path1 = os.path.join(dir1, problem_name)
+        if not os.path.exists(problem_path1):
+            return
+        with open(problem_path1) as fp:
+            problem1 = fp.read()
+#             parse problem1
+        problem1_parse = parse_problem(problem1)
+#             parse problem2
+        problem2_parse = parse_problem(problem2)
+#             problem2_parse['examples'] = problem1_parse['examples']
+        problem2_parse[section] = problem1_parse[section]
+#             compose(problem2)
+        problem2 = compose_problem(problem2_parse)
+        with open(problem_path2, 'w') as fp:
+            fp.write(problem2)
+
+def import_section_dir(dir1, dir2, section):
+#        for each problem2 in dir2:
+    for problem_name in sorted(os.listdir(dir2)):
+        if not problem_name.endswith('.py'):
+            continue
+        import_section(dir1, dir2, problem_name, section) 
+
+
+def main():
+
 #     with open('res/translations/CorruptedMessage.py') as f:
 #         problem = f.read()
 #     parse = parse_problem(problem)
@@ -357,7 +387,7 @@ if __name__ == '__main__':
     fname = 'AlienAndPassword.py'
     fname = 'InfiniteString.py'
 #     print(parse_problem_code(fname, indir, outdir))
-    print(parse_problems_code(indir, outdir))
+#     print(parse_problems_code(indir, outdir))
 #     print(check_solution_path(outdir))
 
 #     fpath = os.path.join(indir, fname)
@@ -367,3 +397,11 @@ if __name__ == '__main__':
 #     problem_parse = to_generic_methods(problem_parse)
 #     print(compose_problem(problem_parse))
 
+    dir1 = os.path.join('res', 'translations')
+    dir2 = os.path.join('res', 'text&code8')
+    problem_name = 'AlienAndPassword.py'
+    section = 'example'
+    import_section_dir(dir1, dir2, section)
+    
+if __name__ == '__main__':
+    main()

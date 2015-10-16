@@ -120,6 +120,7 @@ def word2codewords(word, translations_count=None, p_thresh=0.3, p=None):
         return likelihoods
     wordnet_likelihoods = get_wordnet_likelihoods(word, funcword_dict)
     if max(zip(*wordnet_likelihoods)[0]) >= p_thresh:
+        print(p)
         likelihoods = sorted(wordnet_likelihoods, reverse=True)[:p]
         return likelihoods
     model = get_model()

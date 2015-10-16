@@ -191,13 +191,18 @@ def check_problems(path, n=0, success=True):
         
 
 def main():
-#     logger.console.setLevel(logger.logging.DEBUG)
+    logger.console.setLevel(logger.logging.DEBUG)
     problems_path = 'res/text&code8'
-    print(check_problems(problems_path, 1, success=False))
-    fname = 'FoxAndGomoku.py'
-#     print(check_problem(problems_path, fname))
+    print(check_problems(problems_path, success=True))
+    fname = 'CandidatesSelectionEasy.py'
+    print(check_problem(problems_path, fname))
     print(Counter(missing_words))
-
+    
+#     success:    
+# ['AlienAndPassword.py', 'AverageAverage.py', 'BlockTower.py', 'ChocolateBar.py',
+#  'ChristmasTreeDecorationDiv2.py', 'CucumberMarket.py', 'Elections.py', 'FoxAndG
+# ame.py', 'MountainRanges.py', 'SumOfPower.py', 'TournamentsAmbiguityNumber.py', 
+# 'WinterAndMandarins.py']
     
 if __name__ == '__main__':
     main()

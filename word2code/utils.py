@@ -4,6 +4,7 @@ Created on Jul 23, 2015
 @author: jordan
 '''
 
+from __future__ import division
 import imp
 import os
 import json
@@ -16,6 +17,7 @@ import threading
 import doctest
 import logger
 import string
+import matplotlib.pyplot as plt
 # from code_parser import clean_codeline
 
 
@@ -94,24 +96,22 @@ def check_solution_(problem_path):#TODO: make it portable
 def check_solution(problem_path, soln=1):
 #     resource.setrlimit(resource.RLIMIT_DATA, (M, 100*M))   
     try:
-        
-
         if os.path.exists(problem_path+'c'):
             os.remove(problem_path+'c')
         temp = imp.load_source('tmp', problem_path)
+        results = []
         for i in range(soln):
             name = 'example' + str(i)
             if hasattr(temp, name):
-                result = getattr(temp, name)() 
-            if not result:
-                return False
-        return True
+                result = getattr(temp, name)()
+            results.append(result) 
+        return sum(results)/soln
     except Exception:
 #         traceback.print_exc()
-        pass
+        pass;
     return False
 
-def check_solution_path(path):
+def check_solution_path(path, correct=True, soln=1):
     fail = []
     total = 0
 #     not_empty = []
@@ -120,7 +120,7 @@ def check_solution_path(path):
             continue
         print(fname)
         fpath = os.path.join(path, fname)
-        if not check_solution(fpath):
+        if xor(correct,  not check_solution(fpath, soln)):
             fail.append(fname)
         total += 1
     if total:
@@ -265,8 +265,7 @@ def get_codeline_type(codeline):
 
 
 sentence_types = ['return', 'mapping', 'valid', 'reduce', 'possibilities']
-# types = ['return', 'mapping', 'valid', 'reduce', 'possibilities', 'types']
-# types = ['I']
+#sentence_types = ['I']
 
 def get_sentence_type(sentence, translations, code, method):
     '''
@@ -279,6 +278,8 @@ def get_sentence_type(sentence, translations, code, method):
     '''
     if not code:
         return 'O'
+    if len(sentence_types) == 1:
+        return sentence_types[0]
     if method[0]:
         codewords = nltk.word_tokenize(method[0])
         sentence_type = clean_word(codewords[1])
@@ -298,6 +299,20 @@ def get_sentence_type(sentence, translations, code, method):
 #     print(method)
 #     print(code)
     return 'O'
+
+def draw(scores, title = '', ylim = None, xlabel = None):
+    plt.figure()
+    plt.plot(scores.keys(), map(len, scores.values()))
+    plt.ylabel('Correct')
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylim:
+        plt.ylim(ylim)
+    plt.title(title)
+    plt.draw()
+
+def show():
+    plt.show()
 
 if __name__ == '__main__':
 #     main_data_dir = 'res/brute_force_easy/'

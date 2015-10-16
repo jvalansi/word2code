@@ -14,10 +14,11 @@ import doctest
 import ast
 
 class Node:
-    def __init__(self, name='', parent=None, children=None, ntype=None, code=None):
+    def __init__(self, name='', parent=None, children=None, ntype=None, code=None, star=False):
         self.name = name
         self.parent = parent
         self.ntype = ntype
+        self.star = star
         if not children:
             self.children = []
         if code:
@@ -27,7 +28,7 @@ class Node:
         if ind==-1:
             self.children.append(node)
         else:
-            self.children.insert(ind, node)            
+            self.children.insert(ind, node)
         node.parent = self
 
     def move_child(self, child, target):
@@ -94,7 +95,6 @@ class Node:
             self.children.append(node)
             deps_.remove(dep)
             node.deps2tree(deps_)
-        return self
 
     def tree2deps(self):
         deps = []
@@ -115,6 +115,11 @@ class Node:
                 node = Node(parent=self)
                 self.children.append(node)
                 node.ast2tree(arg)
+        if hasattr(parse, 'starargs'):
+            if parse.starargs:
+                node = Node(parent = self, star=True)
+                self.children.append(node)
+                node.ast2tree(parse.starargs)
 #         if isinstance(parse, list):
 #             for p in parse:
 #                 node = Node(parent=self)
@@ -182,6 +187,8 @@ class Node:
         s = ''
         if self.ntype:
             s = self.ntype + '='
+        if self.star:
+            s += '* '
         s += self.name
         if self.children:
             s += '('
@@ -269,8 +276,14 @@ class Node:
 
     def fix_type(self):
         '''
-        if a func is a child of a non-func - swap
+        if the number of arguments is too small, and already has possibility argument, add *
+        >>> root = Node(code = 'eq(possibility)')
+        >>> root.fix_type()
+        >>> print(root)
+        eq(* possibility)
 
+        
+        if a func is a child of a non-func - swap
         >>> root = Node(code = 'len(set(possibility))')
         >>> root.fix_type()
         >>> print(root)
@@ -292,6 +305,7 @@ class Node:
         >>> root.fix_type()
         >>> print(root)
         sub(max(possibility), min(possibility))
+
 
         >>> root = Node(code = 'indexOf(min(possibility))')
         >>> root.fix_type()
@@ -345,6 +359,11 @@ def insert_possibility(node):
         return [new_node]
     if not node.eval_node():
         return node.children
+    for child in node.children:
+        if child.name == 'possibility':
+            child.star = True
+            if not node.eval_node():
+                return node.children
     for i in range(len(node.children)+1):
         tmp_node = copy.deepcopy(node)
         new_node = Node('possibility')
@@ -536,6 +555,15 @@ def split_args(args):
     return args_                
 
 def translate_code(type_codeline, codedict):
+    '''
+    >>> type_codeline = "sum(gt(possibility, input_int1), * possibility)"
+    >>> codedict = {'input_int1': u'input_int1', 'sum': u'total', 'gt': u'greater', 'not_': u'not', 'possibility': u'cucumbers'}
+    >>> print(translate_code(type_codeline, codedict))
+    total(greater(cucumbers, input_int1), * cucumbers)
+    
+    :param type_codeline:
+    :param codedict:
+    '''
     return str(Node(code=type_codeline).translate(codedict))
 
 def main():

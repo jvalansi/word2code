@@ -26,7 +26,7 @@ class BlockTower:
             #### return reduce(map(mapping, possibilities))
             return reduce(map(mapping, possibilities))
         # Josh will never place a box of an even height on top of a box of an odd height.
-        def valid0(possibility):
+        def valid1(possibility):
             #### possibilities = top(possibility)
             possibilities = cpairs(possibility)
             #### def mapping(possibility): return even(box[0])
@@ -42,7 +42,7 @@ class BlockTower:
             #### possibilities = possibility
             possibilities = possibility
             #### reduce = lambda possibility: sum(heights)
-            reduce = (lambda possibility: sum(possibility))
+            reduce = lambda possibility: sum(possibility)
             #### return(reduce(possibilities))
             return reduce(possibilities)
         # You are given the int[] input_array.
@@ -52,7 +52,7 @@ class BlockTower:
         #### def reduce(possibility): return tallest(tower)
         def reduce(possibility): return max(possibility)
         #### return reduce(map(mapping0, filter(valid1, filter(valid0, possibilities))))
-        return reduce(map(mapping0, filter(valid0, filter(valid0, possibilities))))
+        return reduce(map(mapping0, filter(valid1, filter(valid0, possibilities))))
 
 def example0():
 	blockHeights = [4,7]
