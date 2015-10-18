@@ -240,7 +240,7 @@ class CrfStruct(LearnerWrapper):
 
         learner.fit(X_train, Y_train)
         
-        if online and sol_dir:  
+        if online and sol_dir: 
             # get all Y_goods from good folder
             # for each Y_good get most similar Y_bads
             # for each pair of Y_good, Y_bad update learner

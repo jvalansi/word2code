@@ -15,6 +15,7 @@ from CRF_struct import get_features
 from CRF_struct import CrfStruct
 from sentence2word import Sentence2Word
 import ast
+import argparse
 
 
 class Sentence2WordStruct(CrfStruct):
@@ -139,32 +140,41 @@ class Sentence2WordStruct(CrfStruct):
 
 
 def main():
-    s2ws = Sentence2WordStruct()
     problem_dir = os.path.join('res', 'text&code8', 'solutions', 'AverageAverage', 'Good') 
     problem_dir = os.path.join('res', 'text&code8') 
 #     problem_dir = os.path.join('res', 'small') 
-    indir = problem_dir
-    train_dir = os.path.join(problem_dir, 'word_train_struct')
-    s2ws.build_train(indir, train_dir, True)
-    
-    test_indir = indir
-#     test_indir = os.path.join('res', 'problems_test')
-    test_dir = os.path.join(test_indir,'word_test_struct')
-#     s2ws.build_train(test_indir, test_dir, False)
 
-    outdir = os.path.join(problem_dir, 'word_json_struct')
-    s2ws.test(train_dir, outdir, build_features=True, overwrite=True)
-    
-    test_output_dir = os.path.join(test_indir, 'word_json_test_struct')
-#     s2ws.test(train_dir, test_output_dir, test_dir=test_dir, overwrite=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled",
+                        default=problem_dir)
+    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems")
+    parser.add_argument("-od", "--outdir", help="Directory to store output")
+    parser.add_argument("-m", "--M", help="Top M words allowed per label", type=int, default=3)
+    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code", action="store_true")
+    parser.add_argument("-o", "--online", help="Whether to test online", action="store_true")
+    parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online")
+    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online")
+    args = parser.parse_args()
 
-    n = 3
-    labels = get_features(train_dir)[2]
+    
+    s2ws = Sentence2WordStruct()
+    indir = args.problem_dir
+    only_code = not args.all
+    if not args.train_dir:
+        args.train_dir = os.path.join(problem_dir, 'word_train_struct')
+    s2ws.build_train(indir, args.train_dir, only_code)
+    
+    if not args.outdir:
+        args.outdir = os.path.join(problem_dir, 'word_json_struct')
+    s2ws.test(args.train_dir, args.outdir, build_features=True, overwrite=True, 
+              online=args.online, json_dir=args.json_dir, sol_dir=args.solution_dir)
+    
+    labels = get_features(args.train_dir)[2]
     labels.remove('O')
     s2w = Sentence2Word()
-    print(s2w.calc_score(outdir, n, labels=labels))
+    print(s2w.calc_score(args.outdir, args.M, labels=labels))
 #     result1 = s2w.calc_score(outdir, n)
-    online_dir = outdir+'_online'
+#     online_dir = outdir+'_online'
 #     result2 = s2w.calc_score(online_dir, n)
 #     print(set(result2).difference(set(result1)))
 

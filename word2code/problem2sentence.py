@@ -16,6 +16,7 @@ from utils import check_solution, clean_word, clean_name, get_sentence_type,\
 from stanford_corenlp import tokenize_sentences
 from CRF import Crf
 from dependency_parser import get_features
+import argparse
 
 
 def get_min_mask(sentwords,relevantwords):
@@ -176,21 +177,25 @@ class Problem2Sentence(Crf):
 def main():
     p2s = Problem2Sentence()
     indir = os.path.join('res', 'text&code8')
-    train_dir = os.path.join(indir, 'sentence_train')
-    p2s.build_train(indir, train_dir)
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled",
+                        default=indir)
+    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems")
+    parser.add_argument("-od", "--outdir", help="Directory to store output")
+    parser.add_argument("-n", "--N", help="Top N sentences allowed per label", type=int, default=1)
+    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code", action="store_true")
+    args = parser.parse_args()
 
-#     test_indir = os.path.join('res', 'problems_test1')
-#     test_dir = os.path.join(test_indir, 'sentence_test')
-#     p2s.build_train(test_indir, test_dir)
+    if not args.train_dir:
+        args.train_dir = os.path.join(args.problem_dir, 'sentence_train')
+    p2s.build_train(args.problem_dir, args.train_dir)
 
-    outdir = os.path.join(indir, 'sentence_json')
-    p2s.test(train_dir, outdir)
+    if not args.outdir:
+        args.outdir = os.path.join(args.problem_dir, 'sentence_json')
+    p2s.test(args.train_dir, args.outdir)
 
-#     test_outdir = os.path.join(test_indir, 'sentence_json')
-#     p2s.test(train_dir, test_outdir, test_dir)
-
-    n = 1
-    print(p2s.calc_score(outdir, n, indir))
+    print(p2s.calc_score(args.outdir, args.N, indir))
 
     fname = 'AlienAndPassword.py'
 #     p2s.label_problem(indir, fname, train_dir)

@@ -19,6 +19,7 @@ from utils import is_func, check_solution, clean_name, clean_word,\
 from stanford_corenlp import tokenize_sentences
 from CRF import Crf
 from dependency_parser import get_features
+import argparse
 
 
 
@@ -153,26 +154,27 @@ def main():
     
     indir = os.path.join('res','text&code8')
 
-    fname = 'PalindromesCount.py'
-    fname = 'RandomColoringDiv2.py'
-    train_dir = os.path.join(indir, 'word_train')
-#     s2w.label_problem(indir, fname, train_dir)
-#     s2w.build_train(indir, train_dir, only_code=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled",
+                        default=indir)
+    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems")
+    parser.add_argument("-od", "--outdir", help="Directory to store output")
+    parser.add_argument("-m", "--M", help="Top M words allowed per label", type=int, default=1)
+    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code", action="store_true")
+    args = parser.parse_args()
 
-    test_indir = os.path.join('res', 'problems_test1')
-    test_indir = indir
-    test_dir = os.path.join(test_indir,'word_test')
-#     s2w.build_train(test_indir, test_dir)
 
-    output_dir = os.path.join(indir, 'word_json')
-#     s2w.test(train_dir, output_dir)
+    only_code = not args.all
+    if not args.train_dir:
+        args.train_dir = os.path.join(args.problem_dir, 'word_train')
+    s2w.build_train(args.problem_dir, args.train_dir, only_code=only_code)
 
-    test_output_dir = os.path.join(test_indir, 'word_test_json')
-#     s2w.test(train_dir, test_output_dir, test_dir)
+    if not args.outdir:
+        args.outdir = os.path.join(args.problem_dir, 'word_json')
+    s2w.test(args.train_dir, args.outdir)
 
-    check_dir = output_dir
-#     m = 2
-#     print(s2w.calc_score(check_dir, m, indir))
+    check_dir = args.outdir
+    print(s2w.calc_score(check_dir, args.M, args.problem_dir))
     
     fname = 'MountainRanges.label'
 #     fname = 'BlockTower.label'
@@ -183,6 +185,7 @@ def main():
 #     fname = 'FarFromPrimes.label'
 #     fname = 'Elections.label'
 #     fname = 'LittleElephantAndBallsAgain.label'
+#     s2w.label_problem(indir, fname, train_dir)
 #     print(s2w.check_problem(check_dir, fname, m))
 
 if __name__ == '__main__':

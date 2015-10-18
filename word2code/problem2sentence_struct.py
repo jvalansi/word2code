@@ -14,6 +14,7 @@ import string
 from CRF_struct import CrfStruct, get_features
 from problem2sentence import Problem2Sentence, get_min_mask
 from utils import get_sentence_type
+import argparse
 
 
 class Problem2Sentence_Struct(CrfStruct):
@@ -123,26 +124,34 @@ class Problem2Sentence_Struct(CrfStruct):
 def main():
     p2ss = Problem2Sentence_Struct()
     problem_dir = os.path.join('res', 'text&code8') 
-#     problem_dir = os.path.join('res', 'small') 
-    indir = problem_dir
-    train_dir = os.path.join(problem_dir, 'sentence_train_struct')
-    p2ss.build_train(indir, train_dir)
+#     problem_dir = os.path.join('res', 'small')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled",
+                        default=problem_dir)
+    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems")
+    parser.add_argument("-od", "--outdir", help="Directory to store output")
+    parser.add_argument("-n", "--N", help="Top N sentences allowed per label", type=int, default=1)
+    parser.add_argument("-oc", "--only_code", help="Whether to label only the sentences with code", action="store_true")
+    parser.add_argument("-o", "--online", help="Whether to test online", action="store_true")
+    parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online")
+    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online")
+    args = parser.parse_args()
+ 
+    indir = args.problem_dir
+    if not args.train_dir:
+        args.train_dir = os.path.join(args.problem_dir, 'sentence_train_struct')
+    p2ss.build_train(indir, args.train_dir, args.only_code)
     
-    test_indir = os.path.join('res', 'problems_test')
-    test_dir = os.path.join(test_indir,'sentence_test_struct')
-#     build_train(test_indir, test_dir, False)
+    if not args.outdir:
+        args.outdir = os.path.join(problem_dir, 'sentence_json_struct')
+    p2ss.test(args.train_dir, args.outdir, build_features=True,
+              online=args.online, json_dir=args.json_dir, sol_dir=args.solution_dir)
 
-    outdir = os.path.join(problem_dir, 'sentence_json_struct')
-    p2ss.test(train_dir, outdir, build_features=True)
-
-    test_output_dir = os.path.join(test_indir, 'sentence_json_struct')
-#     CRF_struct.test(train_dir, test_output_dir, test_dir=test_dir)
-
-    n = 1
-    labels = get_features(train_dir)[2]
+    labels = get_features(args.train_dir)[2]
     labels.remove('O')
     p2s = Problem2Sentence()
-    print(p2s.calc_score(outdir, n))
+    print(p2s.calc_score(args.outdir, args.N))
 
     fname = 'GogoXBallsAndBinsEasy.py'
     fname = 'PalindromesCount.py'
