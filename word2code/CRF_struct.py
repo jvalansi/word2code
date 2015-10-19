@@ -271,7 +271,7 @@ class CrfStruct(LearnerWrapper):
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
 
     
-    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, 
+    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, n_jobs=4, 
              online=False, n=2, json_dir=None, sol_dir=None):
         if os.path.exists(outdir) and overwrite:
             shutil.rmtree(outdir)
@@ -285,8 +285,6 @@ class CrfStruct(LearnerWrapper):
         print(crf.inference_method)
     #     learner = OneSlackSSVM(crf, inference_cache=50, C=.1, tol=.1, max_iter=100,
     #                         n_jobs=1)
-        n_jobs = 3
-        n_jobs = 1
         learner = StructuredPerceptron(crf, batch=True, n_jobs=n_jobs)
 #         learner = StructuredPerceptron(crf)
         for fname in sorted(os.listdir(train_dir)):

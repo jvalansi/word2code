@@ -136,6 +136,7 @@ def main():
     parser.add_argument("-o", "--online", help="Whether to test online", action="store_true")
     parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online")
     parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online")
+    parser.add_argument("-nj", "--n_jobs", help="Number of jobs for the learner", type=int, default=4)
     args = parser.parse_args()
  
     indir = args.problem_dir
@@ -145,7 +146,7 @@ def main():
     
     if not args.outdir:
         args.outdir = os.path.join(problem_dir, 'sentence_json_struct')
-    p2ss.test(args.train_dir, args.outdir, build_features=True,
+    p2ss.test(args.train_dir, args.outdir, build_features=True, n_jobs=args.njobs,
               online=args.online, json_dir=args.json_dir, sol_dir=args.solution_dir)
 
     labels = get_features(args.train_dir)[2]
