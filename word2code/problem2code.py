@@ -27,6 +27,7 @@ from sentence2word import Sentence2Word
 from problem2sentence import Problem2Sentence
 import nltk
 from dependency_parser import Node, translate_code
+import argparse
 
 overwrite = True
 
@@ -39,7 +40,7 @@ golden_possibilities_codeline = True #10%
 golden_codeline = False #50%
 golden_return_codeline = True #66% for False
 
-golden_words = False #10%
+golden_words = True #10%
 golden_codewords = True #10%
 
 #     phrase to code:
@@ -523,25 +524,41 @@ def check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P
     
 def main():
 #     problem_dir = os.path.join('res', 'problems_test1')
-    problem_dir = os.path.join('res', 'text&code8')
-#     p_thresh = 0.5
-    p = 1
-    sentence_dir = os.path.join(problem_dir, 'sentence_json')
-    n = 1
-    word_dir = os.path.join(problem_dir, 'word_json')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-pd", "--problem_dir", help="problem_dir", default=os.path.join('res', 'text&code8'))
+    parser.add_argument("-sd", "--sentence_dir", help="sentence dir", default=None)
+    parser.add_argument("-wd", "--word_dir", help="word dir", default=None)
+    parser.add_argument("-p", "--codeword_count", help="codeword count", default=1)
+    parser.add_argument("-n", "--sentence_count", help="sentence count", default=1)
+    parser.add_argument("-m", "--word_count", help="word count", default=3)    
+    parser.add_argument("-i", "--intersection", help="intersection", action="store_true")
+    args = parser.parse_args()
+
+    
+    problem_dir = args.problem_dir    
+    p = args.codeword_count
+    sentence_dir = args.sentence_dir
+    if not sentence_dir:
+        sentence_dir = os.path.join(problem_dir, 'sentence_json')
+    n = args.sentence_count
+    word_dir = args.word_dir
+    if not word_dir:
+        word_dir = os.path.join(problem_dir, 'word_json_struct')
 #     word_dir = os.path.join(problem_dir, 'word_test_json')
 #     word_dir = os.path.join(problem_dir, 'word_json_struct')
 #     word_dir = os.path.join(problem_dir, 'word_json_test_struct')
-    m = 3
+    m = args.word_count
 
-    intersections_path = os.path.join(problem_dir, 'intesections')
-    N = M = P = 4
-    check_all_problems_intersection(sentence_dir, N, word_dir, M, problem_dir, P, intersections_path)
+    if args.intersection:
+        intersections_dir = os.path.join(problem_dir, 'intesections')
+        check_all_problems_intersection(sentence_dir, n, word_dir, m, problem_dir, p, intersections_dir)
     
-    tries = 10000
-    solutions_dir = os.path.join(problem_dir, 'solutions')
-#     print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
-# ['AverageAverage.py', 'ChocolateBar.py', 'MarbleDecoration.py', 'SumOfPower.py']
+    else:
+        tries = 10000
+        solutions_dir = os.path.join(problem_dir, 'solutions')
+        print(check_problems(problem_dir, sentence_dir, n, word_dir, m, p, tries, solutions_dir))
+    # ['AverageAverage.py', 'ChocolateBar.py', 'MarbleDecoration.py', 'SumOfPower.py']
 
 
     fname = 'CucumberMarket.py'
