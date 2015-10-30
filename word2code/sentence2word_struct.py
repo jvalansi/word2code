@@ -166,7 +166,7 @@ def main():
     
     outdir = os.path.join(problem_dir, args.outdir)
     sol_dir = os.path.join(problem_dir, args.solution_dir)
-    s2ws.test(train_dir, outdir, build_features=True, overwrite=True, n_jobs=args.njobs, 
+    s2ws.test(train_dir, outdir, build_features=True, overwrite=True, n_jobs=args.n_jobs, 
               online=args.online, json_dir=args.json_dir, sol_dir=sol_dir)
     
     labels = get_features(args.train_dir)[2]

@@ -146,7 +146,7 @@ def main():
     
     if not args.outdir:
         args.outdir = os.path.join(problem_dir, 'sentence_json_struct')
-    p2ss.test(args.train_dir, args.outdir, build_features=True, n_jobs=args.njobs,
+    p2ss.test(args.train_dir, args.outdir, build_features=True, n_jobs=args.n_jobs,
               online=args.online, json_dir=args.json_dir, sol_dir=args.solution_dir)
 
     labels = get_features(args.train_dir)[2]
