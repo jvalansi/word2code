@@ -95,11 +95,11 @@ def check_solution_(problem_path):#TODO: make it portable
 
 def check_solution(problem_path, soln=3):
 #     resource.setrlimit(resource.RLIMIT_DATA, (M, 100*M))   
+    results = []
     try:
         if os.path.exists(problem_path+'c'):
             os.remove(problem_path+'c')
         temp = imp.load_source('tmp', problem_path)
-        results = []
         for i in range(soln):
             name = 'example' + str(i)
             if hasattr(temp, name):
@@ -109,7 +109,7 @@ def check_solution(problem_path, soln=3):
     except Exception:
 #         traceback.print_exc()
         pass;
-    return False
+    return sum(results)/soln
 
 def check_solution_path(path, correct=True, soln=1):
     fail = []

@@ -15,7 +15,7 @@ class SwappingDigits:
         # For example, input_array ="1147" represents the integer 1147.
         # The String input_array will not have any leading zeros.
         # You are allowed to swap one pair of digits in the given number.
-        # In other words, you may choose a pair of distinct indices i and j, and swap the characters input_array [i] and input_array [j].
+        # In other words, you may choose a pair of distinct indices i and j, and swap the characters input_array [i] and input_array [j].z
         #### possibilities = choose(indices(N), pair)
         possibilities = combinations_with_replacement(range(N), 2)
         #### integers = (lambda possibility: list2str(swap(list(input_array), possibility))

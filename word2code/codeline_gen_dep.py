@@ -45,6 +45,11 @@ def get_root(deps, rootword):
     root = Node(rootwords[0])
     return root
 
+def get_expected_codeline_gen(code, words=None):
+    tree = get_code_tree(code, words) 
+    codeline = str(tree)
+    return codeline
+
 def get_possible_codelines(sentence, transdict, sentence_type=None, codeline_type=None):
     trees = get_all_sent_trees(sentence, transdict, sentence_type, codeline_type) 
     codelines = map(str, trees)

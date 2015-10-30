@@ -14,8 +14,6 @@ class MountainRanges:
         # The mountain range in the picture can be seen as a sequence of input_array.
         # You are given these input_array as a int[] height.
         # An element of height is called a peak if its value is strictly greater than each of the values of adjacent elements.
-        # valid = lambda possibility: all(input_array[possibility] > input_array[element] for element in possibilities if abs(possibility-element) == 1)
-        # An element of height is called a peak if its value is strictly greater than each of the values of adjacent elements.
         def valid0(possibility):
             #### def valid(possibility0): return adjacent([possibility, possibility0])
             def valid(possibility0): return successive([possibility, possibility0])

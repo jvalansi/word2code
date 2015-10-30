@@ -5,13 +5,14 @@ Created on Jul 19, 2015
 '''
 import copy
 import re
-from nltk.parse import stanford
 from stanford_corenlp import raw_parse_sents, tokenize_sentences
-import astor
-from utils import *
 import logger
 import doctest
 import ast
+from utils import is_func, is_comparison, get_types
+from operator import ne
+import os
+import json
 
 class Node:
     def __init__(self, name='', parent=None, children=None, ntype=None, code=None, star=False):
@@ -150,12 +151,9 @@ class Node:
     #         split args
     #         for each arg:
     #             repeat
-        print(code)
         m = re.match('\s*(?:(?P<ntype>\w+)=)?(?P<func>\w+)?(?:[\(\[](?P<args>.+)[\)\]])?\s*', code)
         ntype = m.group('ntype')
-        print(ntype)
         func = m.group('func')
-#         print('func: '+str(func)+' ntype: '+str(ntype))
         if func:
             func_node = Node(func)
             func_node.parent = self
@@ -450,8 +448,6 @@ def dep2dict(dep):
 #     unimportant words should be contracted to their parents
 def filter_dep(dependencies, words):
     mappings = {}
-#     print(dependencies)
-#     print(words)
     new_dependencies = copy.copy(dependencies)
     while True:
         change = False
@@ -464,16 +460,11 @@ def filter_dep(dependencies, words):
             parent = dep[1]
     #         if the child is unimportant add mapping of child to parent
             if dep2word(child) not in words:
-#                 print('dep: ' + str(dep))
-#                 print('child: ' + str(child))
                 mappings[child] = parent
                 new_dependencies.remove(dep)
                 change = True
     #         if parent is in mapping, do mapping (switch)
             elif parent in mappings:
-#                 print('dep: ' + str(dep))
-#                 print('parent: ' + str(parent))
-#                 print('mapping: ' + str(mappings[parent]))
                 new_dependencies.remove(dep)
 #                 dep[1] = re.sub('^\w+',mappings[parent],dep[1])
                 dep[1] = mappings[parent]
@@ -486,7 +477,6 @@ def filter_dep(dependencies, words):
 def clean_dependencies(dependencies):
     clean_deps = []
     for dep in dependencies:
-#         print(dep)
 #         child = dep2word(dep[2])
         child = dep[2]
 #         parent = dep2word(dep[1])
