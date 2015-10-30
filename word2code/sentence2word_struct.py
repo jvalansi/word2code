@@ -145,35 +145,33 @@ def main():
 #     problem_dir = os.path.join('res', 'small') 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled",
+    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled,  (default: %(default)s)",
                         default=problem_dir)
-    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems")
-    parser.add_argument("-od", "--outdir", help="Directory to store output")
-    parser.add_argument("-m", "--M", help="Top M words allowed per label", type=int, default=3)
-    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code", action="store_true")
+    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems,  (default: %(default)s)", default='word_train_struct')
+    parser.add_argument("-od", "--outdir", help="Directory to store output, (default: %(default)s)", default='word_json_struct')
+    parser.add_argument("-m", "--M", help="Top M words allowed per label, (default: %(default)s)", type=int, default=3)
+    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code, (default: %(default)s)", action="store_true")
     parser.add_argument("-o", "--online", help="Whether to test online", action="store_true")
-    parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online")
-    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online")
-    parser.add_argument("-nj", "--n_jobs", help="Number of jobs for the learner", type=int, default=4)
+    parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online, (default: %(default)s)")
+    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online, (default: %(default)s)")
+    parser.add_argument("-nj", "--n_jobs", help="Number of jobs for the learner, (default: %(default)s)", type=int, default=4)
     args = parser.parse_args()
 
     
     s2ws = Sentence2WordStruct()
     indir = args.problem_dir
     only_code = not args.all
-    if not args.train_dir:
-        args.train_dir = os.path.join(problem_dir, 'word_train_struct')
-    s2ws.build_train(indir, args.train_dir, only_code)
+    train_dir = os.path.join(problem_dir, args.train_dir)
+    s2ws.build_train(indir, train_dir, only_code)
     
-    if not args.outdir:
-        args.outdir = os.path.join(problem_dir, 'word_json_struct')
-    s2ws.test(args.train_dir, args.outdir, build_features=True, overwrite=True, n_jobs=args.njobs, 
+    outdir = os.path.join(problem_dir, args.outdir)
+    s2ws.test(train_dir, outdir, build_features=True, overwrite=True, n_jobs=args.njobs, 
               online=args.online, json_dir=args.json_dir, sol_dir=args.solution_dir)
     
     labels = get_features(args.train_dir)[2]
     labels.remove('O')
     s2w = Sentence2Word()
-    print(s2w.calc_score(args.outdir, args.M, labels=labels))
+    print(s2w.calc_score(outdir, args.M, labels=labels))
 #     result1 = s2w.calc_score(outdir, n)
 #     online_dir = outdir+'_online'
 #     result2 = s2w.calc_score(online_dir, n)
