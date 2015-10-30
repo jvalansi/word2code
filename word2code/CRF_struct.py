@@ -244,9 +244,9 @@ class CrfStruct(LearnerWrapper):
             # get all Y_goods from good folder
             # for each Y_good get most similar Y_bads
             # for each pair of Y_good, Y_bad update learner
-            good_dir = os.path.join(sol_dir, 'Good')
+            good_dir = os.path.join(sol_dir, clean_name(fname), 'Good')
             X_goods, Y_goods = self.build_and_get_data(good_dir)
-            bad_dir = os.path.join(sol_dir, 'Bad')
+            bad_dir = os.path.join(sol_dir, clean_name(fname), 'Bad')
             X_bads, Y_bads = self.build_and_get_data(bad_dir)
             pairs = {}
             for (Y_good,Y_bad) in product(Y_goods,Y_bads):

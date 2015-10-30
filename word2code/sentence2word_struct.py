@@ -150,10 +150,10 @@ def main():
     parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems,  (default: %(default)s)", default='word_train_struct')
     parser.add_argument("-od", "--outdir", help="Directory to store output, (default: %(default)s)", default='word_json_struct')
     parser.add_argument("-m", "--M", help="Top M words allowed per label, (default: %(default)s)", type=int, default=3)
-    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code, (default: %(default)s)", action="store_true")
+    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code", action="store_true")
     parser.add_argument("-o", "--online", help="Whether to test online", action="store_true")
     parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online, (default: %(default)s)")
-    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online, (default: %(default)s)")
+    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online, (default: %(default)s)", default='solutions')
     parser.add_argument("-nj", "--n_jobs", help="Number of jobs for the learner, (default: %(default)s)", type=int, default=4)
     args = parser.parse_args()
 
@@ -165,8 +165,9 @@ def main():
     s2ws.build_train(indir, train_dir, only_code)
     
     outdir = os.path.join(problem_dir, args.outdir)
+    sol_dir = os.path.join(problem_dir, args.solution_dir)
     s2ws.test(train_dir, outdir, build_features=True, overwrite=True, n_jobs=args.njobs, 
-              online=args.online, json_dir=args.json_dir, sol_dir=args.solution_dir)
+              online=args.online, json_dir=args.json_dir, sol_dir=sol_dir)
     
     labels = get_features(args.train_dir)[2]
     labels.remove('O')
