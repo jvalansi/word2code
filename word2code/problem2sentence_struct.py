@@ -127,26 +127,25 @@ def main():
 #     problem_dir = os.path.join('res', 'small')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled",
+    parser.add_argument("-pd","--problem_dir", help="Directory of the problems to be labeled,  (default: %(default)s)",
                         default=problem_dir)
-    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems")
-    parser.add_argument("-od", "--outdir", help="Directory to store output")
-    parser.add_argument("-n", "--N", help="Top N sentences allowed per label", type=int, default=1)
-    parser.add_argument("-oc", "--only_code", help="Whether to label only the sentences with code", action="store_true")
+    parser.add_argument("-td", "--train_dir", help="Directory of the labeled problems,  (default: %(default)s)", default='sentence_train_struct')
+    parser.add_argument("-od", "--outdir", help="Directory to store output, (default: %(default)s)", default='sentence_json_struct')
+    parser.add_argument("-n", "--N", help="Top N sentences allowed per label, (default: %(default)s)", type=int, default=1)
+    parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code", action="store_true")
     parser.add_argument("-o", "--online", help="Whether to test online", action="store_true")
-    parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online")
-    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online")
-    parser.add_argument("-nj", "--n_jobs", help="Number of jobs for the learner", type=int, default=4)
+    parser.add_argument("-ow", "--overwrite", help="Whether to overwrite previous results", action="store_true")
+    parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online, (default: %(default)s)")
+    parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online, (default: %(default)s)", default='solutions')
+    parser.add_argument("-nj", "--n_jobs", help="Number of jobs for the learner, (default: %(default)s)", type=int, default=4)
     args = parser.parse_args()
  
     indir = args.problem_dir
-    if not args.train_dir:
-        args.train_dir = os.path.join(args.problem_dir, 'sentence_train_struct')
+    args.train_dir = os.path.join(args.problem_dir, 'sentence_train_struct')
     p2ss.build_train(indir, args.train_dir, args.only_code)
     
-    if not args.outdir:
-        args.outdir = os.path.join(problem_dir, 'sentence_json_struct')
-    p2ss.test(args.train_dir, args.outdir, build_features=True, n_jobs=args.n_jobs,
+    args.outdir = os.path.join(problem_dir, 'sentence_json_struct')
+    p2ss.test(args.train_dir, args.outdir, build_features=True, overwrite=args.overwrite, n_jobs=args.n_jobs,
               online=args.online, json_dir=args.json_dir, sol_dir=args.solution_dir)
 
     labels = get_features(args.train_dir)[2]

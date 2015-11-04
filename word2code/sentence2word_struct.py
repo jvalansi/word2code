@@ -152,6 +152,7 @@ def main():
     parser.add_argument("-m", "--M", help="Top M words allowed per label, (default: %(default)s)", type=int, default=3)
     parser.add_argument("-a", "--all", help="Whether to label all the sentences or only the ones with code", action="store_true")
     parser.add_argument("-o", "--online", help="Whether to test online", action="store_true")
+    parser.add_argument("-ow", "--overwrite", help="Whether to overwrite previous results", action="store_true")
     parser.add_argument("-jd", "--json_dir", help="Directory of labeled problems for online, (default: %(default)s)")
     parser.add_argument("-sd", "--solution_dir", help="Directory of problem solutions for online, (default: %(default)s)", default='solutions')
     parser.add_argument("-nj", "--n_jobs", help="Number of jobs for the learner, (default: %(default)s)", type=int, default=4)
@@ -166,7 +167,7 @@ def main():
     
     outdir = os.path.join(problem_dir, args.outdir)
     sol_dir = os.path.join(problem_dir, args.solution_dir)
-    s2ws.test(train_dir, outdir, build_features=True, overwrite=True, n_jobs=args.n_jobs, 
+    s2ws.test(train_dir, outdir, build_features=True, overwrite=args.overwrite, n_jobs=args.n_jobs, 
               online=args.online, json_dir=args.json_dir, sol_dir=sol_dir)
     
     labels = get_features(args.train_dir)[2]

@@ -200,6 +200,8 @@ class CrfStruct(LearnerWrapper):
     def build_and_get_data(self, data_dir):
         Xs = []
         Ys = []
+        if not os.path.exists(data_dir):
+            return (Xs, Ys)
         self.build_train(data_dir, data_dir)
         data_features = get_features(data_dir)
         for sol_fname in os.listdir(data_dir):
@@ -211,7 +213,7 @@ class CrfStruct(LearnerWrapper):
         return (Xs, Ys)
     
     def test_file(self, train_dir, fname, features, learner, model, outdir, 
-                  test_dir=None, overwrite=True, online=False, n=2, json_dir=None, sol_dir=None):
+                  test_dir=None, overwrite=False, online=False, n=2, json_dir=None, sol_dir=None):
         fpath_out = os.path.join(outdir, clean_name(fname)+'.json')
         if not overwrite and os.path.exists(fpath_out):
             return
@@ -271,12 +273,12 @@ class CrfStruct(LearnerWrapper):
               % accuracy_score(np.hstack(Y_test), np.hstack(Y_pred)))
 
     
-    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=True, n_jobs=4, 
+    def test(self, train_dir, outdir, test_dir=None, build_features=False, overwrite=False, n_jobs=4, 
              online=False, n=2, json_dir=None, sol_dir=None):
         if os.path.exists(outdir) and overwrite:
             shutil.rmtree(outdir)
         if not os.path.exists(outdir):
-            os.mkdir(outdir)    
+            os.mkdir(outdir)
         features = get_features(train_dir, build_features)
         inference_method = 'ad3'
         inference_method = 'lp'
